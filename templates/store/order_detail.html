@@ -1,0 +1,654 @@
+{% extends "store/base.html" %}
+{% block title %}Order #{{ order.id }} | TheZivo{% endblock %}
+
+{% block content %}
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+    .detail-page {
+        background: #f8f7f5;
+        min-height: 100vh;
+        padding: 48px 0 80px;
+        font-family: 'DM Sans', sans-serif;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.85rem;
+        color: #888;
+        text-decoration: none;
+        margin-bottom: 28px;
+        transition: color 0.15s;
+    }
+
+    .back-link:hover { color: #111; }
+
+    .detail-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 32px;
+    }
+
+    .detail-header h1 {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.9rem;
+        font-weight: 600;
+        color: #111;
+        margin: 0;
+    }
+
+    .detail-header p {
+        color: #999;
+        font-size: 0.85rem;
+        margin: 4px 0 0;
+    }
+
+    /* CARDS */
+    .detail-card {
+        background: #fff;
+        border-radius: 16px;
+        border: 1px solid #ececec;
+        margin-bottom: 16px;
+        overflow: hidden;
+    }
+
+    .detail-card-title {
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #aaa;
+        text-transform: uppercase;
+        letter-spacing: 0.9px;
+        padding: 20px 24px 0;
+        margin-bottom: 16px;
+    }
+
+    /* STATUS BADGES */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.78rem;
+        font-weight: 600;
+    }
+
+    .status-badge::before {
+        content: '';
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+    }
+
+    .status-placed    { background: #e8f4fd; color: #1a73e8; }
+    .status-shipped   { background: #fff3e0; color: #e65100; }
+    .status-delivered { background: #e8f5e9; color: #2e7d32; }
+    .status-cancelled { background: #fce4ec; color: #c62828; }
+    .status-created   { background: #f3e5f5; color: #6a1b9a; }
+    .status-default   { background: #f5f5f5; color: #555; }
+    .pay-badge-paid    { background: #e8f5e9; color: #2e7d32; }
+    .pay-badge-pending { background: #fff8e1; color: #f57f17; }
+    .pay-badge-failed  { background: #fce4ec; color: #c62828; }
+
+    /* INFO GRID */
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 0;
+        padding: 0 24px 20px;
+    }
+
+    .info-item {
+        padding: 8px 0;
+    }
+
+    .info-label {
+        font-size: 0.7rem;
+        font-weight: 500;
+        color: #bbb;
+        text-transform: uppercase;
+        letter-spacing: 0.7px;
+        margin-bottom: 4px;
+    }
+
+    .info-value {
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: #111;
+    }
+
+    /* ADDRESS */
+    .address-block {
+        padding: 0 24px 20px;
+    }
+
+    .address-name {
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: #111;
+        margin-bottom: 4px;
+    }
+
+    .address-line {
+        font-size: 0.88rem;
+        color: #666;
+        line-height: 1.6;
+    }
+
+    .address-phone {
+        font-size: 0.85rem;
+        color: #888;
+        margin-top: 6px;
+    }
+
+    /* TRACKER */
+    .tracker-wrap {
+        padding: 0 24px 24px;
+    }
+
+    .tracker-steps {
+        display: flex;
+        align-items: flex-start;
+        margin-top: 8px;
+    }
+
+    .tracker-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex: 1;
+        position: relative;
+    }
+
+    .tracker-step:not(:last-child)::after {
+        content: '';
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        width: 100%;
+        height: 2px;
+        background: #e0e0e0;
+        z-index: 0;
+    }
+
+    .tracker-step.done:not(:last-child)::after { background: #111; }
+
+    .tracker-dot {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: #e8e8e8;
+        border: 2px solid #e8e8e8;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.55rem;
+        color: #fff;
+    }
+
+    .tracker-step.done .tracker-dot {
+        background: #111;
+        border-color: #111;
+    }
+
+    .tracker-step.active .tracker-dot {
+        background: #fff;
+        border-color: #111;
+        box-shadow: 0 0 0 3px rgba(17,17,17,0.1);
+    }
+
+    .tracker-label {
+        font-size: 0.65rem;
+        color: #bbb;
+        margin-top: 7px;
+        text-align: center;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .tracker-date {
+        font-size: 0.62rem;
+        color: #ccc;
+        margin-top: 3px;
+        text-align: center;
+    }
+
+    .tracker-step.done .tracker-label,
+    .tracker-step.active .tracker-label { color: #111; }
+
+    .tracker-step.done .tracker-date,
+    .tracker-step.active .tracker-date { color: #888; }
+
+    /* ITEMS */
+    .order-item-row {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px 24px;
+        border-bottom: 1px solid #f7f7f7;
+        text-decoration: none;
+        transition: background 0.15s;
+    }
+
+    .order-item-row:last-child { border-bottom: none; }
+    .order-item-row:hover { background: #fafafa; }
+
+    .order-item-img {
+        width: 60px;
+        height: 76px;
+        object-fit: cover;
+        border-radius: 8px;
+        flex-shrink: 0;
+        background: #f0f0f0;
+    }
+
+    .order-item-img-placeholder {
+        width: 60px;
+        height: 76px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ccc;
+    }
+
+    .order-item-name {
+        font-weight: 500;
+        font-size: 0.92rem;
+        color: #111;
+    }
+
+    .order-item-meta {
+        font-size: 0.78rem;
+        color: #999;
+        margin-top: 4px;
+    }
+
+    .order-item-price {
+        font-weight: 600;
+        font-size: 0.92rem;
+        color: #111;
+        white-space: nowrap;
+        margin-left: auto;
+    }
+
+    /* TOTALS */
+    .totals-section {
+        padding: 0 24px 20px;
+    }
+
+    .totals-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.88rem;
+        padding: 6px 0;
+        color: #666;
+    }
+
+    .totals-row.total {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: #111;
+        border-top: 1px solid #f0f0f0;
+        margin-top: 8px;
+        padding-top: 14px;
+    }
+
+    .delivery-free { color: #2e7d32; font-weight: 600; }
+
+    /* CANCEL BUTTON */
+    .cancel-section {
+        padding: 20px 24px;
+        border-top: 1px solid #f5f5f5;
+    }
+
+    .btn-cancel {
+        background: none;
+        border: 1.5px solid #ffcdd2;
+        color: #c62828;
+        padding: 10px 24px;
+        border-radius: 8px;
+        font-family: 'DM Sans', sans-serif;
+        font-weight: 500;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: background 0.15s, border-color 0.15s;
+        width: 100%;
+    }
+
+    .btn-cancel:hover {
+        background: #fce4ec;
+        border-color: #ef9a9a;
+    }
+
+    /* CANCEL MODAL */
+    .cancel-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.4);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .cancel-overlay.show { display: flex; }
+
+    .cancel-modal {
+        background: #fff;
+        border-radius: 16px;
+        padding: 32px;
+        max-width: 400px;
+        width: 90%;
+        text-align: center;
+    }
+
+    .cancel-modal h5 {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.2rem;
+        color: #111;
+        margin-bottom: 8px;
+    }
+
+    .cancel-modal p {
+        font-size: 0.85rem;
+        color: #888;
+        margin-bottom: 24px;
+    }
+
+    .cancel-modal-actions {
+        display: flex;
+        gap: 12px;
+    }
+
+    .btn-keep {
+        flex: 1;
+        background: #f5f5f5;
+        border: none;
+        padding: 12px;
+        border-radius: 8px;
+        font-family: 'DM Sans', sans-serif;
+        font-weight: 500;
+        cursor: pointer;
+        font-size: 0.88rem;
+        transition: background 0.15s;
+    }
+
+    .btn-keep:hover { background: #eee; }
+
+    .btn-confirm-cancel {
+        flex: 1;
+        background: #c62828;
+        color: #fff;
+        border: none;
+        padding: 12px;
+        border-radius: 8px;
+        font-family: 'DM Sans', sans-serif;
+        font-weight: 500;
+        cursor: pointer;
+        font-size: 0.88rem;
+        transition: background 0.15s;
+    }
+
+    .btn-confirm-cancel:hover { background: #b71c1c; }
+</style>
+
+<div class="detail-page">
+    <div class="container" style="max-width: 720px;">
+
+        <a href="{% url 'my_orders' %}{% if request.GET.page %}?page={{ request.GET.page }}{% endif %}" class="back-link">
+            ← Back to Orders
+        </a>
+
+        <!-- HEADER -->
+        <div class="detail-header">
+            <div>
+                <h1>Order #{{ order.id }}</h1>
+                <p>Placed on {{ order.created_at|date:"d M Y, g:i A" }}</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap align-items-center">
+                {% if order.payment_status == "PAID" %}
+                    <span class="status-badge pay-badge-paid">Paid</span>
+                {% elif order.payment_status == "FAILED" %}
+                    <span class="status-badge pay-badge-failed">Failed</span>
+                {% else %}
+                    <span class="status-badge pay-badge-pending">Pending</span>
+                {% endif %}
+
+                {% if order.status == "PLACED" %}
+                    <span class="status-badge status-placed">Placed</span>
+                {% elif order.status == "SHIPPED" %}
+                    <span class="status-badge status-shipped">Shipped</span>
+                {% elif order.status == "DELIVERED" %}
+                    <span class="status-badge status-delivered">Delivered</span>
+                {% elif order.status == "CANCELLED" %}
+                    <span class="status-badge status-cancelled">Cancelled</span>
+                {% elif order.status == "CREATED" %}
+                    <span class="status-badge status-created">Created</span>
+                {% else %}
+                    <span class="status-badge status-default">{{ order.status }}</span>
+                {% endif %}
+
+                <a href="{% url 'download_invoice' order.id %}"
+                   style="display:inline-flex;align-items:center;gap:6px;
+                          font-size:0.82rem;font-weight:500;color:#7c3aed;
+                          text-decoration:none;border:1px solid #e9d5ff;
+                          padding:6px 14px;border-radius:6px;
+                          transition:background 0.15s;"
+                   onmouseover="this.style.background='#f5f3ff'"
+                   onmouseout="this.style.background=''">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2.5"
+                         stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                      <polyline points="7 10 12 15 17 10"/>
+                      <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    Download Invoice
+                </a>
+            </div>
+        </div>
+
+        <!-- ORDER PROGRESS -->
+        {% if order.status != "CANCELLED" %}
+        <div class="detail-card">
+            <div class="detail-card-title">Order Progress</div>
+            <div class="tracker-wrap">
+                <div class="tracker-steps">
+
+                    <div class="tracker-step {% if order.status in 'CREATED,PLACED,SHIPPED,DELIVERED' %}done{% endif %}">
+                        <div class="tracker-dot">✓</div>
+                        <span class="tracker-label">Confirmed</span>
+                        <span class="tracker-date">{{ order.created_at|date:"d M, g:i A" }}</span>
+                    </div>
+
+                    <div class="tracker-step {% if order.status == 'PLACED' or order.status == 'SHIPPED' or order.status == 'DELIVERED' %}done{% endif %}">
+                        <div class="tracker-dot">✓</div>
+                        <span class="tracker-label">Packed</span>
+                        <span class="tracker-date">&nbsp;</span>
+                    </div>
+
+                    <div class="tracker-step {% if order.status == 'SHIPPED' or order.status == 'DELIVERED' %}done{% endif %}">
+                        <div class="tracker-dot">✓</div>
+                        <span class="tracker-label">Shipped</span>
+                        <span class="tracker-date">
+                            {% if order.shipped_at %}{{ order.shipped_at|date:"d M, g:i A" }}{% else %}&nbsp;{% endif %}
+                        </span>
+                    </div>
+
+                    <div class="tracker-step {% if order.status == 'DELIVERED' %}done{% endif %}">
+                        <div class="tracker-dot">✓</div>
+                        <span class="tracker-label">Delivered</span>
+                        <span class="tracker-date">
+                            {% if order.delivered_at %}{{ order.delivered_at|date:"d M, g:i A" }}{% else %}&nbsp;{% endif %}
+                        </span>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- ORDER INFO -->
+        <div class="detail-card">
+            <div class="detail-card-title">Order Info</div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Order ID</div>
+                    <div class="info-value">#{{ order.id }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Date</div>
+                    <div class="info-value">{{ order.created_at|date:"d M Y" }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Payment</div>
+                    <div class="info-value">{{ order.payment_method }}</div>
+                </div>
+                {% if order.payment_method == "ONLINE" and order.razorpay_payment_id %}
+                <div class="info-item">
+                    <div class="info-label">Transaction ID</div>
+                    <div class="info-value" style="font-size:0.78rem;">{{ order.razorpay_payment_id }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- DELIVERY ADDRESS -->
+        <div class="detail-card">
+            <div class="detail-card-title">Delivery Address</div>
+            <div class="address-block">
+                <div class="address-name">{{ order.name }}</div>
+                <div class="address-line">
+                    {{ order.address }}
+                    {% if order.city %}, {{ order.city }}{% endif %}
+                    {% if order.state %}, {{ order.state }}{% endif %}
+                    {% if order.pincode %} - {{ order.pincode }}{% endif %}
+                </div>
+                <div class="address-phone">📞 {{ order.phone }}</div>
+            </div>
+        </div>
+
+        <!-- ITEMS -->
+        <div class="detail-card">
+            <div class="detail-card-title">Items Ordered</div>
+
+            {% for item in order.items.all %}
+            <a href="{% url 'product_detail' item.sku.product.id %}"
+               class="order-item-row">
+
+                {% if item.sku.product.image %}
+                    <img src="{{ item.sku.product.image.url }}"
+                         class="order-item-img"
+                         alt="{{ item.sku.product.name }}">
+                {% else %}
+                    <div class="order-item-img-placeholder">
+                        <i class="bi bi-bag"></i>
+                    </div>
+                {% endif %}
+
+                <div>
+                    <div class="order-item-name">{{ item.sku.product.name }}</div>
+                    <div class="order-item-meta">
+                        Size: {{ item.sku.size }}
+                        {% if item.sku.color %} · {{ item.sku.color }}{% endif %}
+                        · Qty: {{ item.quantity }}
+                    </div>
+                </div>
+
+                <div class="order-item-price">₹{{ item.price }}</div>
+
+            </a>
+            {% endfor %}
+
+            <!-- TOTALS -->
+            <div class="totals-section" style="margin-top:8px; border-top: 1px solid #f0f0f0; padding-top: 16px;">
+                <div class="totals-row">
+                    <span>Subtotal</span>
+                    <span>₹{{ order.items_subtotal }}</span>
+                </div>
+                <div class="totals-row">
+                    <span>Delivery</span>
+                    <span>
+                        {% if order.delivery_charge == 0 %}
+                            <span class="delivery-free">FREE</span>
+                        {% else %}
+                            ₹{{ order.delivery_charge }}
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="totals-row total">
+                    <span>Total Paid</span>
+                    <span>₹{{ order.total_amount }}</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- CANCEL ORDER -->
+        {% if order.status in "PLACED,CREATED" %}
+        <div class="detail-card">
+            <div class="cancel-section">
+                <div style="font-size:0.82rem; color:#999; margin-bottom:12px;">
+                    You can cancel this order as it hasn't been shipped yet.
+                </div>
+                <button class="btn-cancel" onclick="showCancelModal()">
+                    Cancel Order
+                </button>
+            </div>
+        </div>
+        {% elif order.status == "CANCELLED" %}
+        <div class="detail-card">
+            <div class="cancel-section" style="text-align:center;">
+                <span style="font-size:0.88rem; color:#c62828;">
+                    ✕ This order has been cancelled
+                </span>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<!-- CANCEL CONFIRMATION MODAL -->
+<div class="cancel-overlay" id="cancelOverlay" onclick="hideCancelModal(event)">
+    <div class="cancel-modal">
+        <h5>Cancel Order #{{ order.id }}?</h5>
+        <p>This action cannot be undone. Your items will be restocked and any payment will be refunded as per our policy.</p>
+        <div class="cancel-modal-actions">
+            <button class="btn-keep" onclick="hideCancelModal()">Keep Order</button>
+            <form method="post" action="{% url 'cancel_order' order.id %}" style="flex:1;">
+                {% csrf_token %}
+                <button type="submit" class="btn-confirm-cancel" style="width:100%;">
+                    Yes, Cancel
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function showCancelModal() {
+    document.getElementById("cancelOverlay").classList.add("show");
+}
+
+function hideCancelModal(e) {
+    if (!e || e.target === document.getElementById("cancelOverlay")) {
+        document.getElementById("cancelOverlay").classList.remove("show");
+    }
+}
+</script>
+
+{% endblock %}

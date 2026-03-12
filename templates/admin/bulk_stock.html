@@ -1,0 +1,146 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}Bulk Stock Update — Zivo Admin{% endblock %}
+
+{% block content %}
+<style>
+  .bs-card   { background:#fff;border-radius:10px;padding:20px 16px;
+               box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:16px;
+               overflow:hidden; }
+  .dark .bs-card { background:#1e1e2d; }
+
+  .bs-product-title { font-size:14px;font-weight:700;color:#111827;
+                      margin-bottom:12px;padding-bottom:8px;
+                      border-bottom:2px solid #e5e7eb; }
+  .dark .bs-product-title { color:#f3f4f6;border-color:#374151; }
+
+  .bs-table-wrap { overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -4px; }
+
+  .bs-table  { width:100%;border-collapse:collapse;font-size:13px;min-width:480px; }
+  .bs-table th { padding:7px 10px;text-align:left;font-size:11px;font-weight:700;
+                 text-transform:uppercase;letter-spacing:.05em;color:#6b7280;
+                 white-space:nowrap; }
+  .bs-table td { padding:8px 10px;border-bottom:1px solid #f3f4f6;vertical-align:middle; }
+  .dark .bs-table td { border-color:#2d2d3d;color:#d1d5db; }
+  .bs-table tr:last-child td { border-bottom:none; }
+
+  .bs-stock-input {
+    width:72px;padding:5px 7px;border:1px solid #d1d5db;border-radius:6px;
+    font-size:13px;font-weight:600;text-align:center;
+  }
+  .bs-stock-input:focus { outline:none;border-color:#8b5cf6;
+                          box-shadow:0 0 0 2px rgba(139,92,246,.2); }
+  .bs-stock-input.low  { border-color:#f59e0b;background:#fffbeb; }
+  .bs-stock-input.out  { border-color:#ef4444;background:#fef2f2; }
+
+  .bs-header {
+    display:flex;justify-content:space-between;align-items:center;
+    flex-wrap:wrap;gap:10px;margin-bottom:20px;
+  }
+  .bs-header h1 { font-size:18px;font-weight:700;margin:0; }
+
+  .bs-btn-save {
+    padding:10px 24px;background:#8b5cf6;color:#fff;border:none;
+    border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;
+  }
+  .bs-btn-save:hover { background:#7c3aed; }
+  .bs-btn-back {
+    padding:10px 18px;background:#e5e7eb;color:#374151;border:none;
+    border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;
+    text-decoration:none;display:inline-block;
+  }
+  .dark .bs-btn-back { background:#374151;color:#d1d5db; }
+
+  .bs-sticky-footer {
+    position:sticky;bottom:0;
+    background:#fff;
+    border-top:1px solid #e5e7eb;
+    padding:12px 0;
+    display:flex;gap:10px;align-items:center;
+    flex-wrap:wrap;
+  }
+  .dark .bs-sticky-footer { background:#111827;border-color:#374151; }
+
+  @media(max-width:576px) {
+    .bs-card { padding:14px 10px; }
+    .bs-header h1 { font-size:15px; }
+    .bs-btn-save, .bs-btn-back { font-size:13px;padding:9px 14px; }
+    .bs-sticky-footer { gap:8px; }
+    .bs-sticky-footer .bs-btn-save { flex:1;text-align:center; }
+    .bs-table { font-size:12px; }
+  }
+</style>
+
+<div class="bs-header">
+  <h1>📦 Bulk Stock Update</h1>
+  <a href=".." class="bs-btn-back">← Back to SKUs</a>
+</div>
+
+<form method="post">
+  {% csrf_token %}
+
+  {% for product_name, skus in products.items %}
+  <div class="bs-card">
+    <div class="bs-product-title">{{ product_name }}</div>
+    <div class="bs-table-wrap">
+    <table class="bs-table">
+      <thead>
+        <tr>
+          <th>SKU Code</th>
+          <th>Size</th>
+          <th>Color</th>
+          <th>MRP</th>
+          <th>Price</th>
+          <th>Stock</th>
+          <th>New</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for sku in skus %}
+        <tr>
+          <td style="font-family:monospace;font-size:12px;font-weight:600;color:#8b5cf6;white-space:nowrap;">
+            {{ sku.sku_code }}
+          </td>
+          <td><strong>{{ sku.size }}</strong></td>
+          <td style="white-space:nowrap;">{{ sku.color }}</td>
+          <td style="color:#6b7280;white-space:nowrap;">₹{{ sku.mrp }}</td>
+          <td style="color:#6b7280;white-space:nowrap;">₹{{ sku.selling_price }}</td>
+          <td>
+            {% if sku.stock == 0 %}
+              <span style="color:#ef4444;font-weight:700;">0</span>
+            {% elif sku.stock <= 5 %}
+              <span style="color:#f59e0b;font-weight:700;">⚠ {{ sku.stock }}</span>
+            {% else %}
+              <span style="color:#10b981;font-weight:700;">{{ sku.stock }}</span>
+            {% endif %}
+          </td>
+          <td>
+            <input
+              type="number"
+              name="stock_{{ sku.pk }}"
+              value="{{ sku.stock }}"
+              min="0"
+              class="bs-stock-input {% if sku.stock == 0 %}out{% elif sku.stock <= 5 %}low{% endif %}"
+              onchange="this.classList.toggle('out', this.value == 0);
+                        this.classList.toggle('low', this.value > 0 && this.value <= 5);"
+            >
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+  </div>
+  {% empty %}
+    <div class="bs-card" style="text-align:center;color:#9ca3af;">
+      No SKUs found.
+    </div>
+  {% endfor %}
+
+  <div class="bs-sticky-footer">
+    <a href=".." class="bs-btn-back">← Cancel</a>
+    <button type="submit" class="bs-btn-save">💾 Save All Stock Changes</button>
+  </div>
+</form>
+{% endblock %}

@@ -1,0 +1,233 @@
+<form method="get" id="filters-form">
+
+    <!-- BRAND FILTER -->
+    <div class="filter-section">
+
+        <!-- FILTER TITLE -->
+        <div class="filters-header-row">
+            <span class="filter-title">FILTERS</span>
+
+            <a href="#"
+                class="clear-all"
+                id="clearAllBtn"
+                style="display:none;">
+                    CLEAR ALL
+            </a>
+
+        </div>
+
+
+        <!-- BRAND HEADER -->
+        <div class="filter-header d-flex justify-content-between align-items-center">
+            <span>BRAND</span>
+
+            {% if not mobile_mode %}
+            <span class="d-flex gap-2 align-items-center">
+                <!-- SEARCH ICON -->
+                <span class="filter-search"
+                    id="brandSearchOpen"
+                    style="cursor:pointer;">
+                    <i class="bi bi-search"></i>
+                </span>
+
+                <!-- CLOSE ICON -->
+                <span class="filter-search d-none"
+                    id="brandSearchClose"
+                    style="cursor:pointer;">
+                    <i class="bi bi-x-lg"></i>
+                </span>
+            </span>
+            {% endif %}
+        </div>
+
+
+        {% if not mobile_mode %}
+        <!-- BRAND SEARCH INPUT (desktop only) -->
+        <input type="text"
+            id="brandSearchInput"
+            class="form-control form-control-sm mb-2 d-none"
+            placeholder="Search brand">
+        {% endif %}
+
+
+        <!-- BRAND LIST -->
+        <div class="filter-options {% if mobile_mode %}mob-brand-list{% endif %}"
+             id="{% if mobile_mode %}brand-list-mob{% else %}brand-list{% endif %}">
+
+            {% for brand in brands %}
+                <label class="filter-checkbox brand-item
+                    {% if not mobile_mode and forloop.counter > 5 %}d-none extra-brand{% endif %}">
+                    <input type="checkbox"
+                        name="brand"
+                        value="{{ brand }}"
+                        {% if brand in selected_brands %}checked{% endif %}>
+                    <span class="checkmark"></span>
+                    <span class="label-text">
+                        {{ brand }}
+                    </span>
+                </label>
+            {% endfor %}
+
+        </div>
+
+        {% if not mobile_mode %}
+        <div id="noBrandResult"
+            class="small text-muted mt-2 d-none">
+            No brands found
+        </div>
+
+        {% if brands|length > 5 %}
+            <div class="filter-more"
+                id="brand-toggle"
+                onclick="toggleBrands()">
+                + {{ brands|length|add:"-5" }} more
+            </div>
+        {% endif %}
+        {% endif %}
+
+
+    </div>
+
+
+    <!-- SIZE FILTER -->
+    <div class="filter-section">
+
+        <div class="filter-header">
+            <span>SIZE</span>
+        </div>
+
+        <div class="filter-options size-options">
+            {% for size in sizes %}
+                <label class="filter-checkbox size-checkbox">
+                    <input type="checkbox"
+                        name="size"
+                        value="{{ size }}"
+                        {% if size in selected_sizes %}checked{% endif %}>
+                    <span class="checkmark"></span>
+                    <span class="label-text">{{ size }}</span>
+                </label>
+            {% endfor %}
+        </div>
+
+    </div>
+
+
+    <!-- COLOR FILTER -->
+    {% if colors %}
+    <div class="filter-section">
+        <div class="filter-header"><span>COLOR</span></div>
+        <div class="filter-options" id="color-list">
+            {% for color in colors %}
+            <label class="filter-checkbox">
+                <input type="checkbox" name="color" value="{{ color }}"
+                       {% if color in selected_colors %}checked{% endif %}>
+                <span class="checkmark"></span>
+                <span class="label-text">{{ color }}</span>
+            </label>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+
+    <!-- CATEGORY FILTER -->
+    {% if not url_category and categories %}
+    <div class="filter-section">
+        <div class="filter-header"><span>CATEGORY</span></div>
+        <div class="filter-options" id="category-list">
+            {% for cat_val, cat_label in categories %}
+            <label class="filter-checkbox">
+                <input type="checkbox" name="category" value="{{ cat_val }}"
+                       {% if cat_val in selected_categories %}checked{% endif %}>
+                <span class="checkmark"></span>
+                <span class="label-text">{{ cat_label }}</span>
+            </label>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+
+    <!-- DISCOUNT FILTER -->
+    <div class="filter-section">
+        <div class="filter-header"><span>DISCOUNT</span></div>
+        <div class="filter-options" id="discount-list">
+            {% for pct in discount_options %}
+            <label class="filter-checkbox">
+                <input type="radio" name="discount" value="{{ pct }}"
+                       {% if selected_discount == pct|stringformat:"s" %}checked{% endif %}>
+                <span class="checkmark"></span>
+                <span class="label-text">{{ pct }}% and above</span>
+            </label>
+            {% endfor %}
+        </div>
+    </div>
+
+
+    {% if not mobile_mode %}
+    <!-- PRICE FILTER — desktop (unique IDs: minRange, maxRange, priceFill) -->
+    <div class="filter-section">
+
+        <div class="filter-header">
+            <span>PRICE</span>
+        </div>
+
+        <div class="price-range mt-2">
+            <div class="price-track"></div>
+            <div class="price-fill" id="priceFill"></div>
+
+            <input type="range" id="minRange"
+                min="{{ min_price_db }}"
+                max="{{ max_price_db }}"
+                value="{{ selected_min_price|default:min_price_db }}">
+
+            <input type="range" id="maxRange"
+                min="{{ min_price_db }}"
+                max="{{ max_price_db }}"
+                value="{{ selected_max_price|default:max_price_db }}">
+        </div>
+
+        <div class="d-flex justify-content-between small mt-2">
+            <span>₹<span id="minPriceText"></span></span>
+            <span>₹<span id="maxPriceText"></span></span>
+        </div>
+
+        <input type="hidden" name="min_price" id="min_price_input">
+        <input type="hidden" name="max_price" id="max_price_input">
+    </div>
+
+    {% else %}
+    <!-- PRICE FILTER — mobile (separate IDs: minRange-mob, maxRange-mob, priceFill-mob) -->
+    <div class="filter-section">
+
+        <div class="filter-header">
+            <span>PRICE</span>
+        </div>
+
+        <div class="price-range mt-2">
+            <div class="price-track"></div>
+            <div class="price-fill" id="priceFill-mob"></div>
+
+            <input type="range" id="minRange-mob"
+                min="{{ min_price_db }}"
+                max="{{ max_price_db }}"
+                value="{{ selected_min_price|default:min_price_db }}">
+
+            <input type="range" id="maxRange-mob"
+                min="{{ min_price_db }}"
+                max="{{ max_price_db }}"
+                value="{{ selected_max_price|default:max_price_db }}">
+        </div>
+
+        <div class="d-flex justify-content-between small mt-2">
+            <span>₹<span id="minPriceText-mob"></span></span>
+            <span>₹<span id="maxPriceText-mob"></span></span>
+        </div>
+
+    </div>
+    {% endif %}
+
+
+</form>
+
+

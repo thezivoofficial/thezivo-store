@@ -1,0 +1,38 @@
+{% load cart_extras %}
+{% if items %}
+    {% for item in items %}
+    <div class="sc-item" id="item-{{ item.sku.id }}">
+
+        <a href="{% url 'product_detail' item.sku.product.id %}">
+            <img src="{{ item.sku.product.image.url }}" class="sc-item-img">
+        </a>
+
+        <div class="sc-item-info">
+
+            <div class="sc-item-name">{{ item.sku.product.name }}</div>
+
+            <div class="sc-item-meta">
+                {% if item.sku.size %}Size: <strong>{{ item.sku.size }}</strong>{% endif %}
+                {% if item.sku.color %}&nbsp;·&nbsp; {{ item.sku.color }}{% endif %}
+            </div>
+
+            <div class="sc-item-bottom">
+                <div class="sc-item-qty">
+                    <button class="sc-qty-btn" data-action="decrease" data-sku="{{ item.sku.id }}">−</button>
+                    <span id="qty-{{ item.sku.id }}" class="sc-qty-val">{{ item.quantity }}</span>
+                    <button class="sc-qty-btn" data-action="increase" data-sku="{{ item.sku.id }}">+</button>
+                </div>
+                <div class="sc-item-price" id="price-{{ item.sku.id }}">
+                    ₹{{ item.quantity|multiply:item.sku.selling_price }}
+                </div>
+            </div>
+
+        </div>
+
+        <button class="sc-delete-btn" data-action="delete" data-sku="{{ item.sku.id }}" title="Remove">
+            &#x2715;
+        </button>
+
+    </div>
+    {% endfor %}
+{% endif %}

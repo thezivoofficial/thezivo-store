@@ -1,0 +1,406 @@
+{% extends "store/base.html" %}
+{% block title %}{{ action }} Address | TheZivo{% endblock %}
+
+{% block content %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+    .form-page {
+        background: #f8f7f5;
+        min-height: 100vh;
+        padding: 48px 0 80px;
+        font-family: 'DM Sans', sans-serif;
+    }
+
+    .form-card {
+        background: #fff;
+        border-radius: 16px;
+        border: 1px solid #ececec;
+        padding: 36px;
+        max-width: 560px;
+        margin: 0 auto;
+    }
+
+    .form-card h1 {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.6rem;
+        font-weight: 600;
+        color: #111;
+        margin-bottom: 28px;
+    }
+
+    .form-label {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: #888;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        margin-bottom: 6px;
+    }
+
+    .form-control {
+        border: 1.5px solid #e8e8e8;
+        border-radius: 8px;
+        padding: 11px 14px;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.9rem;
+        color: #111;
+        transition: border-color 0.15s;
+    }
+
+    .form-control:focus {
+        border-color: #111;
+        box-shadow: none;
+        outline: none;
+    }
+
+    .default-toggle {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 14px 16px;
+        border: 1.5px solid #e8e8e8;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: border-color 0.15s;
+        margin-top: 8px;
+    }
+
+    .default-toggle:hover { border-color: #111; }
+
+    .default-toggle input { display: none; }
+
+    .toggle-track {
+        width: 36px;
+        height: 20px;
+        border-radius: 10px;
+        background: #ddd;
+        position: relative;
+        transition: background 0.2s;
+        flex-shrink: 0;
+    }
+
+    .toggle-track::after {
+        content: '';
+        position: absolute;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #fff;
+        top: 3px;
+        left: 3px;
+        transition: left 0.2s;
+    }
+
+    input[type="checkbox"]:checked ~ .toggle-track {
+        background: #111;
+    }
+
+    input[type="checkbox"]:checked ~ .toggle-track::after {
+        left: 19px;
+    }
+
+    .toggle-label {
+        font-size: 0.88rem;
+        font-weight: 500;
+        color: #333;
+    }
+
+    .btn-save {
+        background: #111;
+        color: #fff;
+        border: none;
+        padding: 13px;
+        border-radius: 8px;
+        font-family: 'DM Sans', sans-serif;
+        font-weight: 600;
+        font-size: 0.9rem;
+        width: 100%;
+        cursor: pointer;
+        transition: background 0.15s;
+        margin-top: 8px;
+    }
+
+    .btn-save:hover { background: #333; }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.85rem;
+        color: #888;
+        text-decoration: none;
+        margin-bottom: 24px;
+        transition: color 0.15s;
+    }
+
+    .back-link:hover { color: #111; }
+</style>
+
+<div class="form-page">
+    <div class="container">
+
+        {% if request.GET.next == "checkout" %}
+        <a href="{% url 'checkout' %}" class="back-link">← Back to Checkout</a>
+        {% else %}
+        <a href="{% url 'manage_addresses' %}" class="back-link">← Back to Addresses</a>
+        {% endif %}
+
+        <div class="form-card">
+            <h1>{{ action }} Address</h1>
+
+            <form method="post">
+                {% csrf_token %}
+                {% if next %}
+                    <input type="hidden" name="next" value="{{ next }}">
+                {% elif request.GET.next %}
+                    <input type="hidden" name="next" value="{{ request.GET.next }}">
+                {% endif %}
+
+                <div class="row g-3">
+
+                    <div class="col-md-6">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" name="name" class="form-control"
+                               placeholder="John Doe"
+                               value="{{ address.name|default:'' }}" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Phone Number</label>
+                        <div class="input-group">
+                            <select name="country_code" id="addr-country-code"
+                                    class="form-select" style="max-width:110px;" required>
+                                <option value="+91" {% if not address.phone or address.phone|slice:":3" == "+91" %}selected{% endif %}>🇮🇳 +91</option>
+                                <option value="+1"  {% if address.phone|slice:":2" == "+1" and address.phone|slice:":3" != "+91" and address.phone|slice:":3" != "+61" %}selected{% endif %}>🇺🇸 +1</option>
+                                <option value="+44" {% if address.phone|slice:":3" == "+44" %}selected{% endif %}>🇬🇧 +44</option>
+                                <option value="+61" {% if address.phone|slice:":3" == "+61" %}selected{% endif %}>🇦🇺 +61</option>
+                            </select>
+                            <input type="tel" name="phone" id="addr-phone-input"
+                                class="form-control"
+                                placeholder="9876543210"
+                                value="" required>
+                        </div>
+                        <div id="phone-hint" style="font-size:0.72rem; color:#999; margin-top:4px;"></div>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Address</label>
+                        <textarea name="address" class="form-control"
+                                  rows="2"
+                                  placeholder="Flat / House No, Street, Area"
+                                  required>{{ address.address|default:'' }}</textarea>
+                    </div>
+
+                    <div class="col-md-5">
+                        <label class="form-label">City</label>
+                        <input type="text" name="city" class="form-control"
+                               placeholder="Chennai"
+                               value="{{ address.city|default:'' }}" required>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">State</label>
+                        <input type="text" name="state" class="form-control"
+                               placeholder="Tamil Nadu"
+                               value="{{ address.state|default:'' }}" required>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Pincode</label>
+                        <div style="position:relative;">
+                            <input type="text" name="pincode" id="pincode-input"
+                                class="form-control"
+                                placeholder="600001"
+                                maxlength="6"
+                                value="{{ address.pincode|default:'' }}"
+                                required
+                                autocomplete="off">
+                            <div id="pincode-spinner"
+                                style="display:none; position:absolute; right:10px; top:50%;
+                                        transform:translateY(-50%); font-size:0.75rem; color:#999;">
+                                ⏳
+                            </div>
+                        </div>
+                        <div id="pincode-status"
+                            style="font-size:0.72rem; margin-top:4px; min-height:16px;"></div>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="default-toggle" for="is_default">
+                            <input type="checkbox" id="is_default" name="is_default"
+                                   {% if address.is_default %}checked{% endif %}
+                                   onchange="syncToggle(this)">
+                            <div class="toggle-track" id="toggleTrack"></div>
+                            <span class="toggle-label">Set as default address</span>
+                        </label>
+                    </div>
+
+                    <div class="col-12">
+                        <button type="submit" class="btn-save">
+                            Save Address
+                        </button>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+<script>
+// Sync visual toggle with checkbox state
+function syncToggle(checkbox) {
+    const track = document.getElementById("toggleTrack");
+    if (checkbox.checked) {
+        track.style.background = "#111";
+    } else {
+        track.style.background = "#ddd";
+    }
+}
+
+// Init on load
+document.addEventListener("DOMContentLoaded", function() {
+    const cb = document.getElementById("is_default");
+    if (cb) syncToggle(cb);
+});
+
+document.addEventListener("DOMContentLoaded", function() {
+    var pincodeInput = document.getElementById("pincode-input");
+    var cityInput = document.querySelector('[name="city"]');
+    var stateInput = document.querySelector('[name="state"]');
+    var spinner = document.getElementById("pincode-spinner");
+    var status = document.getElementById("pincode-status");
+    var lookupTimer = null;
+
+    pincodeInput.addEventListener("input", function() {
+        var pin = pincodeInput.value.trim();
+
+        // Clear previous
+        clearTimeout(lookupTimer);
+        status.textContent = "";
+        status.style.color = "#999";
+
+        if (pin.length !== 6 || isNaN(pin)) return;
+
+        // Debounce — wait 500ms after user stops typing
+        lookupTimer = setTimeout(function() {
+            spinner.style.display = "block";
+            status.textContent = "Looking up...";
+            status.style.color = "#999";
+
+            fetch("https://api.postalpincode.in/pincode/" + pin)
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                spinner.style.display = "none";
+
+                if (data && data[0] && data[0].Status === "Success") {
+                    var postOffice = data[0].PostOffice[0];
+                    var city = postOffice.District;
+                    var state = postOffice.State;
+
+                    cityInput.value = city;
+                    stateInput.value = state;
+
+                    // Highlight filled fields briefly
+                    [cityInput, stateInput].forEach(function(el) {
+                        el.style.borderColor = "#2e7d32";
+                        el.style.background = "#f1f8f1";
+                        setTimeout(function() {
+                            el.style.borderColor = "";
+                            el.style.background = "";
+                        }, 2000);
+                    });
+
+                    status.textContent = "✓ " + postOffice.Name + ", " + city;
+                    status.style.color = "#2e7d32";
+
+                } else {
+                    status.textContent = "✗ Invalid pincode";
+                    status.style.color = "#c62828";
+                    cityInput.value = "";
+                    stateInput.value = "";
+                }
+            })
+            .catch(function() {
+                spinner.style.display = "none";
+                status.textContent = "Could not verify pincode";
+                status.style.color = "#999";
+            });
+        }, 500);
+    });
+});
+
+// ADD:
+var addrCountrySelect = document.getElementById("addr-country-code");
+var addrPhoneInput = document.getElementById("addr-phone-input");
+var phoneHint = document.getElementById("phone-hint");
+
+function updateAddrPhone() {
+    var code = addrCountrySelect.value;
+    if (code === "+91") {
+        addrPhoneInput.placeholder = "9876543210";
+        addrPhoneInput.maxLength = 10;
+        phoneHint.textContent = "10-digit number";
+    } else if (code === "+1") {
+        addrPhoneInput.placeholder = "2025550123";
+        addrPhoneInput.maxLength = 10;
+        phoneHint.textContent = "10-digit number";
+    } else if (code === "+44") {
+        addrPhoneInput.placeholder = "7911123456";
+        addrPhoneInput.maxLength = 11;
+        phoneHint.textContent = "10–11 digit number";
+    } else if (code === "+61") {
+        addrPhoneInput.placeholder = "412345678";
+        addrPhoneInput.maxLength = 9;
+        phoneHint.textContent = "9-digit number";
+    }
+}
+
+updateAddrPhone();
+addrCountrySelect.addEventListener("change", updateAddrPhone);
+
+// Strip country code from stored phone on edit
+var rawPhone = "{{ address.phone|default:'' }}";
+if (rawPhone) {
+    var codes = ["+91", "+44", "+61", "+1"];
+    var stripped = rawPhone;
+    for (var i = 0; i < codes.length; i++) {
+        if (rawPhone.startsWith(codes[i])) {
+            stripped = rawPhone.slice(codes[i].length);
+            break;
+        }
+    }
+    addrPhoneInput.value = stripped;
+}
+
+document.querySelector("form").addEventListener("submit", function(e) {
+    var code = addrCountrySelect.value;
+    var phone = addrPhoneInput.value.trim();
+
+    if (!/^\d+$/.test(phone)) {
+        e.preventDefault();
+        phoneHint.textContent = "✗ Digits only, no spaces or symbols";
+        phoneHint.style.color = "#c62828";
+        addrPhoneInput.focus();
+        return;
+    }
+
+    var valid = false;
+    if (code === "+91" || code === "+1") valid = phone.length === 10;
+    else if (code === "+44") valid = phone.length === 10 || phone.length === 11;
+    else if (code === "+61") valid = phone.length === 9;
+    else valid = phone.length >= 6 && phone.length <= 15;
+
+    if (!valid) {
+        e.preventDefault();
+        var hints = { "+91": "10 digits", "+1": "10 digits", "+44": "10–11 digits", "+61": "9 digits" };
+        phoneHint.textContent = "✗ " + (hints[code] || "6–15 digits") + " required for " + code;
+        phoneHint.style.color = "#c62828";
+        addrPhoneInput.focus();
+    }
+});
+</script>
+
+{% endblock %}

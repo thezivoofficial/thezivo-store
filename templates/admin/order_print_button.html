@@ -1,0 +1,13 @@
+{% if print_url %}
+<div style="display:flex; justify-content:flex-end; margin-bottom:16px;">
+  <a href="{{ print_url }}"
+     target="_blank"
+     style="display:inline-flex; align-items:center; gap:6px;
+            padding:8px 18px; background:#8b5cf6; color:#fff;
+            border-radius:8px; font-size:13px; font-weight:600;
+            text-decoration:none; white-space:nowrap;
+            box-shadow:0 1px 4px rgba(139,92,246,.3);">
+    🖨️ Print Invoice
+  </a>
+</div>
+{% endif %}

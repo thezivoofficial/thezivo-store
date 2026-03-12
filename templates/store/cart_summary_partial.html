@@ -1,0 +1,74 @@
+{% if items %}
+
+<div style="padding: 24px;">
+
+    <h5 style="font-family:'Playfair Display',serif; font-size:1rem; font-weight:600;
+               color:#111; margin-bottom:20px; letter-spacing:-0.2px;">
+        Order Summary
+    </h5>
+
+    <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+        <span style="font-size:0.84rem; color:#888;">Subtotal</span>
+        <span style="font-size:0.84rem; font-weight:600; color:#111;">₹{{ cart_subtotal }}</span>
+    </div>
+
+    <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
+        <span style="font-size:0.84rem; color:#888;">Delivery</span>
+        <span style="font-size:0.84rem; font-weight:600;">
+            {% if delivery_charge == 0 %}
+                <span style="color:#2e7d32;">FREE</span>
+            {% else %}
+                <span style="color:#111;">₹{{ delivery_charge }}</span>
+            {% endif %}
+        </span>
+    </div>
+
+    {% if free_delivery_remaining > 0 %}
+    <div class="free-delivery-cart pending" style="margin-bottom:16px;">
+        Add ₹{{ free_delivery_remaining }} more for free delivery
+    </div>
+    {% else %}
+    <div class="free-delivery-cart success" style="margin-bottom:16px;">
+        🎉 You've unlocked free delivery!
+    </div>
+    {% endif %}
+
+    <div style="border-top:1px solid #f0f0f0; padding-top:14px; margin-bottom:20px;
+                display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-weight:700; font-size:1rem; color:#111;">Total</span>
+        <span style="font-weight:700; font-size:1.1rem; color:#111;
+                     font-family:'Playfair Display',serif;">
+            ₹{{ cart_total }}
+        </span>
+    </div>
+
+    <a href="{% url 'checkout' %}"
+       style="display:block; width:100%; padding:13px; background:#111; color:#fff;
+              text-align:center; border-radius:10px; font-size:0.88rem; font-weight:600;
+              text-decoration:none; font-family:'DM Sans',sans-serif;
+              transition:background 0.15s; letter-spacing:0.2px;"
+       onmouseover="this.style.background='#333'"
+       onmouseout="this.style.background='#111'">
+        Proceed to Checkout
+    </a>
+
+    <a id="continueShoppingBtn" href="{% url 'home' %}"
+       style="display:block; width:100%; padding:11px; margin-top:10px;
+              background:#fff; color:#111; text-align:center; border-radius:10px;
+              font-size:0.84rem; font-weight:500; text-decoration:none;
+              border:1.5px solid #e0e0e0; font-family:'DM Sans',sans-serif;
+              transition:border-color 0.15s;"
+       onmouseover="this.style.borderColor='#111'"
+       onmouseout="this.style.borderColor='#e0e0e0'">
+        Continue Shopping
+    </a>
+    <script>
+    (function() {
+        const prev = sessionStorage.getItem("lastNonCartPage");
+        if (prev) document.getElementById("continueShoppingBtn").href = prev;
+    })();
+    </script>
+
+</div>
+
+{% endif %}

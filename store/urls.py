@@ -1,0 +1,46 @@
+from . import views
+from django.urls import path, include
+from .views import home, product_detail, add_to_cart, view_cart, checkout
+from django.contrib import admin
+from django.conf import settings
+from django.conf.urls.static import static
+
+urlpatterns = [
+    path("", home, name="home"),
+    path("product/<int:product_id>/", product_detail, name="product_detail"),
+    path("add-to-cart/", add_to_cart, name="add_to_cart"),
+    path("cart/", view_cart, name="view_cart"),
+    path("checkout/", checkout, name="checkout"),
+    path("men/", views.category_products, {"gender": "men"}, name="men"),
+    path("men/<str:category>/", views.category_products, {"gender": "men"}, name="men_category"),
+    path("women/", views.category_products, {"gender": "women"}, name="women"),
+    path("women/<str:category>/", views.category_products, {"gender": "women"}, name="women_category"),
+    path("wishlist-toggle/", views.toggle_wishlist, name="toggle_wishlist"),
+    path("create-razorpay-order/", views.create_razorpay_order, name="create_razorpay_order"),
+    path("verify-payment/", views.verify_payment, name="verify_payment"),
+    path("order-success/<int:order_id>/", views.order_success, name="order_success"),
+    path("cart-ajax/", views.cart_ajax, name="cart_ajax"),
+    path("login/", views.login_view, name="login"),
+    path("signup/", views.signup_view, name="signup"),
+    path("logout/", views.logout_view, name="logout"),
+    path("profile/", views.profile, name="profile"),
+    path("profile/update/", views.update_profile, name="update_profile"),
+    path("my-orders/", views.my_orders, name="my_orders"),
+    path("notify-me/<int:product_id>/", views.notify_me, name="notify_me"),
+    path("search/", views.search_products, name="search_products"),
+    path("search-suggest/", views.search_suggest, name="search_suggest"),
+    path("cart/update/", views.update_cart, name="update_cart"),
+    path("wishlist/", views.wishlist_page, name="wishlist"),
+    path("get-product-skus/<int:product_id>/", views.get_product_skus),
+    path("change-cart-size/", views.change_cart_size, name="change_cart_size"),
+    path("orders/<int:order_id>/", views.order_detail, name="order_detail"),
+    path("orders/<int:order_id>/cancel/", views.cancel_order, name="cancel_order"),
+    path("orders/<int:order_id>/invoice/", views.download_invoice, name="download_invoice"),
+    path("addresses/", views.manage_addresses, name="manage_addresses"),
+    path("addresses/add/", views.add_address, name="add_address"),
+    path("addresses/<int:address_id>/edit/", views.edit_address, name="edit_address"),
+    path("addresses/<int:address_id>/delete/", views.delete_address, name="delete_address"),
+    path("addresses/<int:address_id>/set-default/", views.set_default_address, name="set_default_address"),
+
+
+]

@@ -1,0 +1,53 @@
+{% extends "store/base.html" %}
+
+{% block title %}Login | TheZivo{% endblock %}
+
+{% block content %}
+<div class="container mt-5" style="max-width: 420px;">
+    <div class="bg-white p-4 rounded shadow-sm">
+
+        <h4 class="mb-4 text-center">Login</h4>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-danger">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="mb-3">
+                <label class="form-label">Phone Number</label>
+                <input type="tel"
+                       name="phone"
+                       class="form-control"
+                       placeholder="+919XXXXXXXXX"
+                       required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Password</label>
+                <input type="password"
+                       name="password"
+                       class="form-control"
+                       required>
+            </div>
+
+            <button type="submit" class="btn btn-dark w-100">
+                Login
+            </button>
+        </form>
+
+        <div class="text-center mt-3">
+            <small>
+                Don’t have an account?
+                <a href="{% url 'signup' %}">Sign up</a>
+            </small>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

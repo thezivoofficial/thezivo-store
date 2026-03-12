@@ -1,0 +1,72 @@
+/* ── Prevent horizontal overflow — keeps fixed sidebar from "moving" ──── */
+html, body {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+/* Content pane must not expand the viewport */
+#main   { min-width: 0 !important; overflow-x: hidden; }
+#content { max-width: 100%; overflow-x: hidden; }
+
+/* ── Changelist table — always scrollable horizontally ────────────────── */
+.results {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* list_editable inputs — compact so table doesn't explode in width */
+#result_list input[type="text"],
+#result_list input[type="number"] {
+  width: 80px !important;
+  min-width: 60px;
+  padding: 4px 6px !important;
+  font-size: 12px !important;
+}
+
+/* ── Zivo Admin — shared badge classes ────────────────────────────────── */
+.zivo-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+}
+.zivo-green  { background: #10b981; }
+.zivo-yellow { background: #f59e0b; }
+.zivo-red    { background: #ef4444; }
+.zivo-blue   { background: #3b82f6; }
+.zivo-purple { background: #8b5cf6; }
+
+/* ── Ensure all admin form inputs have visible borders ────────────────── */
+/* Targets both standard Django admin (.form-row) and unfold layouts      */
+input[type="text"]:not([class*="border"]):not([type="hidden"]),
+input[type="email"]:not([class*="border"]),
+input[type="password"]:not([class*="border"]),
+input[type="tel"]:not([class*="border"]),
+input[type="number"]:not([class*="border"]),
+select:not([class*="border"]),
+textarea:not([class*="border"]) {
+  border: 1px solid #d1d5db !important;
+  border-radius: 6px !important;
+  padding: 6px 10px !important;
+}
+.dark input[type="text"]:not([class*="border"]),
+.dark input[type="email"]:not([class*="border"]),
+.dark input[type="password"]:not([class*="border"]),
+.dark input[type="tel"]:not([class*="border"]),
+.dark input[type="number"]:not([class*="border"]),
+.dark select:not([class*="border"]),
+.dark textarea:not([class*="border"]) {
+  border-color: #374151 !important;
+  background-color: #111827 !important;
+}
+
+/* ── Highlight products with no SKUs in changelist ────────────────────── */
+tr:has(td .zivo-red) {
+  background-color: #fff8f8 !important;
+}
+.dark tr:has(td .zivo-red) {
+  background-color: rgba(239,68,68,.06) !important;
+}

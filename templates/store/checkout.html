@@ -1,0 +1,889 @@
+{% extends "store/base.html" %}
+{% block title %}Checkout | TheZivo{% endblock %}
+
+{% block content %}
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+    .checkout-page {
+        background: #f8f7f5;
+        min-height: 100vh;
+        padding: 48px 0 80px;
+        font-family: 'DM Sans', sans-serif;
+    }
+
+    .checkout-header {
+        margin-bottom: 32px;
+    }
+
+    .checkout-header h1 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2rem;
+        font-weight: 600;
+        color: #111;
+        letter-spacing: -0.3px;
+        margin-bottom: 4px;
+    }
+
+    .checkout-header p {
+        color: #999;
+        font-size: 0.88rem;
+        font-weight: 300;
+    }
+
+    /* STEP INDICATOR */
+    .checkout-steps {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        margin-bottom: 36px;
+    }
+
+    .step {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: #bbb;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+    }
+
+    .step.active { color: #111; }
+    .step.done { color: #2e7d32; }
+
+    .step-dot {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: #e0e0e0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.6rem;
+        color: #fff;
+        flex-shrink: 0;
+    }
+
+    .step.active .step-dot {
+        background: #111;
+    }
+
+    .step.done .step-dot {
+        background: #2e7d32;
+    }
+
+    .step-line {
+        flex: 1;
+        height: 1px;
+        background: #e0e0e0;
+        margin: 0 12px;
+    }
+
+    /* CARDS */
+    .checkout-card {
+        background: #fff;
+        border-radius: 16px;
+        border: 1px solid #ececec;
+        margin-bottom: 16px;
+        overflow: hidden;
+        animation: fadeUp 0.35s ease both;
+    }
+
+    .checkout-card:nth-child(2) { animation-delay: 80ms; }
+    .checkout-card:nth-child(3) { animation-delay: 160ms; }
+
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(12px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .card-title {
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #aaa;
+        text-transform: uppercase;
+        letter-spacing: 0.9px;
+        padding: 20px 24px 0;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .card-title a, .card-title button {
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: #555;
+        text-decoration: none;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        padding: 4px 10px;
+        background: none;
+        cursor: pointer;
+        letter-spacing: 0;
+        text-transform: none;
+        transition: background 0.15s, border-color 0.15s;
+    }
+
+    .card-title a:hover, .card-title button:hover {
+        background: #f5f5f5;
+        border-color: #bbb;
+        color: #111;
+    }
+
+    .card-body {
+        padding: 0 24px 24px;
+    }
+
+    /* SAVED ADDRESS CARDS */
+    .saved-address-card {
+        border: 1.5px solid #e8e8e8;
+        border-radius: 10px;
+        padding: 14px 16px;
+        margin-bottom: 10px;
+        cursor: pointer;
+        transition: border-color 0.15s, background 0.15s;
+    }
+
+    .saved-address-card:hover {
+        border-color: #aaa;
+        background: #fafafa;
+    }
+
+    .saved-address-card.selected {
+        border-color: #111;
+        background: #fafafa;
+    }
+
+    .default-badge {
+        font-size: 0.65rem;
+        font-weight: 600;
+        background: #111;
+        color: #fff;
+        padding: 2px 8px;
+        border-radius: 4px;
+        white-space: nowrap;
+    }
+
+    .addr-action-btn {
+        font-size: 0.7rem;
+        font-weight:500;
+        color: #555;
+        text-decoration: none;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        padding: 3px 8px;
+        white-space: nowrap;
+        display: inline-block;
+        transition: background 0.15s;
+    }
+
+    .addr-action-btn:hover {
+        background: #f5f5f5;
+        color: #111;
+        border-color: #bbb;
+    }
+
+    .add-new-addr-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        font-size: 0.82rem;
+        color: #777;
+        font-weight: 500;
+        text-decoration: none;
+        border: 1.5px dashed #d0d0d0;
+        border-radius: 10px;
+        padding: 12px;
+        margin-top: 4px;
+        transition: border-color 0.15s, background 0.15s, color 0.15s;
+    }
+
+    .add-new-addr-btn:hover {
+        border-color: #888;
+        background: #f5f5f5;
+        color: #111;
+    }
+
+    /* FORM FIELDS */
+    .field-group {
+        margin-bottom: 16px;
+    }
+
+    .field-label {
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: #aaa;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        margin-bottom: 6px;
+        display: block;
+    }
+
+    .field-input {
+        width: 100%;
+        border: 1.5px solid #e8e8e8;
+        border-radius: 8px;
+        padding: 11px 14px;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.9rem;
+        color: #111;
+        background: #fff;
+        transition: border-color 0.15s;
+        outline: none;
+    }
+
+    .field-input:focus {
+        border-color: #111;
+    }
+
+    textarea.field-input {
+        resize: none;
+        min-height: 80px;
+    }
+
+    .field-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .field-row-3 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 12px;
+    }
+
+    /* PHONE INPUT */
+    .phone-group {
+        display: flex;
+        gap: 8px;
+    }
+
+    .phone-group select {
+        width: 110px;
+        flex-shrink: 0;
+        border: 1.5px solid #e8e8e8;
+        border-radius: 8px;
+        padding: 11px 10px;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.88rem;
+        color: #111;
+        background: #fff;
+        outline: none;
+        transition: border-color 0.15s;
+        cursor: pointer;
+    }
+
+    .phone-group select:focus { border-color: #111; }
+
+    .phone-group input { flex: 1; }
+
+    /* PAYMENT METHODS */
+    .payment-option {
+        border: 1.5px solid #e8e8e8;
+        border-radius: 10px;
+        padding: 14px 16px;
+        margin-bottom: 10px;
+        cursor: pointer;
+        transition: border-color 0.15s, background 0.15s;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .payment-option:hover {
+        border-color: #aaa;
+        background: #fafafa;
+    }
+
+    .payment-option.selected {
+        border-color: #111;
+        background: #fafafa;
+    }
+
+    .payment-option input[type="radio"] {
+        accent-color: #111;
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+    }
+
+    .payment-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: #f5f5f5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+
+    .payment-label {
+        font-size: 0.88rem;
+        font-weight: 500;
+        color: #111;
+    }
+
+    .payment-sublabel {
+        font-size: 0.75rem;
+        color: #999;
+        margin-top: 1px;
+    }
+
+    /* PAY BUTTON */
+    .pay-btn {
+        background: #111;
+        color: #fff;
+        border: none;
+        padding: 15px;
+        border-radius: 10px;
+        font-family: 'DM Sans', sans-serif;
+        font-weight: 600;
+        font-size: 0.95rem;
+        width: 100%;
+        cursor: pointer;
+        transition: background 0.2s, transform 0.15s;
+        letter-spacing: 0.3px;
+        margin-top: 8px;
+    }
+
+    .pay-btn:hover {
+        background: #333;
+        transform: translateY(-1px);
+    }
+
+    /* ORDER SUMMARY (RIGHT) */
+    .summary-card {
+        background: #fff;
+        border-radius: 16px;
+        border: 1px solid #ececec;
+        overflow: hidden;
+        position: sticky;
+        top: 90px;
+        animation: fadeUp 0.35s ease both;
+        animation-delay: 200ms;
+    }
+
+    .summary-title {
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #aaa;
+        text-transform: uppercase;
+        letter-spacing: 0.9px;
+        padding: 20px 24px 16px;
+        border-bottom: 1px solid #f5f5f5;
+    }
+
+    .summary-items {
+        padding: 16px 24px;
+        max-height: 280px;
+        overflow-y: auto;
+    }
+
+    .summary-items::-webkit-scrollbar { width: 3px; }
+    .summary-items::-webkit-scrollbar-thumb { background: #e0e0e0; border-radius: 2px; }
+
+    .summary-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 14px;
+    }
+
+    .summary-item:last-child { margin-bottom: 0; }
+
+    .summary-item-img {
+        width: 48px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 6px;
+        flex-shrink: 0;
+        background: #f0f0f0;
+    }
+
+    .summary-item-name {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: #111;
+        line-height: 1.3;
+    }
+
+    .summary-item-meta {
+        font-size: 0.75rem;
+        color: #999;
+        margin-top: 2px;
+    }
+
+    .summary-item-price {
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: #111;
+        white-space: nowrap;
+        margin-left: auto;
+    }
+
+    .summary-totals {
+        padding: 16px 24px;
+        border-top: 1px solid #f5f5f5;
+    }
+
+    .totals-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.85rem;
+        padding: 5px 0;
+        color: #666;
+    }
+
+    .totals-row.final {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: #111;
+        border-top: 1px solid #f0f0f0;
+        margin-top: 10px;
+        padding-top: 14px;
+    }
+
+    .delivery-free { color: #2e7d32; font-weight: 600; }
+
+    .free-delivery-notice {
+        font-size: 0.75rem;
+        padding: 8px 12px;
+        border-radius: 7px;
+        margin-top: 8px;
+        text-align: center;
+    }
+
+    .free-delivery-notice.pending {
+        background: #fff8e1;
+        color: #e65100;
+    }
+
+    .free-delivery-notice.success {
+        background: #e8f5e9;
+        color: #2e7d32;
+    }
+
+    .secure-note {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        font-size: 0.75rem;
+        color: #bbb;
+        padding: 14px 24px;
+        border-top: 1px solid #f5f5f5;
+    }
+
+    @media (max-width: 480px) {
+        .addr-btn-label { display: none; }
+    }
+
+    @media (max-width: 991px) {
+        .checkout-page { padding: 14px 0 80px; }
+        .checkout-header { margin-bottom: 18px; }
+        .checkout-header h1 { font-size: 1.6rem; }
+        .checkout-steps { margin-bottom: 20px; }
+        .card-title { padding: 14px 16px 0; }
+        .card-body { padding: 0 16px 18px; }
+        .field-row, .field-row-3 { grid-template-columns: 1fr; }
+        .summary-card { position: static; margin: 0 0 16px; }
+        /* summary col hidden on mobile — JS moves the card into the form */
+        .checkout-summary-col { display: none; }
+    }
+</style>
+
+<div class="checkout-page">
+    <div class="container">
+
+        <div class="checkout-header">
+            <h1>Checkout</h1>
+            <p>Complete your order</p>
+        </div>
+
+        <div class="row g-4">
+
+            <!-- LEFT: FORM -->
+            <div class="col-lg-7">
+
+                <form method="post" id="checkoutForm">
+                    {% csrf_token %}
+
+                    <!-- DELIVERY ADDRESS -->
+                    <div class="checkout-card">
+                        <div class="card-title">
+                            Delivery Address
+                            <div class="d-flex gap-2">
+                                <div class="d-flex gap-2">
+                                    <a href="{% url 'manage_addresses' %}?next=checkout" title="Manage Addresses">📋 <span class="addr-btn-label">Manage</span></a>
+                                    <a href="{% url 'add_address' %}?next=checkout" title="Add New Address">＋ <span class="addr-btn-label">Add New</span></a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+
+                            <!-- DEFAULT ADDRESS -->
+                            {% if default_address %}
+                            <div class="saved-address-card selected"
+                                 id="addr-card-{{ default_address.id }}"
+                                 onclick="selectAddress({{ default_address.id }}, '{{ default_address.name }}', '{{ default_address.phone }}', '{{ default_address.address|escapejs }}', '{{ default_address.city }}', '{{ default_address.state }}', '{{ default_address.pincode }}')">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div style="flex:1; min-width:0;">
+                                        <div style="font-weight:600; font-size:0.9rem;">{{ default_address.name }}</div>
+                                        <div style="font-size:0.82rem; color:#666; margin-top:3px; line-height:1.5;">
+                                            {{ default_address.address }}, {{ default_address.city }},
+                                            {{ default_address.state }} — {{ default_address.pincode }}
+                                        </div>
+                                        <div style="font-size:0.78rem; color:#999; margin-top:3px;">
+                                            📞 {{ default_address.phone }}
+                                        </div>
+                                    </div>
+                                    <div class="d-flex flex-column align-items-end gap-2" style="flex-shrink:0; margin-left:12px;">
+                                        <span class="default-badge">Default</span>
+                                        <a href="{% url 'edit_address' default_address.id %}?next=checkout"
+                                           onclick="event.stopPropagation()"
+                                           class="addr-action-btn">✎ Edit</a>
+                                    </div>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div style="font-size:0.85rem; color:#999; padding:8px 0 12px;">
+                                No saved address. Add one above or fill in below.
+                            </div>
+                            {% endif %}
+
+                        </div>
+                    </div>
+
+                    <!-- CONTACT DETAILS -->
+                    <div class="checkout-card">
+                        <div class="card-title">Contact & Delivery Details</div>
+                        <div class="card-body">
+
+                            <div class="field-group">
+                                <label class="field-label">Full Name</label>
+                                <input type="text" name="name" class="field-input"
+                                       placeholder="John Doe"
+                                       value="{{ form_data.name|default:'' }}" required>
+                            </div>
+
+                            <div class="field-group">
+                                <label class="field-label">Mobile Number</label>
+                                <div class="phone-group">
+                                    <select name="country_code" id="country-code">
+                                        <option value="+91" {% if form_data.country_code == "+91" or not form_data %}selected{% endif %}>🇮🇳 +91</option>
+                                        <option value="+1"  {% if form_data.country_code == "+1"  %}selected{% endif %}>🇺🇸 +1</option>
+                                        <option value="+44" {% if form_data.country_code == "+44" %}selected{% endif %}>🇬🇧 +44</option>
+                                        <option value="+61" {% if form_data.country_code == "+61" %}selected{% endif %}>🇦🇺 +61</option>
+                                    </select>
+                                    <input type="tel" name="phone" id="phone-input"
+                                           class="field-input"
+                                           placeholder="10-digit number"
+                                           value="{{ form_data.phone|default:'' }}" required>
+                                </div>
+                            </div>
+
+                            <div class="field-group">
+                                <label class="field-label">Delivery Address</label>
+                                <textarea name="address" class="field-input"
+                                          placeholder="Flat / House No, Street, Area"
+                                          required>{{ form_data.address|default:'' }}</textarea>
+                            </div>
+
+                            <div class="field-row-3">
+                                <div class="field-group">
+                                    <label class="field-label">City</label>
+                                    <input type="text" name="city" class="field-input"
+                                           placeholder="Chennai"
+                                           value="{{ form_data.city|default:'' }}">
+                                </div>
+                                <div class="field-group">
+                                    <label class="field-label">State</label>
+                                    <input type="text" name="state" class="field-input"
+                                           placeholder="Tamil Nadu"
+                                           value="{{ form_data.state|default:'' }}">
+                                </div>
+                                <div class="field-group">
+                                    <label class="field-label">Pincode</label>
+                                    <input type="text" name="pincode" class="field-input"
+                                           placeholder="600001"
+                                           maxlength="10"
+                                           value="{{ form_data.pincode|default:'' }}">
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- PAYMENT -->
+                    <div class="checkout-card">
+                        <div class="card-title">Payment Method</div>
+                        <div class="card-body">
+
+                            {% if cod_enabled %}
+                            <label class="payment-option {% if form_data.payment_method == 'cod' or not form_data %}selected{% endif %}"
+                                   id="pay-opt-cod"
+                                   onclick="selectPayment('cod')">
+                                <input type="radio" name="payment_method" value="cod"
+                                       {% if form_data.payment_method == 'cod' or not form_data %}checked{% endif %}>
+                                <div class="payment-icon">💵</div>
+                                <div>
+                                    <div class="payment-label">Cash on Delivery</div>
+                                    <div class="payment-sublabel">Pay when your order arrives</div>
+                                </div>
+                            </label>
+                            {% endif %}
+
+                            <label class="payment-option {% if form_data.payment_method == 'online' or not cod_enabled %}selected{% endif %}"
+                                   id="pay-opt-online"
+                                   onclick="selectPayment('online')">
+                                <input type="radio" name="payment_method" value="online"
+                                       {% if form_data.payment_method == 'online' or not cod_enabled %}checked{% endif %}>
+                                <div class="payment-icon">💳</div>
+                                <div>
+                                    <div class="payment-label">Online Payment</div>
+                                    <div class="payment-sublabel">UPI · Cards · Net Banking</div>
+                                </div>
+                            </label>
+
+                        </div>
+                    </div>
+
+                    <button type="submit" class="pay-btn" id="pay-btn">
+                        {% if cod_enabled %}Place Order{% else %}Pay ₹{{ final_amount }}{% endif %}
+                    </button>
+
+                </form>
+
+            </div>
+
+            <!-- RIGHT: ORDER SUMMARY -->
+            <div class="col-lg-5 checkout-summary-col">
+                <div class="summary-card">
+
+                    <div class="summary-title">Order Summary</div>
+
+                    <div class="summary-items" id="checkoutItemsContainer">
+                        {% for item in items %}
+                        <div class="summary-item">
+                            {% if item.sku.product.image %}
+                            <img src="{{ item.sku.product.image.url }}"
+                                 class="summary-item-img"
+                                 alt="{{ item.sku.product.name }}">
+                            {% else %}
+                            <div class="summary-item-img"
+                                 style="background:linear-gradient(135deg,#f0f0f0,#e0e0e0);
+                                        display:flex;align-items:center;justify-content:center;
+                                        color:#ccc;font-size:1rem;">
+                                🛍
+                            </div>
+                            {% endif %}
+                            <div style="flex:1; min-width:0;">
+                                <div class="summary-item-name">{{ item.sku.product.name }}</div>
+                                <div class="summary-item-meta">
+                                    Size: {{ item.sku.size }} · Qty: {{ item.quantity }}
+                                </div>
+                            </div>
+                            <div class="summary-item-price">₹{{ item.subtotal }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="summary-totals" id="checkoutTotals">
+
+                        <div class="totals-row">
+                            <span>Subtotal</span>
+                            <span>₹{{ total }}</span>
+                        </div>
+
+                        <div class="totals-row">
+                            <span>Delivery</span>
+                            <span>
+                                {% if delivery_charge == 0 %}
+                                    <span class="delivery-free">FREE</span>
+                                {% else %}
+                                    ₹{{ delivery_charge }}
+                                {% endif %}
+                            </span>
+                        </div>
+
+                        {% if free_delivery_remaining > 0 %}
+                        <div class="free-delivery-notice pending">
+                            Add ₹{{ free_delivery_remaining }} more for free delivery
+                        </div>
+                        {% else %}
+                        <div class="free-delivery-notice success">
+                            🎉 Free delivery unlocked!
+                        </div>
+                        {% endif %}
+
+                        <div class="totals-row final">
+                            <span>Amount Payable</span>
+                            <span>₹{{ final_amount }}</span>
+                        </div>
+
+                    </div>
+
+                    <div class="secure-note">
+                        🔒 Secure & encrypted checkout
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+{% if online_payment %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    fetch("{% url 'create_razorpay_order' %}", {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": "{{ csrf_token }}",
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: "order_id={{ order.id }}"
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+        var options = {
+            key: data.key,
+            amount: data.amount,
+            currency: "INR",
+            name: "TheZivo",
+            description: "Order Payment",
+            order_id: data.razorpay_order_id,
+            handler: function(response) {
+                fetch("{% url 'verify_payment' %}", {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": "{{ csrf_token }}",
+                        "Content-Type": "application/x-www-form-urlencoded"
+                    },
+                    body:
+                        "razorpay_payment_id=" + response.razorpay_payment_id +
+                        "&razorpay_order_id=" + response.razorpay_order_id +
+                        "&razorpay_signature=" + response.razorpay_signature +
+                        "&order_id={{ order.id }}"
+                })
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    if (data.status === "success") {
+                        window.location.href = "/order-success/{{ order.id }}/";
+                    } else {
+                        alert("Payment failed");
+                    }
+                });
+            }
+        };
+        var rzp = new Razorpay(options);
+        rzp.open();
+    });
+});
+</script>
+{% endif %}
+
+<script>
+// Phone placeholder
+document.addEventListener("DOMContentLoaded", function() {
+    var countrySelect = document.getElementById("country-code");
+    var phoneInput = document.getElementById("phone-input");
+
+    function updatePhone() {
+        var code = countrySelect.value;
+        if (code === "+91" || code === "+1") {
+            phoneInput.placeholder = "10-digit number";
+            phoneInput.maxLength = 10;
+        } else if (code === "+44") {
+            phoneInput.placeholder = "10–11 digit number";
+            phoneInput.maxLength = 11;
+        } else if (code === "+61") {
+            phoneInput.placeholder = "9-digit number";
+            phoneInput.maxLength = 9;
+        } else {
+            phoneInput.placeholder = "Enter phone number";
+            phoneInput.removeAttribute("maxLength");
+        }
+    }
+
+    updatePhone();
+    countrySelect.addEventListener("change", updatePhone);
+});
+
+// Select saved address
+function selectAddress(id, name, phone, address, city, state, pincode) {
+    document.querySelector('[name="name"]').value = name;
+
+    var countryCodes = ["+91", "+1", "+44", "+61"];
+    var stripped = phone;
+    var detectedCode = "+91";
+
+    for (var i = 0; i < countryCodes.length; i++) {
+        if (phone.startsWith(countryCodes[i])) {
+            stripped = phone.slice(countryCodes[i].length);
+            detectedCode = countryCodes[i];
+            break;
+        }
+    }
+
+    // Set country code and trigger change so maxLength updates first
+    var countrySelect = document.querySelector('[name="country_code"]');
+    countrySelect.value = detectedCode;
+    countrySelect.dispatchEvent(new Event("change"));
+
+    // Now set phone — maxLength is already correct
+    document.querySelector('[name="phone"]').value = stripped;
+    document.querySelector('[name="address"]').value = address;
+    document.querySelector('[name="city"]').value = city;
+    document.querySelector('[name="state"]').value = state;
+    document.querySelector('[name="pincode"]').value = pincode;
+
+    document.querySelectorAll(".saved-address-card").forEach(function(card) {
+        card.classList.remove("selected");
+    });
+    var target = document.getElementById("addr-card-" + id);
+    if (target) target.classList.add("selected");
+}
+
+
+// Mobile: move order summary between contact details and payment
+(function () {
+    if (window.innerWidth >= 992) return;
+    var summaryCard = document.querySelector('.summary-card');
+    var paymentRadio = document.querySelector('[name="payment_method"]');
+    var paymentCard = paymentRadio ? paymentRadio.closest('.checkout-card') : null;
+    if (summaryCard && paymentCard) {
+        paymentCard.parentNode.insertBefore(summaryCard, paymentCard);
+    }
+})();
+
+// Payment option highlight + button text
+function selectPayment(method) {
+    document.querySelectorAll(".payment-option").forEach(function(el) {
+        el.classList.remove("selected");
+    });
+    var opt = document.getElementById("pay-opt-" + method);
+    if (opt) opt.classList.add("selected");
+
+    var btn = document.getElementById("pay-btn");
+    if (btn) {
+        btn.textContent = (method === "cod")
+            ? "Place Order"
+            : "Pay ₹{{ final_amount }}";
+    }
+}
+</script>
+
+{% endblock %}

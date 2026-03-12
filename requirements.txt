@@ -1,0 +1,16 @@
+Django==5.2.9
+django-axes==8.3.1
+django-unfold==0.81.0
+pillow==12.0.0
+psycopg2-binary==2.9.11
+python-decouple==3.8
+qrcode==8.2
+razorpay==2.0.0
+reportlab==4.4.10
+requests==2.32.5
+twilio==9.9.0
+weasyprint==68.1
+gunicorn==23.0.0
+whitenoise==6.9.0
+cloudinary==1.44.0
+django-cloudinary-storage==0.3.0

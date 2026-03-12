@@ -1,0 +1,26 @@
+{% load cart_extras %}
+
+{% for item in items %}
+
+<div class="d-flex mb-3">
+
+    <img src="{{ item.sku.product.image.url }}"
+         style="width:60px;height:80px;object-fit:cover;border-radius:6px;">
+
+    <div class="ms-3 flex-grow-1">
+        <div class="fw-semibold">
+            {{ item.sku.product.name }}
+        </div>
+
+        <small class="text-muted">
+            Size: {{ item.sku.size }} × {{ item.quantity }}
+        </small>
+    </div>
+
+    <div class="fw-semibold">
+        ₹{{ item.subtotal }}
+    </div>
+
+</div>
+
+{% endfor %}

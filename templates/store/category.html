@@ -1,0 +1,737 @@
+{% extends "store/base.html" %}
+
+{% block content %}
+
+<div class="row">
+    <!-- LEFT COLUMN (FILTERS + HEADINGS) -->
+    <div class="col-lg-2 col-md-3 border-end px-0 d-none d-md-block">
+
+        <!-- Breadcrumb -->
+        <div class="small text-muted mb-2 ps-2">
+            Home / {{ title }}
+        </div>
+
+        <!-- Title -->
+        <h5 class="mb-3 ps-2">
+            {{ title }} ({{ products|length }} items)
+        </h5>
+
+        <!-- FILTERS -->
+        <div class="sticky-filters ps-2 pe-2">
+            {% include "store/filters.html" %}
+        </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN (SORT + PRODUCTS) -->
+    <div class="col-lg-10 col-md-9 ps-3 pe-1">
+
+        <!-- Sort dropdown (desktop only) -->
+        <div class="d-none d-md-flex justify-content-end mb-3">
+            <select id="desktopSortSelect"
+                    class="form-select w-auto"
+                    onchange="ajaxSortProducts(this.value)">
+                <option value="">Recommended</option>
+                <option value="low">Price: Low to High</option>
+                <option value="high">Price: High to Low</option>
+            </select>
+        </div>
+
+        <!-- Title + count (mobile only) -->
+        <div class="d-md-none mb-3">
+            <div class="small text-muted">Home / {{ title }}</div>
+            <h6 class="mb-0 mt-1">{{ title }} <span class="text-muted fw-normal">({{ products|length }} items)</span></h6>
+        </div>
+
+        <!-- PRODUCT GRID -->
+        <div id="product-grid" style="padding-bottom: 60px;">
+            {% include "store/product_grid.html" %}
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ── MOBILE FILTERS OFFCANVAS (two-panel: sidebar tabs + content) ── -->
+<div class="offcanvas offcanvas-start mf-offcanvas" tabindex="-1" id="mobileFilters">
+
+    <!-- HEADER -->
+    <div class="mf-header">
+        <h6 class="fw-bold mb-0">Filters</h6>
+        <a href="#" id="mfClearAllBtn" class="mf-clear-all" onclick="mfClearAll(event)">CLEAR ALL</a>
+    </div>
+    <!-- No-filters toast -->
+    <div id="mfNoFilterToast" class="mf-no-filter-toast d-none">No filters are applied</div>
+
+    <!-- TWO-PANEL BODY -->
+    <div class="mf-body">
+
+        <!-- LEFT SIDEBAR: filter category tabs -->
+        <div class="mf-sidebar">
+            <div class="mf-tab active" data-panel="brand" onclick="mfSwitchTab(this)">
+                <span>Brand</span>
+                {% if selected_brands %}<span class="mf-badge">{{ selected_brands|length }}</span>{% endif %}
+            </div>
+            <div class="mf-tab" data-panel="size" onclick="mfSwitchTab(this)">
+                <span>Size</span>
+                {% if selected_sizes %}<span class="mf-badge">{{ selected_sizes|length }}</span>{% endif %}
+            </div>
+            <div class="mf-tab" data-panel="price" onclick="mfSwitchTab(this)">
+                <span>Price</span>
+            </div>
+            {% if colors %}
+            <div class="mf-tab" data-panel="color" onclick="mfSwitchTab(this)">
+                <span>Color</span>
+                {% if selected_colors %}<span class="mf-badge">{{ selected_colors|length }}</span>{% endif %}
+            </div>
+            {% endif %}
+            {% if not url_category and categories %}
+            <div class="mf-tab" data-panel="category" onclick="mfSwitchTab(this)">
+                <span>Category</span>
+                {% if selected_categories %}<span class="mf-badge">{{ selected_categories|length }}</span>{% endif %}
+            </div>
+            {% endif %}
+            <div class="mf-tab" data-panel="discount" onclick="mfSwitchTab(this)">
+                <span>Discount</span>
+                {% if selected_discount %}<span class="mf-badge">1</span>{% endif %}
+            </div>
+        </div>
+
+        <!-- RIGHT CONTENT AREA -->
+        <div class="mf-content">
+
+            <!-- ── BRAND PANEL ── -->
+            <div class="mf-panel active" id="mf-panel-brand">
+                <input type="text" class="mf-search" id="mfBrandSearch"
+                       placeholder="Search brand..." autocomplete="off">
+                <div class="mf-options" id="mf-brand-list">
+                    {% for brand in brands %}
+                    <label class="mf-checkbox-item" data-brand-name="{{ brand|lower }}">
+                        <input type="checkbox" name="brand" value="{{ brand }}"
+                               {% if brand in selected_brands %}checked{% endif %}>
+                        <span class="mf-checkmark"></span>
+                        <span class="mf-label">{{ brand }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+                <div id="mf-brand-no-result" class="mf-no-result d-none">No brands found</div>
+            </div>
+
+            <!-- ── SIZE PANEL ── -->
+            <div class="mf-panel" id="mf-panel-size">
+                <div class="mf-size-grid">
+                    {% for size in sizes %}
+                    <label class="mf-size-item">
+                        <input type="checkbox" name="size" value="{{ size }}"
+                               {% if size in selected_sizes %}checked{% endif %}>
+                        <span class="mf-size-pill">{{ size }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- ── PRICE PANEL ── -->
+            <div class="mf-panel" id="mf-panel-price">
+                <p class="small text-muted mb-3">Drag to set price range</p>
+                <div class="price-range mx-2 mt-4">
+                    <div class="price-track"></div>
+                    <div class="price-fill" id="priceFill-mob"></div>
+                    <input type="range" id="minRange-mob"
+                           min="{{ min_price_db }}" max="{{ max_price_db }}"
+                           value="{{ selected_min_price|default:min_price_db }}">
+                    <input type="range" id="maxRange-mob"
+                           min="{{ min_price_db }}" max="{{ max_price_db }}"
+                           value="{{ selected_max_price|default:max_price_db }}">
+                </div>
+                <div class="d-flex justify-content-between mt-3 mx-2">
+                    <span class="mf-price-val">₹<span id="minPriceText-mob"></span></span>
+                    <span class="mf-price-val">₹<span id="maxPriceText-mob"></span></span>
+                </div>
+            </div>
+
+            <!-- ── COLOR PANEL ── -->
+            {% if colors %}
+            <div class="mf-panel" id="mf-panel-color">
+                <div class="mf-options" id="mf-color-list">
+                    {% for color in colors %}
+                    <label class="mf-checkbox-item">
+                        <input type="checkbox" name="color" value="{{ color }}"
+                               {% if color in selected_colors %}checked{% endif %}>
+                        <span class="mf-checkmark"></span>
+                        <span class="mf-label">{{ color }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- ── CATEGORY PANEL ── -->
+            {% if not url_category and categories %}
+            <div class="mf-panel" id="mf-panel-category">
+                <div class="mf-options" id="mf-category-list">
+                    {% for cat_val, cat_label in categories %}
+                    <label class="mf-checkbox-item">
+                        <input type="checkbox" name="category" value="{{ cat_val }}"
+                               {% if cat_val in selected_categories %}checked{% endif %}>
+                        <span class="mf-checkmark"></span>
+                        <span class="mf-label">{{ cat_label }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- ── DISCOUNT PANEL ── -->
+            <div class="mf-panel" id="mf-panel-discount">
+                <div class="mf-size-grid">
+                    {% for pct in discount_options %}
+                    <label class="mf-size-item">
+                        <input type="radio" name="discount" value="{{ pct }}"
+                               {% if selected_discount == pct|stringformat:"s" %}checked{% endif %}>
+                        <span class="mf-size-pill">{{ pct }}%+</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div><!-- /mf-content -->
+    </div><!-- /mf-body -->
+
+    <!-- FOOTER: Apply / Close -->
+    <div class="mf-footer">
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary flex-fill"
+                    onclick="mobFilterClose()">Close</button>
+            <button class="btn btn-dark flex-fill"
+                    onclick="mobFilterApply()">Apply</button>
+        </div>
+    </div>
+
+
+</div>
+
+<!-- ── UNSAVED CHANGES OVERLAY (fixed, above offcanvas z-index 1060) ── -->
+<div id="mobUnsavedOverlay" class="mob-unsaved-overlay" style="display:none;" onclick="mobUnsavedOverlayDismiss(event)">
+    <div class="mob-unsaved-sheet">
+        <div class="mob-unsaved-icon">
+            <i class="bi bi-exclamation-circle-fill"></i>
+        </div>
+        <h6 class="mob-unsaved-title">You have unsaved filters</h6>
+        <p class="mob-unsaved-msg">
+            Your filter selections haven't been applied yet.<br>
+            Apply them now to see updated results, or discard to go back.
+        </p>
+        <button class="btn btn-dark w-100 mb-2" onclick="mobFilterApply()">
+            <i class="bi bi-check2-circle me-2"></i>Apply Changes
+        </button>
+        <button class="btn btn-outline-secondary w-100" onclick="mobFilterDiscard()">
+            <i class="bi bi-x-circle me-2"></i>Discard Changes
+        </button>
+    </div>
+</div>
+
+<!-- ── SORT BOTTOM SHEET (mobile) ── -->
+<div class="offcanvas offcanvas-bottom" tabindex="-1" id="sortBottomSheet"
+     style="height:auto;border-radius:20px 20px 0 0;">
+    <div class="offcanvas-header border-bottom pb-2">
+        <h6 class="offcanvas-title fw-bold">Sort By</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body p-0 pb-3">
+        <div class="sort-option" data-sort="" onclick="mobileSortSelect(this)">
+            <span>Recommended</span><i class="bi bi-check2 sort-check"></i>
+        </div>
+        <div class="sort-option" data-sort="low" onclick="mobileSortSelect(this)">
+            <span>Price: Low to High</span><i class="bi bi-check2 sort-check"></i>
+        </div>
+        <div class="sort-option" data-sort="high" onclick="mobileSortSelect(this)">
+            <span>Price: High to Low</span><i class="bi bi-check2 sort-check"></i>
+        </div>
+    </div>
+</div>
+
+<!-- ── STICKY SORT + FILTER FOOTER (mobile only) ── -->
+<div class="mobile-cat-footer d-md-none">
+    <button class="mob-cat-btn"
+            data-bs-toggle="offcanvas"
+            data-bs-target="#sortBottomSheet">
+        <i class="bi bi-arrow-down-up"></i> Sort
+    </button>
+    <div class="mob-cat-divider"></div>
+    <button class="mob-cat-btn"
+            data-bs-toggle="offcanvas"
+            data-bs-target="#mobileFilters">
+        <i class="bi bi-sliders"></i> Filter
+    </button>
+</div>
+
+<script>
+let activeSortValue = "";
+
+function mobileSortSelect(el) {
+    activeSortValue = el.dataset.sort;
+    // update checkmarks
+    document.querySelectorAll(".sort-option").forEach(o => o.classList.remove("active"));
+    el.classList.add("active");
+    // close bottom sheet
+    bootstrap.Offcanvas.getInstance(document.getElementById("sortBottomSheet"))?.hide();
+    ajaxSortProducts(activeSortValue);
+}
+</script>
+
+<script>
+function ajaxSortProducts(value) {
+    const url = new URL(window.location.href);
+
+    if (value) {
+        url.searchParams.set("sort", value);
+    } else {
+        url.searchParams.delete("sort");
+    }
+
+    fetch(url.toString(), {
+        headers: {
+            "X-Requested-With": "XMLHttpRequest"
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        // replace product grid
+        document.getElementById("product-grid").innerHTML = data.html;
+
+
+        // update URL without reload
+        window.history.pushState({}, "", url.toString());
+    })
+    .catch(err => console.error("AJAX sort error:", err));
+}
+</script>
+
+<script>
+function toggleBrands() {
+    const extras = document.querySelectorAll(".extra-brand");
+    const toggle = document.getElementById("brand-toggle");
+
+    if (!extras.length) return;
+
+    const isHidden = extras[0].classList.contains("d-none");
+
+    extras.forEach(el => el.classList.toggle("d-none"));
+
+    toggle.innerText = isHidden
+        ? "Show Less"
+        : `+ ${extras.length} more`;
+}
+</script>
+
+
+<script>
+/* ════════════════════════════════════════════════════
+   DESKTOP FILTER — auto-apply on checkbox / slider
+   MOBILE FILTER  — manual Apply button
+   ════════════════════════════════════════════════════ */
+document.addEventListener("DOMContentLoaded", function () {
+
+    const desktopForm  = document.querySelector("#filters-form");
+    const mobileFilter = document.getElementById("mobileFilters");
+    const clearBtn     = document.getElementById("clearAllBtn");
+    const minRange     = document.getElementById("minRange");
+    const maxRange     = document.getElementById("maxRange");
+
+    if (!desktopForm) return;
+
+    /* ── CLEAR ALL VISIBILITY ── */
+    function updateClearAll() {
+        const hasChecked = desktopForm.querySelectorAll("input[type='checkbox']:checked, input[type='radio']:checked").length > 0;
+        const hasPrice   = minRange && maxRange
+            ? (minRange.value !== minRange.min || maxRange.value !== maxRange.max)
+            : false;
+        const isActive = hasChecked || hasPrice;
+        document.querySelectorAll("#clearAllBtn").forEach(btn => {
+            btn.style.display = isActive ? "inline" : "none";
+        });
+    }
+
+    /* ── APPLY FILTERS (reads desktop form as source of truth) ── */
+    function applyFilters() {
+        const params = new URLSearchParams();
+        desktopForm.querySelectorAll("input[name='brand']:checked").forEach(cb => params.append("brand", cb.value));
+        desktopForm.querySelectorAll("input[name='size']:checked").forEach(cb => params.append("size", cb.value));
+        desktopForm.querySelectorAll("input[name='color']:checked").forEach(cb => params.append("color", cb.value));
+        desktopForm.querySelectorAll("input[name='category']:checked").forEach(cb => params.append("category", cb.value));
+        const discountInput = desktopForm.querySelector("input[name='discount']:checked");
+        if (discountInput) params.append("discount", discountInput.value);
+        if (minRange && maxRange) {
+            if (minRange.value !== minRange.min) params.append("min_price", minRange.value);
+            if (maxRange.value !== maxRange.max) params.append("max_price", maxRange.value);
+        }
+        const url = params.toString()
+            ? `${window.location.pathname}?${params.toString()}`
+            : window.location.pathname;
+
+        fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" } })
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById("product-grid").innerHTML = data.html;
+            window.history.replaceState({}, "", url);
+            updateClearAll();
+            updateMfBadges();
+        });
+    }
+
+    window._catApplyFilters = applyFilters;
+
+    /* ── DESKTOP CHECKBOXES: mirror to mobile + auto-apply ── */
+    desktopForm.querySelectorAll("input[type='checkbox']").forEach(cb => {
+        cb.addEventListener("change", function () {
+            if (mobileFilter) {
+                const paired = mobileFilter.querySelector(`input[name="${cb.name}"][value="${cb.value}"]`);
+                if (paired) paired.checked = cb.checked;
+            }
+            applyFilters();
+        });
+    });
+
+    /* ── MOBILE CHECKBOXES: mirror to desktop only (no auto-apply) ── */
+    if (mobileFilter) {
+        mobileFilter.querySelectorAll("input[type='checkbox']").forEach(cb => {
+            cb.addEventListener("change", function () {
+                const paired = desktopForm.querySelector(`input[name="${cb.name}"][value="${cb.value}"]`);
+                if (paired) paired.checked = cb.checked;
+                // NO applyFilters() — wait for Apply button
+            });
+        });
+    }
+
+    /* ── DESKTOP RADIO (discount): allow uncheck + mirror to mobile + auto-apply ── */
+    desktopForm.querySelectorAll("input[type='radio']").forEach(rb => {
+        rb.addEventListener("click", function () {
+            // Allow deselect by clicking already-checked radio
+            if (this._wasChecked) {
+                this.checked = false;
+                this._wasChecked = false;
+                if (mobileFilter) {
+                    mobileFilter.querySelectorAll(`input[type='radio'][name="${rb.name}"]`).forEach(r => { r.checked = false; r._wasChecked = false; });
+                }
+                applyFilters();
+                return;
+            }
+        });
+        rb.addEventListener("change", function () {
+            desktopForm.querySelectorAll(`input[type='radio'][name="${rb.name}"]`).forEach(r => r._wasChecked = false);
+            this._wasChecked = true;
+            if (mobileFilter) {
+                mobileFilter.querySelectorAll(`input[type='radio'][name="${rb.name}"]`).forEach(r => { r.checked = false; r._wasChecked = false; });
+                const paired = mobileFilter.querySelector(`input[name="${rb.name}"][value="${rb.value}"]`);
+                if (paired) { paired.checked = true; paired._wasChecked = true; }
+            }
+            applyFilters();
+        });
+    });
+
+    /* ── MOBILE RADIO uncheck support ── */
+    if (mobileFilter) {
+        mobileFilter.querySelectorAll("input[type='radio']").forEach(rb => {
+            rb.addEventListener("click", function () {
+                if (this._wasChecked) {
+                    this.checked = false;
+                    this._wasChecked = false;
+                    desktopForm.querySelectorAll(`input[type='radio'][name="${rb.name}"]`).forEach(r => { r.checked = false; r._wasChecked = false; });
+                }
+            });
+            rb.addEventListener("change", function () {
+                mobileFilter.querySelectorAll(`input[type='radio'][name="${rb.name}"]`).forEach(r => r._wasChecked = false);
+                this._wasChecked = true;
+                desktopForm.querySelectorAll(`input[type='radio'][name="${rb.name}"]`).forEach(r => { r.checked = false; r._wasChecked = false; });
+                const paired = desktopForm.querySelector(`input[name="${rb.name}"][value="${rb.value}"]`);
+                if (paired) { paired.checked = true; paired._wasChecked = true; }
+            });
+        });
+    }
+
+    /* ── DESKTOP PRICE SLIDER: auto-apply ── */
+    if (minRange && maxRange) {
+        let t;
+        minRange.addEventListener("input", () => { clearTimeout(t); t = setTimeout(applyFilters, 400); });
+        maxRange.addEventListener("input", () => { clearTimeout(t); t = setTimeout(applyFilters, 400); });
+    }
+
+    /* ── CLEAR ALL (shared logic) ── */
+    function clearAllFilters() {
+        desktopForm.querySelectorAll("input[type='checkbox'], input[type='radio']").forEach(i => { i.checked = false; i._wasChecked = false; });
+        if (mobileFilter) mobileFilter.querySelectorAll("input[type='checkbox'], input[type='radio']").forEach(i => { i.checked = false; i._wasChecked = false; });
+        if (minRange) minRange.value = minRange.min;
+        if (maxRange) maxRange.value = maxRange.max;
+        const minMob = document.getElementById("minRange-mob");
+        const maxMob = document.getElementById("maxRange-mob");
+        if (minMob) minMob.value = minMob.min;
+        if (maxMob) maxMob.value = maxMob.max;
+        if (typeof updateSlider    === "function") updateSlider();
+        if (typeof updateSliderMob === "function") updateSliderMob();
+        fetch(window.location.pathname, { headers: { "X-Requested-With": "XMLHttpRequest" } })
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById("product-grid").innerHTML = data.html;
+            window.history.replaceState({}, "", window.location.pathname);
+            updateClearAll();
+            updateMfBadges();
+        });
+    }
+    window._clearAllFilters = clearAllFilters;
+
+    document.querySelectorAll("#clearAllBtn").forEach(btn => {
+        btn.addEventListener("click", function (e) {
+            e.preventDefault();
+            clearAllFilters();
+        });
+    });
+
+    /* ── DESKTOP BRAND SEARCH ── */
+    const openBtn   = document.getElementById("brandSearchOpen");
+    const closeBtn  = document.getElementById("brandSearchClose");
+    const bInput    = document.getElementById("brandSearchInput");
+    const brandList = document.getElementById("brand-list");
+
+    if (openBtn && closeBtn && bInput && brandList) {
+        const labels     = brandList.querySelectorAll(".brand-item");
+        const noResult   = document.getElementById("noBrandResult");
+        const moreToggle = document.getElementById("brand-toggle");
+
+        openBtn.addEventListener("click", function () {
+            bInput.classList.remove("d-none");
+            openBtn.classList.add("d-none");
+            closeBtn.classList.remove("d-none");
+            bInput.value = "";
+            bInput.focus();
+            requestAnimationFrame(() => bInput.classList.add("show"));
+            labels.forEach(l => l.style.display = "flex");
+            if (noResult)   noResult.classList.add("d-none");
+            if (moreToggle) moreToggle.style.display = "none";
+        });
+
+        closeBtn.addEventListener("click", function () {
+            bInput.classList.remove("show");
+            setTimeout(() => bInput.classList.add("d-none"), 250);
+            closeBtn.classList.add("d-none");
+            openBtn.classList.remove("d-none");
+            bInput.value = "";
+            labels.forEach(l => l.style.display = "flex");
+            if (noResult)   noResult.classList.add("d-none");
+            if (moreToggle) moreToggle.style.display = "block";
+        });
+
+        bInput.addEventListener("input", function () {
+            const q = bInput.value.toLowerCase().trim();
+            let vis = 0;
+            labels.forEach(l => {
+                const match = l.querySelector(".label-text").innerText.toLowerCase().includes(q);
+                l.style.display = match ? "flex" : "none";
+                if (match) vis++;
+            });
+            if (noResult)   noResult.classList.toggle("d-none", vis > 0);
+            if (moreToggle) moreToggle.style.display = q ? "none" : "block";
+        });
+
+        bInput.addEventListener("keydown", e => { if (e.key === "Enter") e.preventDefault(); });
+    }
+
+    updateClearAll();
+});
+</script>
+
+<script>
+/* ═══════════════════════════════════════════════
+   MOBILE FILTER — two-panel tab switcher
+   ═══════════════════════════════════════════════ */
+
+function mfClearAll(e) {
+    e.preventDefault();
+    const mf = document.getElementById("mobileFilters");
+    const hasAny = mf && (
+        mf.querySelectorAll("input[type='checkbox']:checked, input[type='radio']:checked").length > 0 ||
+        (document.getElementById("minRange-mob")?.value !== document.getElementById("minRange-mob")?.min) ||
+        (document.getElementById("maxRange-mob")?.value !== document.getElementById("maxRange-mob")?.max)
+    );
+    if (!hasAny) {
+        const toast = document.getElementById("mfNoFilterToast");
+        if (toast) {
+            toast.classList.remove("d-none");
+            clearTimeout(toast._t);
+            toast._t = setTimeout(() => toast.classList.add("d-none"), 2000);
+        }
+        return;
+    }
+    if (typeof window._clearAllFilters === "function") window._clearAllFilters();
+    updateMfBadges();
+}
+
+function mfSwitchTab(el) {
+    document.querySelectorAll(".mf-tab").forEach(t => t.classList.remove("active"));
+    el.classList.add("active");
+    const panel = "mf-panel-" + el.dataset.panel;
+    document.querySelectorAll(".mf-panel").forEach(p => p.classList.remove("active"));
+    document.getElementById(panel)?.classList.add("active");
+}
+
+function updateMfBadges() {
+    function setBadge(panelId, count) {
+        const tab = document.querySelector(`.mf-tab[data-panel='${panelId}']`);
+        if (!tab) return;
+        let badge = tab.querySelector(".mf-badge");
+        if (count > 0) {
+            if (!badge) { badge = document.createElement("span"); badge.className = "mf-badge"; tab.appendChild(badge); }
+            badge.textContent = count;
+        } else if (badge) badge.remove();
+    }
+    setBadge("brand",    document.querySelectorAll("#mf-brand-list input:checked").length);
+    setBadge("size",     document.querySelectorAll("#mf-panel-size input:checked").length);
+    setBadge("color",    document.querySelectorAll("#mf-panel-color input:checked").length);
+    setBadge("category", document.querySelectorAll("#mf-panel-category input:checked").length);
+    setBadge("discount", document.querySelectorAll("#mf-panel-discount input:checked").length);
+}
+
+/* Mobile brand search */
+document.getElementById("mfBrandSearch")?.addEventListener("input", function () {
+    const q = this.value.toLowerCase().trim();
+    let vis = 0;
+    document.querySelectorAll("#mf-brand-list .mf-checkbox-item").forEach(item => {
+        const match = (item.dataset.brandName || "").includes(q);
+        item.style.display = match ? "flex" : "none";
+        if (match) vis++;
+    });
+    document.getElementById("mf-brand-no-result")?.classList.toggle("d-none", vis > 0);
+});
+document.getElementById("mfBrandSearch")?.addEventListener("keydown", e => {
+    if (e.key === "Enter") e.preventDefault();
+});
+</script>
+
+<script>
+/* ═══════════════════════════════════════════════
+   MOBILE PRICE SLIDER (IDs: *-mob)
+   ═══════════════════════════════════════════════ */
+
+const minRangeMob = document.getElementById("minRange-mob");
+const maxRangeMob = document.getElementById("maxRange-mob");
+const fillMob     = document.getElementById("priceFill-mob");
+const minTextMob  = document.getElementById("minPriceText-mob");
+const maxTextMob  = document.getElementById("maxPriceText-mob");
+
+function updateSliderMob() {
+    if (!minRangeMob || !maxRangeMob || !fillMob) return;
+    const min = parseInt(minRangeMob.min);
+    const max = parseInt(maxRangeMob.max);
+    let lo = parseInt(minRangeMob.value);
+    let hi = parseInt(maxRangeMob.value);
+    if (lo > hi) [lo, hi] = [hi, lo];
+    fillMob.style.left  = ((lo - min) / (max - min) * 100) + "%";
+    fillMob.style.width = ((hi - lo) / (max - min) * 100) + "%";
+    if (minTextMob) minTextMob.innerText = lo;
+    if (maxTextMob) maxTextMob.innerText = hi;
+}
+
+if (minRangeMob && maxRangeMob) {
+    minRangeMob.addEventListener("input", updateSliderMob);
+    maxRangeMob.addEventListener("input", updateSliderMob);
+    updateSliderMob();
+}
+</script>
+
+<script>
+/* ═══════════════════════════════════════════════
+   MOBILE FILTER: Apply / Close / Discard
+   ═══════════════════════════════════════════════ */
+
+let mobFilterSnapshot = null;
+
+function getMobFilterState() {
+    const mf = document.getElementById("mobileFilters");
+    if (!mf) return "{}";
+    const s = {};
+    mf.querySelectorAll("input[type='checkbox']").forEach(cb => {
+        s["cb|" + cb.name + "|" + cb.value] = cb.checked;
+    });
+    mf.querySelectorAll("input[type='radio']:checked").forEach(rb => {
+        s["radio|" + rb.name] = rb.value;
+    });
+    if (minRangeMob) s.min_price = minRangeMob.value;
+    if (maxRangeMob) s.max_price = maxRangeMob.value;
+    return JSON.stringify(s);
+}
+
+function mobUnsavedOverlayDismiss(e) {
+    // Close overlay only if clicking the dark backdrop (not the sheet itself)
+    if (e.target === document.getElementById("mobUnsavedOverlay")) {
+        document.getElementById("mobUnsavedOverlay").style.display = "none";
+    }
+}
+
+function mobFilterApply() {
+    // Close overlay if open
+    document.getElementById("mobUnsavedOverlay").style.display = "none";
+    // Sync mobile slider → desktop slider
+    const minDesk = document.getElementById("minRange");
+    const maxDesk = document.getElementById("maxRange");
+    if (minRangeMob && minDesk) minDesk.value = minRangeMob.value;
+    if (maxRangeMob && maxDesk) maxDesk.value = maxRangeMob.value;
+
+    if (typeof window._catApplyFilters === "function") window._catApplyFilters();
+
+    mobFilterSnapshot = getMobFilterState();
+    bootstrap.Offcanvas.getInstance(document.getElementById("mobileFilters"))?.hide();
+}
+
+function mobFilterClose() {
+    if (getMobFilterState() !== mobFilterSnapshot) {
+        document.getElementById("mobUnsavedOverlay").style.display = "flex";
+    } else {
+        bootstrap.Offcanvas.getInstance(document.getElementById("mobileFilters"))?.hide();
+    }
+}
+
+function mobFilterDiscard() {
+    const snap = JSON.parse(mobFilterSnapshot || "{}");
+    const mf   = document.getElementById("mobileFilters");
+    const df   = document.querySelector("#filters-form");
+
+    if (mf) {
+        mf.querySelectorAll("input[type='checkbox']").forEach(cb => {
+            const key = "cb|" + cb.name + "|" + cb.value;
+            if (key in snap) {
+                cb.checked = snap[key];
+                const paired = df?.querySelector(`input[name="${cb.name}"][value="${cb.value}"]`);
+                if (paired) paired.checked = cb.checked;
+            }
+        });
+        // Restore radio buttons
+        const radioNames = new Set(
+            Object.keys(snap).filter(k => k.startsWith("radio|")).map(k => k.split("|")[1])
+        );
+        radioNames.forEach(name => {
+            mf.querySelectorAll(`input[type='radio'][name="${name}"]`).forEach(r => r.checked = false);
+            df?.querySelectorAll(`input[type='radio'][name="${name}"]`).forEach(r => r.checked = false);
+            const val = snap["radio|" + name];
+            if (val) {
+                const rb = mf.querySelector(`input[type='radio'][name="${name}"][value="${val}"]`);
+                if (rb) rb.checked = true;
+                const paired = df?.querySelector(`input[type='radio'][name="${name}"][value="${val}"]`);
+                if (paired) paired.checked = true;
+            }
+        });
+    }
+    if (minRangeMob && "min_price" in snap) minRangeMob.value = snap.min_price;
+    if (maxRangeMob && "max_price" in snap) maxRangeMob.value = snap.max_price;
+    updateSliderMob();
+
+    document.getElementById("mobUnsavedOverlay").style.display = "none";
+    bootstrap.Offcanvas.getInstance(document.getElementById("mobileFilters"))?.hide();
+}
+
+document.getElementById("mobileFilters")?.addEventListener("show.bs.offcanvas", function () {
+    mobFilterSnapshot = getMobFilterState();
+    document.getElementById("mobUnsavedOverlay").style.display = "none";
+});
+</script>
+
+
+{% endblock %}

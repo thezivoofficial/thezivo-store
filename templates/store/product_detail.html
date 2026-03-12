@@ -1,0 +1,1053 @@
+{% extends "store/base.html" %}
+
+{% block title %}{{ product.name }} | TheZivo{% endblock %}
+
+{% block content %}
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+    .product-page {
+        background: #f8f7f5;
+        min-height: 100vh;
+        padding: 32px 0 80px;
+        font-family: 'DM Sans', sans-serif;
+    }
+
+    /* BREADCRUMB */
+    .breadcrumb-nav {
+        font-size: 0.78rem;
+        color: #aaa;
+        margin-bottom: 28px;
+    }
+    .breadcrumb-nav a {
+        color: #aaa;
+        text-decoration: none;
+        transition: color 0.15s;
+    }
+    .breadcrumb-nav a:hover { color: #111; }
+    .breadcrumb-nav span.sep { margin: 0 6px; }
+    .breadcrumb-nav span.current { color: #555; }
+
+    /* GALLERY */
+    .gallery-wrapper {
+        position: sticky;
+        top: 90px;
+    }
+
+    .main-image-wrapper {
+        background: #fff;
+        border-radius: 16px;
+        border: 1px solid #ececec;
+        overflow: hidden;
+        aspect-ratio: 3/4;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .main-image-wrapper img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.4s ease;
+    }
+
+    .main-image-wrapper:hover img { transform: scale(1.04); }
+
+    .thumbnail-row {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+        flex-wrap: wrap;
+    }
+
+    .thumbnail-img {
+        width: 60px;
+        height: 76px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 1.5px solid #e0e0e0;
+        cursor: pointer;
+        transition: border-color 0.15s, transform 0.15s;
+    }
+
+    .thumbnail-img:hover {
+        border-color: #111;
+        transform: translateY(-2px);
+    }
+
+    .thumbnail-img.active { border-color: #111; }
+
+    /* PRODUCT INFO CARD */
+    .product-info-card {
+        background: #fff;
+        border-radius: 16px;
+        border: 1px solid #ececec;
+        padding: 32px;
+        animation: fadeUp 0.35s ease both;
+    }
+
+    .product-brand {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #aaa;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+        margin-bottom: 8px;
+    }
+
+    .product-name {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.6rem;
+        font-weight: 600;
+        color: #111;
+        line-height: 1.3;
+        margin-bottom: 20px;
+    }
+
+    /* PRICE */
+    .price-row {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        margin-bottom: 24px;
+        padding-bottom: 24px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .price-selling {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.6rem;
+        font-weight: 600;
+        color: #111;
+    }
+
+    .price-mrp {
+        font-size: 1rem;
+        color: #bbb;
+        text-decoration: line-through;
+    }
+
+    .price-discount {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: #2e7d32;
+        background: #f1f8f1;
+        padding: 3px 8px;
+        border-radius: 4px;
+    }
+
+    /* COLOR */
+    .section-label {
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #aaa;
+        text-transform: uppercase;
+        letter-spacing: 0.9px;
+        margin-bottom: 10px;
+    }
+
+    .color-value {
+        font-size: 0.88rem;
+        color: #111;
+        font-weight: 500;
+    }
+
+    /* COLOR SWATCHES */
+    .color-swatches {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 10px;
+        margin-bottom: 20px;
+    }
+
+    .color-swatch {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+        cursor: pointer;
+        border: none;
+        background: none;
+        padding: 0;
+        font-family: 'DM Sans', sans-serif;
+    }
+
+    .color-swatch-img {
+        width: 64px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 6px;
+        border: 2px solid transparent;
+        transition: border-color 0.15s, transform 0.15s;
+    }
+
+    .color-swatch:hover .color-swatch-img {
+        border-color: #aaa;
+        transform: translateY(-2px);
+    }
+
+    .color-swatch.active .color-swatch-img {
+        border-color: #111;
+    }
+
+    .color-swatch-name {
+        font-size: 0.68rem;
+        font-weight: 500;
+        color: #888;
+        text-align: center;
+        max-width: 64px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .color-swatch.active .color-swatch-name {
+        color: #111;
+        font-weight: 700;
+    }
+
+    /* SIZE SELECTOR */
+    .size-section { margin-bottom: 24px; }
+
+    .size-options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .size-radio { display: none; }
+
+    .size-circle {
+        width: 48px;
+        height: 48px;
+        border: 1.5px solid #e0e0e0;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: #111;
+        cursor: pointer;
+        transition: border-color 0.15s, background 0.15s, color 0.15s;
+        font-family: 'DM Sans', sans-serif;
+    }
+
+    .size-circle:hover { border-color: #111; background: #fafafa; }
+
+    .size-radio:checked + .size-circle {
+        border-color: #111;
+        background: #111;
+        color: #fff;
+    }
+
+    .size-disabled {
+        border-color: #f0f0f0 !important;
+        color: #ccc !important;
+        cursor: not-allowed !important;
+        text-decoration: line-through;
+        background: #fafafa !important;
+    }
+
+    /* ACTION BUTTONS */
+    .action-row {
+        display: flex;
+        gap: 12px;
+        margin-top: 28px;
+    }
+
+    .btn-add-to-bag {
+        flex: 1;
+        background: #111;
+        color: #fff;
+        border: none;
+        padding: 14px 20px;
+        border-radius: 10px;
+        font-family: 'DM Sans', sans-serif;
+        font-weight: 600;
+        font-size: 0.88rem;
+        letter-spacing: 0.5px;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        transition: background 0.2s, transform 0.15s;
+    }
+
+    .btn-add-to-bag::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%);
+        transform: translateX(-100%);
+        transition: transform 0.4s ease;
+    }
+
+    .btn-add-to-bag:hover::before { transform: translateX(100%); }
+    .btn-add-to-bag:hover { background: #333; transform: translateY(-1px); }
+
+    .btn-notify {
+        flex: 1;
+        background: #fff;
+        color: #111;
+        border: 1.5px solid #e0e0e0;
+        padding: 14px 20px;
+        border-radius: 10px;
+        font-family: 'DM Sans', sans-serif;
+        font-weight: 600;
+        font-size: 0.88rem;
+        letter-spacing: 0.5px;
+        cursor: pointer;
+        transition: border-color 0.15s, background 0.15s;
+    }
+
+    .btn-notify:hover { border-color: #111; background: #fafafa; }
+
+    .btn-wishlist {
+        width: 52px;
+        height: 52px;
+        flex-shrink: 0;
+        background: #fff;
+        border: 1.5px solid #e0e0e0;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        cursor: pointer;
+        transition: border-color 0.15s, background 0.15s, color 0.15s;
+        color: #aaa;
+    }
+
+    .btn-wishlist:hover { border-color: #e53935; color: #e53935; }
+    .btn-wishlist.wishlisted { border-color: #e53935; color: #e53935; background: #fff5f5; }
+
+    /* TRUST BADGES */
+    .trust-row {
+        display: flex;
+        gap: 16px;
+        margin-top: 24px;
+        padding-top: 24px;
+        border-top: 1px solid #f0f0f0;
+        flex-wrap: wrap;
+    }
+
+    .trust-item {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 0.75rem;
+        color: #888;
+        font-weight: 400;
+    }
+
+    .trust-item span.icon { font-size: 1rem; }
+
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(12px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 768px) {
+        .product-page { padding: 14px 0 80px; }
+        .breadcrumb-nav { margin-bottom: 14px; }
+        .gallery-wrapper { position: static; margin-bottom: 20px; }
+        .thumbnail-row { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+        .thumbnail-img { flex-shrink: 0; }
+        .product-info-card { padding: 20px; }
+        .product-name { font-size: 1.3rem; }
+        .price-selling { font-size: 1.3rem; }
+        .action-row { flex-wrap: wrap; }
+        .btn-add-to-bag, .btn-notify { flex: 1 1 100%; }
+        .btn-wishlist { width: 100%; border-radius: 10px; }
+    }
+
+    /* SIZE CHART */
+    .size-chart-link {
+        display: inline-flex; align-items: center; gap: 5px;
+        font-size: 0.75rem; font-weight: 600; color: #555;
+        text-decoration: underline; text-underline-offset: 3px;
+        background: none; border: none; cursor: pointer; padding: 0;
+        letter-spacing: 0.3px; transition: color 0.15s;
+        font-family: 'DM Sans', sans-serif;
+    }
+    .size-chart-link:hover { color: #ff3f6c; }
+    .sc-overlay {
+        display: none; position: fixed; inset: 0; z-index: 1060;
+        background: rgba(0,0,0,0.45); opacity: 0; transition: opacity 0.25s;
+    }
+    .sc-overlay.open { opacity: 1; }
+    .sc-drawer {
+        position: fixed; top: 0; right: 0; width: 480px; max-width: 98vw;
+        height: 100vh; background: #fff; z-index: 1061;
+        display: flex; flex-direction: column;
+        transform: translateX(100%);
+        transition: transform 0.32s cubic-bezier(0.4,0,0.2,1);
+        box-shadow: -6px 0 40px rgba(0,0,0,0.12);
+    }
+    .sc-drawer.open { transform: translateX(0); }
+    .sc-header {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 20px 24px 18px; border-bottom: 1px solid #f0f0f0; flex-shrink: 0;
+    }
+    .sc-header h3 {
+        font-family: 'Playfair Display', serif; font-size: 1.05rem;
+        font-weight: 600; color: #111; margin: 0;
+    }
+    .sc-close {
+        width: 32px; height: 32px; border-radius: 50%; border: none;
+        background: #f5f5f5; cursor: pointer; display: flex;
+        align-items: center; justify-content: center;
+        font-size: 1.1rem; color: #555; transition: background 0.15s;
+    }
+    .sc-close:hover { background: #eee; color: #111; }
+    .sc-tabs {
+        display: flex; border-bottom: 1px solid #ececec;
+        flex-shrink: 0; padding: 0 24px; gap: 4px;
+    }
+    .sc-tab {
+        padding: 12px 16px; font-size: 0.8rem; font-weight: 600; color: #aaa;
+        border: none; background: none; cursor: pointer;
+        border-bottom: 2px solid transparent;
+        transition: color 0.15s, border-color 0.15s;
+        font-family: 'DM Sans', sans-serif;
+    }
+    .sc-tab.active { color: #111; border-bottom-color: #111; }
+    .sc-panel { display: none; }
+    .sc-panel.active { display: block; }
+    .sc-body { flex: 1; overflow-y: auto; padding: 24px; }
+    .unit-toggle {
+        display: flex; background: #f5f5f5; border-radius: 8px;
+        padding: 3px; margin-bottom: 20px; width: fit-content; gap: 2px;
+    }
+    .unit-btn {
+        padding: 5px 16px; font-size: 0.78rem; font-weight: 600; border: none;
+        background: transparent; border-radius: 6px; cursor: pointer; color: #888;
+        transition: all 0.15s; font-family: 'DM Sans', sans-serif;
+    }
+    .unit-btn.active { background: #fff; color: #111; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+    .sc-table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
+    .sc-table thead th {
+        background: #f8f7f5; padding: 10px 14px; text-align: center;
+        font-weight: 700; font-size: 0.7rem; color: #777; text-transform: uppercase;
+        letter-spacing: 0.6px; border-bottom: 1px solid #ececec;
+    }
+    .sc-table thead th:first-child { text-align: left; }
+    .sc-table tbody td {
+        padding: 11px 14px; text-align: center;
+        border-bottom: 1px solid #f5f5f5; color: #555;
+    }
+    .sc-table tbody td:first-child { text-align: left; font-weight: 700; color: #111; font-size: 0.88rem; }
+    .sc-table tbody tr:last-child td { border-bottom: none; }
+    .sc-table tbody tr:hover { background: #fafafa; }
+    .sc-table tbody tr.sc-highlighted td { background: #fff5f7; }
+    .sc-table tbody tr.sc-highlighted td:first-child { color: #ff3f6c; }
+    .measure-tip {
+        display: flex; gap: 14px; padding: 16px;
+        background: #f8f7f5; border-radius: 12px; margin-bottom: 10px;
+    }
+    .measure-tip-icon { font-size: 1.5rem; flex-shrink: 0; margin-top: 2px; }
+    .measure-tip-text h5 { font-size: 0.84rem; font-weight: 700; color: #111; margin: 0 0 4px; }
+    .measure-tip-text p { font-size: 0.79rem; color: #888; margin: 0; line-height: 1.55; }
+    .sc-note {
+        margin-top: 20px; padding: 12px 16px; background: #fff8e6;
+        border-left: 3px solid #f5a623; border-radius: 0 8px 8px 0;
+        font-size: 0.78rem; color: #7a5c00; line-height: 1.6;
+    }
+</style>
+
+<div class="product-page">
+    <div class="container">
+
+        <!-- BREADCRUMB -->
+        <nav class="breadcrumb-nav">
+            <a href="{% url 'home' %}">Home</a>
+            <span class="sep">›</span>
+            <a href="{% url product.gender %}">{{ product.gender|title }}</a>
+            <span class="sep">›</span>
+            <a href="{% url product.gender|add:'_category' product.category %}">{{ product.category|title }}</a>
+            <span class="sep">›</span>
+            <span class="current">{{ product.name }}</span>
+        </nav>
+
+        <div class="row g-4">
+
+            <!-- LEFT: GALLERY -->
+            <div class="col-md-6">
+                <div class="gallery-wrapper">
+
+                    <div class="main-image-wrapper">
+                        {% if images %}
+                            <img src="{{ images.0.image.url }}" id="mainProductImage" alt="{{ product.name }}">
+                        {% else %}
+                            <img src="{{ product.image.url }}" id="mainProductImage" alt="{{ product.name }}">
+                        {% endif %}
+                    </div>
+
+                    {% if images %}
+                    <div class="thumbnail-row">
+                        {% for img in images %}
+                        <img src="{{ img.image.url }}"
+                             class="thumbnail-img {% if forloop.first %}active{% endif %}"
+                             onclick="changeMainImage('{{ img.image.url }}', this)"
+                             alt="{{ product.name }}">
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                </div>
+            </div>
+
+            <!-- RIGHT: INFO -->
+            <div class="col-md-6">
+                <div class="product-info-card">
+
+                    <div class="product-brand">{{ product.brand }}</div>
+                    <div class="product-name">{{ product.name }}</div>
+
+                    <!-- PRICE -->
+                    <div class="price-row">
+                        <span class="price-selling" id="selling-price">₹{{ default_sku.selling_price }}</span>
+                        <span class="price-mrp" id="mrp">₹{{ default_sku.mrp }}</span>
+                        <span class="price-discount" id="discount">{{ default_sku.discount_percent }}% OFF</span>
+                    </div>
+
+                    <!-- COLOR SWATCHES -->
+                    <div style="margin-bottom:20px;">
+                        <div class="section-label">
+                            Color — <span id="selected-color" style="color:#111; font-weight:700; text-transform:none; letter-spacing:0; font-size:0.78rem;">{{ default_sku.color }}</span>
+                        </div>
+                        {% if color_variants|length > 1 %}
+                        <div class="color-swatches" id="color-swatches">
+                            {% for color, sku in color_variants.items %}
+                            <button class="color-swatch {% if color == default_sku.color %}active{% endif %}"
+                                    data-color="{{ color }}"
+                                    onclick="selectColor('{{ color }}')">
+                                <img src="{{ sku.product.image.url }}"
+                                     class="color-swatch-img"
+                                     alt="{{ color }}">
+                                <div class="color-swatch-name">{{ color }}</div>
+                            </button>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- SIZE -->
+                    <div class="size-section">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <div class="section-label" style="margin-bottom:0;">Select Size</div>
+                            <button class="size-chart-link" onclick="openSizeChart()">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 6H3M21 12H3M21 18H3"/></svg>
+                                Size Chart
+                            </button>
+                        </div>
+                        <form id="add-to-cart-form" method="post" action="/add-to-cart/">
+                            {% csrf_token %}
+                            <div class="size-options">
+                                {% for sku in skus %}
+                                <input type="radio"
+                                       id="sku-{{ sku.id }}"
+                                       name="sku_id"
+                                       value="{{ sku.id }}"
+                                       class="size-radio"
+                                       data-mrp="{{ sku.mrp }}"
+                                       data-selling="{{ sku.selling_price }}"
+                                       data-discount="{{ sku.discount_percent }}"
+                                       data-color="{{ sku.color }}"
+                                       onchange="updatePrice(this)"
+                                       {% if sku.stock == 0 %}disabled{% endif %}
+                                       {% if sku.stock > 0 and forloop.first %}checked{% endif %}>
+                                <label for="sku-{{ sku.id }}"
+                                       class="size-circle {% if sku.stock == 0 %}size-disabled{% endif %}">
+                                    {{ sku.size }}
+                                </label>
+                                {% endfor %}
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- ACTIONS -->
+                    <div class="action-row">
+                        {% if not in_stock %}
+                        <form method="post" action="{% url 'notify_me' product.id %}" style="flex:1;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-notify w-100">NOTIFY ME</button>
+                        </form>
+                        {% else %}
+                        <button type="submit"
+                                form="add-to-cart-form"
+                                class="btn-add-to-bag">
+                            ADD TO BAG
+                        </button>
+                        {% endif %}
+
+                        <button type="button"
+                                class="btn-wishlist"
+                                onclick="toggleWishlist('{{ product.id }}', this)"
+                                title="Add to Wishlist">
+                            <i class="bi bi-heart"></i>
+                        </button>
+                    </div>
+
+                    <!-- TRUST BADGES -->
+                    <div class="trust-row">
+                        <div class="trust-item">
+                            <span class="icon">🚚</span> Free delivery over ₹799
+                        </div>
+                        <div class="trust-item">
+                            <span class="icon">↩️</span> Easy 30-day returns
+                        </div>
+                        <div class="trust-item">
+                            <span class="icon">🔒</span> Secure checkout
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<!-- SIZE CHART DRAWER -->
+<div class="sc-overlay" id="scOverlay" onclick="closeSizeChart()"></div>
+<div class="sc-drawer" id="scDrawer">
+    <div class="sc-header">
+        <h3>Size Chart</h3>
+        <button class="sc-close" onclick="closeSizeChart()">&#x2715;</button>
+    </div>
+    <div class="sc-tabs">
+        <button class="sc-tab active" onclick="scSwitchTab(this,'scTable')">Size Chart</button>
+        <button class="sc-tab" onclick="scSwitchTab(this,'scMeasure')">How to Measure</button>
+    </div>
+    <div class="sc-body">
+
+        <!-- TAB 1: SIZE TABLE -->
+        <div class="sc-panel active" id="scTable">
+            <div class="unit-toggle">
+                <button class="unit-btn active" onclick="scSetUnit('in',this)">Inches</button>
+                <button class="unit-btn" onclick="scSetUnit('cm',this)">CM</button>
+            </div>
+            <div id="scTableContent"></div>
+            <p class="sc-note">
+                All measurements are body measurements, not garment measurements.
+                Sizes may vary slightly by style &mdash; when in doubt, size up.
+            </p>
+        </div>
+
+        <!-- TAB 2: HOW TO MEASURE -->
+        <div class="sc-panel" id="scMeasure">
+            <div class="measure-tip">
+                <div class="measure-tip-icon">📏</div>
+                <div class="measure-tip-text">
+                    <h5>Chest / Bust</h5>
+                    <p>Measure around the fullest part of your chest, keeping the tape horizontal and parallel to the floor. Keep arms relaxed at your sides.</p>
+                </div>
+            </div>
+            <div class="measure-tip">
+                <div class="measure-tip-icon">⬜</div>
+                <div class="measure-tip-text">
+                    <h5>Waist</h5>
+                    <p>Measure around your natural waistline — the narrowest part of your torso, usually just above your navel. Don't pull the tape tight.</p>
+                </div>
+            </div>
+            <div class="measure-tip">
+                <div class="measure-tip-icon">🔵</div>
+                <div class="measure-tip-text">
+                    <h5>Hips</h5>
+                    <p>Stand with your feet together and measure around the fullest part of your hips, about 8&ndash;9 inches below your waistline.</p>
+                </div>
+            </div>
+            <div class="measure-tip">
+                <div class="measure-tip-icon">📐</div>
+                <div class="measure-tip-text">
+                    <h5>Length / Inseam</h5>
+                    <p>For tops: measure from the highest point of your shoulder straight down to where you want the garment to end. For bottoms: measure from crotch to ankle bone.</p>
+                </div>
+            </div>
+            <p class="sc-note">
+                💡 Tip: Use a soft measuring tape. Ask a friend to help for more accurate results. Always measure over form-fitting clothes, not bulky layers.
+            </p>
+        </div>
+
+    </div>
+</div>
+
+<!-- ZOOM OVERLAY -->
+<div id="zoomOverlay" style="
+    display:none; position:fixed; inset:0; z-index:9999;
+    background:rgba(0,0,0,0.92); align-items:center; justify-content:center;
+">
+    <!-- CLOSE -->
+    <button onclick="closeZoom()" style="
+        position:absolute; top:20px; right:24px;
+        background:none; border:none; color:#fff;
+        font-size:1.8rem; cursor:pointer; line-height:1;
+    ">✕</button>
+
+    <!-- PREV -->
+    <button id="zoomPrev" onclick="zoomNav(-1)" style="
+        position:absolute; left:20px; top:50%; transform:translateY(-50%);
+        background:rgba(255,255,255,0.1); border:none; color:#fff;
+        width:48px; height:48px; border-radius:50%; font-size:1.4rem;
+        cursor:pointer; transition:background 0.2s;
+    ">‹</button>
+
+    <!-- IMAGE -->
+    <img id="zoomImage" src="" style="
+        max-height:90vh; max-width:85vw;
+        object-fit:contain; border-radius:4px;
+        transition:opacity 0.2s;
+    ">
+
+    <!-- NEXT -->
+    <button id="zoomNext" onclick="zoomNav(1)" style="
+        position:absolute; right:20px; top:50%; transform:translateY(-50%);
+        background:rgba(255,255,255,0.1); border:none; color:#fff;
+        width:48px; height:48px; border-radius:50%; font-size:1.4rem;
+        cursor:pointer; transition:background 0.2s;
+    ">›</button>
+
+    <!-- COUNTER -->
+    <div id="zoomCounter" style="
+        position:absolute; bottom:20px; left:50%; transform:translateX(-50%);
+        color:rgba(255,255,255,0.5); font-size:0.8rem;
+        font-family:'DM Sans',sans-serif;
+    "></div>
+</div>
+
+<script>
+// ── ZOOM ──────────────────────────────────────────────
+const zoomImages = [
+    {% if images %}
+        {% for img in images %}"{{ img.image.url }}"{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    {% else %}
+        "{{ product.image.url }}"
+    {% endif %}
+];
+
+let zoomIndex = 0;
+
+// Make main image clickable
+document.addEventListener("DOMContentLoaded", function () {
+    const mainImg = document.getElementById("mainProductImage");
+    if (mainImg) {
+        mainImg.style.cursor = "zoom-in";
+        mainImg.addEventListener("click", function () {
+            const src = mainImg.src;
+            const idx = zoomImages.findIndex(u => src.includes(u) || u.includes(src.split('/').pop()));
+            openZoom(idx >= 0 ? idx : 0);
+        });
+    }
+
+    // Init color filter: show only default color's sizes on load
+    const defaultColor = document.getElementById("selected-color").innerText.trim();
+    if (defaultColor) selectColor(defaultColor);
+});
+
+function openZoom(index) {
+    zoomIndex = index;
+    const overlay = document.getElementById("zoomOverlay");
+    overlay.style.display = "flex";
+    document.body.style.overflow = "hidden";
+    renderZoom();
+}
+
+function closeZoom() {
+    document.getElementById("zoomOverlay").style.display = "none";
+    document.body.style.overflow = "";
+}
+
+function zoomNav(dir) {
+    zoomIndex = (zoomIndex + dir + zoomImages.length) % zoomImages.length;
+    renderZoom();
+}
+
+function renderZoom() {
+    const img = document.getElementById("zoomImage");
+    const counter = document.getElementById("zoomCounter");
+    const prev = document.getElementById("zoomPrev");
+    const next = document.getElementById("zoomNext");
+
+    img.style.opacity = "0";
+    img.style.transform = "scale(1) translateY(0)";
+    img.style.transition = "opacity 0.15s";
+    img.style.cursor = "crosshair";
+
+    setTimeout(() => {
+        img.src = zoomImages[zoomIndex];
+        img.style.opacity = "1";
+    }, 150);
+
+    counter.innerText = zoomImages.length > 1
+        ? (zoomIndex + 1) + " / " + zoomImages.length : "";
+
+    const show = zoomImages.length > 1 ? "block" : "none";
+    prev.style.display = show;
+    next.style.display = show;
+}
+
+// Pan on mouse move
+document.getElementById("zoomOverlay").addEventListener("mousemove", function (e) {
+    const overlay = this;
+    const img = document.getElementById("zoomImage");
+    if (overlay.style.display !== "flex") return;
+
+    const overlayH = overlay.clientHeight;
+    const imgNaturalRatio = img.naturalHeight / img.naturalWidth;
+    const imgDisplayW = img.clientWidth;
+    const imgDisplayH = imgDisplayW * imgNaturalRatio;
+
+    const fitScale = overlayH / imgDisplayH;
+    const scale = fitScale * 2;
+
+    const yRatio = e.clientY / overlayH;
+    const scaledH = imgDisplayH * scale;
+    const maxTranslate = (scaledH - overlayH) / 2 / scale;
+    const yMove = (yRatio - 0.5) * 2 * maxTranslate * -1;
+
+    img.style.transition = "transform 0.06s ease-out";
+    img.style.transform = `scale(${scale}) translateY(${yMove}px)`;
+});
+
+document.getElementById("zoomOverlay").addEventListener("mouseleave", function () {
+    const img = document.getElementById("zoomImage");
+    img.style.transition = "transform 0.25s ease";
+    img.style.transform = "scale(1) translateY(0)";
+});
+
+// Keyboard navigation
+document.addEventListener("keydown", function (e) {
+    const overlay = document.getElementById("zoomOverlay");
+    if (overlay.style.display !== "flex") return;
+    if (e.key === "ArrowRight") zoomNav(1);
+    if (e.key === "ArrowLeft") zoomNav(-1);
+    if (e.key === "Escape") closeZoom();
+});
+
+// ── ADD TO CART ────────────────────────────────────────
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("add-to-cart-form");
+    if (!form) return;
+
+    form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        fetch(form.action, {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}",
+                "X-Requested-With": "XMLHttpRequest",
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: new URLSearchParams(new FormData(form))
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === "success") {
+                const cartCountEl = document.getElementById("cart-count");
+                if (cartCountEl) {
+                    cartCountEl.textContent = data.cart_count;
+                    cartCountEl.style.display = "inline-block";
+                }
+                updateCartUI(data);
+                const toastEl = document.getElementById("addToCartToast");
+                if (toastEl) new bootstrap.Toast(toastEl).show();
+            }
+        })
+        .catch(err => console.error("Add to cart error:", err));
+    });
+});
+
+// ── COLOR SWATCHES ─────────────────────────────────────
+function selectColor(color) {
+    // Highlight active swatch
+    document.querySelectorAll(".color-swatch").forEach(function(s) {
+        s.classList.toggle("active", s.dataset.color === color);
+    });
+    document.getElementById("selected-color").innerText = color;
+
+    // Show only size radios for this color, hide others
+    const radios = document.querySelectorAll(".size-radio");
+    let firstAvailable = null;
+    radios.forEach(function(radio) {
+        const label = document.querySelector("label[for='" + radio.id + "']");
+        const isThisColor = radio.dataset.color === color;
+        if (label) label.style.display = isThisColor ? "" : "none";
+        radio.style.display = isThisColor ? "" : "none";
+        if (isThisColor && !radio.disabled && !firstAvailable) firstAvailable = radio;
+    });
+
+    // Auto-select first available size for this color and update price
+    if (firstAvailable) {
+        firstAvailable.checked = true;
+        updatePrice(firstAvailable);
+    } else {
+        radios.forEach(r => r.checked = false);
+    }
+}
+
+// ── PRICE + COLOR SYNC ─────────────────────────────────
+function updatePrice(el) {
+    document.getElementById("selling-price").innerText = "₹" + el.dataset.selling;
+    document.getElementById("mrp").innerText = "₹" + el.dataset.mrp;
+    document.getElementById("discount").innerText = el.dataset.discount + "% OFF";
+    document.getElementById("selected-color").innerText = el.dataset.color;
+    // Sync active swatch when size is changed manually
+    document.querySelectorAll(".color-swatch").forEach(function(s) {
+        s.classList.toggle("active", s.dataset.color === el.dataset.color);
+    });
+}
+
+function changeMainImage(src, thumb) {
+    document.getElementById("mainProductImage").src = src;
+    document.querySelectorAll(".thumbnail-img").forEach(t => t.classList.remove("active"));
+    if (thumb) thumb.classList.add("active");
+}
+
+// ── SIZE CHART ────────────────────────────────────────
+const SC_GENDER   = "{{ product.gender|lower }}";
+const SC_CATEGORY = "{{ product.category|lower }}";
+
+const SC_DATA = {
+    tops: {
+        headers: ["Size", "Chest", "Waist", "Shoulder", "Length"],
+        rows: [
+            ["XS",  "32-33", "26-27", "14.5", "26"],
+            ["S",   "34-35", "28-29", "15",   "27"],
+            ["M",   "36-37", "30-31", "15.5", "28"],
+            ["L",   "38-40", "32-34", "16",   "29"],
+            ["XL",  "41-43", "35-37", "16.5", "30"],
+            ["XXL", "44-46", "38-40", "17",   "31"],
+        ]
+    },
+    bottoms: {
+        headers: ["Size", "Waist", "Hips", "Inseam", "Length"],
+        rows: [
+            ["XS",  "26-27", "34-35", "29", "38"],
+            ["S",   "28-29", "36-37", "30", "39"],
+            ["M",   "30-31", "38-39", "30", "40"],
+            ["L",   "32-34", "40-42", "31", "41"],
+            ["XL",  "35-37", "43-45", "31", "42"],
+            ["XXL", "38-40", "46-48", "32", "43"],
+        ]
+    },
+    kurta: {
+        headers: ["Size", "Chest", "Waist", "Hips", "Kurta Length"],
+        rows: [
+            ["XS",  "32", "26", "36", "42"],
+            ["S",   "34", "28", "38", "44"],
+            ["M",   "36", "30", "40", "46"],
+            ["L",   "38", "32", "42", "46"],
+            ["XL",  "40", "34", "44", "47"],
+            ["XXL", "42", "36", "46", "47"],
+        ]
+    },
+    dress: {
+        headers: ["Size", "Bust", "Waist", "Hips", "Length"],
+        rows: [
+            ["XS",  "32-33", "25-26", "34-35", "52"],
+            ["S",   "34-35", "27-28", "36-37", "53"],
+            ["M",   "36-37", "29-30", "38-39", "54"],
+            ["L",   "38-40", "31-33", "40-42", "55"],
+            ["XL",  "41-43", "34-36", "43-45", "56"],
+            ["XXL", "44-46", "37-40", "46-48", "57"],
+        ]
+    }
+};
+
+function getSizeData() {
+    const cat = SC_CATEGORY;
+    if (["kurta","kurti","salwar","lehenga","ethnic"].some(k => cat.includes(k)))
+        return SC_DATA.kurta;
+    if (["dress","gown","skirt","jumpsuit"].some(k => cat.includes(k)))
+        return SC_DATA.dress;
+    if (["jeans","trouser","pant","shorts","legging"].some(k => cat.includes(k)))
+        return SC_DATA.bottoms;
+    return SC_DATA.tops;
+}
+
+let scUnit = "in";
+let scSelectedSize = null;
+
+function openSizeChart() {
+    const checked = document.querySelector('.size-radio:checked');
+    if (checked) {
+        const lbl = document.querySelector('label[for="' + checked.id + '"]');
+        scSelectedSize = lbl ? lbl.textContent.trim() : null;
+    }
+    renderSizeTable();
+    const overlay = document.getElementById("scOverlay");
+    const drawer  = document.getElementById("scDrawer");
+    overlay.style.display = "block";
+    requestAnimationFrame(() => {
+        overlay.classList.add("open");
+        drawer.classList.add("open");
+        document.body.style.overflow = "hidden";
+    });
+}
+
+function closeSizeChart() {
+    const overlay = document.getElementById("scOverlay");
+    const drawer  = document.getElementById("scDrawer");
+    overlay.classList.remove("open");
+    drawer.classList.remove("open");
+    setTimeout(() => {
+        overlay.style.display = "none";
+        document.body.style.overflow = "";
+    }, 320);
+}
+
+function scSwitchTab(btn, panelId) {
+    document.querySelectorAll(".sc-tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".sc-panel").forEach(p => p.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById(panelId).classList.add("active");
+}
+
+function scSetUnit(unit, btn) {
+    scUnit = unit;
+    document.querySelectorAll(".unit-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    renderSizeTable();
+}
+
+function inToCm(val) {
+    return val.replace(/[\d.]+/g, n => Math.round(parseFloat(n) * 2.54));
+}
+
+function renderSizeTable() {
+    const data = getSizeData();
+    const useCm = (scUnit === "cm");
+    let html = '<table class="sc-table"><thead><tr>';
+    data.headers.forEach((h, i) => {
+        const suffix = i > 0 ? (useCm ? " (cm)" : " (in)") : "";
+        html += "<th>" + h + suffix + "</th>";
+    });
+    html += "</tr></thead><tbody>";
+    data.rows.forEach(row => {
+        const size = row[0];
+        const isSelected = scSelectedSize && scSelectedSize.toUpperCase() === size.toUpperCase();
+        html += '<tr' + (isSelected ? ' class="sc-highlighted"' : '') + '>';
+        row.forEach((cell, i) => {
+            const val = (i > 0 && useCm) ? inToCm(String(cell)) : cell;
+            html += "<td>" + val + "</td>";
+        });
+        html += "</tr>";
+    });
+    html += "</tbody></table>";
+    document.getElementById("scTableContent").innerHTML = html;
+}
+
+// Close size chart on Escape (separate from zoom Escape handler above)
+document.addEventListener("keydown", function(e) {
+    if (e.key === "Escape" && document.getElementById("scDrawer").classList.contains("open"))
+        closeSizeChart();
+});
+</script>
+
+{% endblock %}

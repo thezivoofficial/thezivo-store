@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Order #{{ order.id }} — Quick Update</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    background: #f3f4f6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 16px;
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px 20px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 2px 16px rgba(0,0,0,.10);
+  }
+
+  .brand {
+    font-size: 20px;
+    font-weight: 900;
+    color: #8b5cf6;
+    margin-bottom: 4px;
+  }
+  .scan-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: #9ca3af;
+    margin-bottom: 18px;
+  }
+
+  .order-id {
+    font-size: 32px;
+    font-weight: 900;
+    color: #111;
+    line-height: 1;
+  }
+  .order-meta {
+    font-size: 13px;
+    color: #6b7280;
+    margin-top: 4px;
+    margin-bottom: 6px;
+  }
+  .order-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: #111;
+    margin-bottom: 2px;
+  }
+  .order-addr {
+    font-size: 13px;
+    color: #374151;
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+
+  .divider {
+    border: none;
+    border-top: 1px solid #f3f4f6;
+    margin: 16px 0;
+  }
+
+  .status-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .status-lbl {
+    font-size: 12px;
+    color: #6b7280;
+    font-weight: 600;
+  }
+  .badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+  }
+  .blue   { background: #3b82f6; }
+  .yellow { background: #f59e0b; }
+  .purple { background: #8b5cf6; }
+  .green  { background: #10b981; }
+  .red    { background: #ef4444; }
+  .gray   { background: #9ca3af; }
+
+  .section-lbl {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: #9ca3af;
+    margin-bottom: 12px;
+  }
+
+  .btn-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .upd-btn {
+    display: block;
+    width: 100%;
+    padding: 16px 10px;
+    border: none;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    color: #fff;
+    text-align: center;
+    line-height: 1.3;
+  }
+  .upd-btn .icon { font-size: 22px; display: block; margin-bottom: 4px; }
+  .btn-confirm  { background: #f59e0b; }
+  .btn-ship     { background: #8b5cf6; }
+  .btn-deliver  { background: #10b981; }
+  .btn-cancel   { background: #ef4444; }
+
+  .upd-btn:active { opacity: .8; transform: scale(.97); }
+
+  .success-msg {
+    background: #d1fae5;
+    color: #065f46;
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 16px;
+  }
+
+  .admin-link {
+    display: block;
+    text-align: center;
+    margin-top: 20px;
+    font-size: 13px;
+    color: #8b5cf6;
+    text-decoration: none;
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="brand">Zivo</div>
+  <div class="scan-label">Staff Quick Update</div>
+
+  <div class="order-id">#{{ order.id }}</div>
+  <div class="order-meta">{{ order.created_at|date:"d M Y, H:i" }}</div>
+  <div class="order-name">{{ order.name }}</div>
+  <div class="order-addr">
+    {{ order.phone }}<br>
+    {{ order.address }}{% if order.city %}, {{ order.city }}{% endif %}{% if order.state %}, {{ order.state }}{% endif %}{% if order.pincode %} — {{ order.pincode }}{% endif %}
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="status-row">
+    <span class="status-lbl">Current Status:</span>
+    {% with s=order.status %}
+      {% if s == "PLACED" %}<span class="badge blue">PLACED</span>
+      {% elif s == "CONFIRMED" %}<span class="badge yellow">CONFIRMED</span>
+      {% elif s == "SHIPPED" %}<span class="badge purple">SHIPPED</span>
+      {% elif s == "DELIVERED" %}<span class="badge green">DELIVERED</span>
+      {% elif s == "CANCELLED" %}<span class="badge red">CANCELLED</span>
+      {% else %}<span class="badge gray">{{ s }}</span>{% endif %}
+    {% endwith %}
+    &nbsp;·&nbsp;
+    <span class="status-lbl">{{ order.payment_method }}</span>
+  </div>
+
+  {% if messages %}
+    {% for msg in messages %}
+    <div class="success-msg">✓ {{ msg }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="section-lbl">Update Status</div>
+  <form method="post">
+    {% csrf_token %}
+    <div class="btn-grid">
+      <button type="submit" name="status" value="CONFIRMED" class="upd-btn btn-confirm">
+        <span class="icon">✅</span>Confirm
+      </button>
+      <button type="submit" name="status" value="SHIPPED" class="upd-btn btn-ship">
+        <span class="icon">📦</span>Shipped
+      </button>
+      <button type="submit" name="status" value="DELIVERED" class="upd-btn btn-deliver">
+        <span class="icon">🎉</span>Delivered
+      </button>
+      <button type="submit" name="status" value="CANCELLED" class="upd-btn btn-cancel">
+        <span class="icon">✕</span>Cancel
+      </button>
+    </div>
+  </form>
+
+  <a href="/zivo-manage/store/order/{{ order.id }}/change/" class="admin-link">
+    → Open Full Order in Admin
+  </a>
+</div>
+
+</body>
+</html>

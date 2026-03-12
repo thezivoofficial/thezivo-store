@@ -1,0 +1,157 @@
+{% extends "admin/change_list.html" %}
+{% load i18n %}
+
+{% block content %}
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+            gap:12px;margin-bottom:20px;">
+
+  <div style="background:#fff;border-radius:10px;padding:14px 16px;
+              box-shadow:0 1px 4px rgba(0,0,0,.08);border-left:4px solid #8b5cf6;">
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;
+                letter-spacing:.05em;color:#6b7280;margin-bottom:4px;">
+      Total Revenue (filtered)
+    </div>
+    <div style="font-size:22px;font-weight:700;color:#111827;">
+      ₹{{ summary.total|default:"0"|floatformat:0 }}
+    </div>
+  </div>
+
+  <a href="{% url 'admin:store_order_bulk_print' %}"
+     style="background:#fff;border-radius:10px;padding:14px 16px;
+            box-shadow:0 1px 4px rgba(0,0,0,.08);border-left:4px solid #10b981;
+            text-decoration:none;display:flex;flex-direction:column;justify-content:center;">
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;
+                letter-spacing:.05em;color:#6b7280;margin-bottom:4px;">
+      Bulk Print by Range
+    </div>
+    <div style="font-size:15px;font-weight:700;color:#10b981;">
+      🖨️ Print Invoice Range →
+    </div>
+  </a>
+
+  <button onclick="openQrScanner()"
+     style="background:#fff;border-radius:10px;padding:14px 16px;
+            box-shadow:0 1px 4px rgba(0,0,0,.08);border-left:4px solid #3b82f6;
+            border-top:none;border-right:none;border-bottom:none;
+            cursor:pointer;text-align:left;">
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;
+                letter-spacing:.05em;color:#6b7280;margin-bottom:4px;">
+      Quick Status Update
+    </div>
+    <div style="font-size:15px;font-weight:700;color:#3b82f6;">
+      📷 Scan QR Code →
+    </div>
+  </button>
+
+</div>
+
+<!-- ── QR Scanner Modal ── -->
+<div id="qr-modal" style="display:none;position:fixed;inset:0;z-index:9999;
+     background:rgba(0,0,0,.7);align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:20px;padding:28px 24px;
+              width:100%;max-width:400px;margin:16px;position:relative;">
+
+    <!-- Close button -->
+    <button onclick="closeQrScanner()"
+      style="position:absolute;top:14px;right:16px;background:none;border:none;
+             font-size:22px;cursor:pointer;color:#6b7280;line-height:1;">✕</button>
+
+    <div style="font-size:18px;font-weight:800;color:#111;margin-bottom:4px;">📷 Scan Shipping Label</div>
+    <div style="font-size:12px;color:#9ca3af;margin-bottom:18px;">
+      Point your camera at the QR code on the label
+    </div>
+
+    <!-- Camera feed -->
+    <div id="qr-reader" style="width:100%;border-radius:12px;overflow:hidden;background:#000;"></div>
+
+    <!-- Status message -->
+    <div id="qr-status" style="margin-top:14px;font-size:13px;color:#6b7280;text-align:center;min-height:20px;"></div>
+
+    <button onclick="closeQrScanner()"
+      style="margin-top:16px;width:100%;padding:12px;border:1px solid #e5e7eb;
+             border-radius:10px;background:#f9fafb;font-size:14px;font-weight:600;
+             color:#374151;cursor:pointer;">
+      Cancel
+    </button>
+  </div>
+</div>
+
+<!-- html5-qrcode library -->
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+  let html5QrCode = null;
+
+  function openQrScanner() {
+    document.getElementById("qr-modal").style.display = "flex";
+    document.getElementById("qr-status").textContent = "Starting camera…";
+
+    html5QrCode = new Html5Qrcode("qr-reader");
+
+    // Use facingMode directly — avoids the double camera-open conflict that
+    // caused NotReadableError when using getCameras() + start() together.
+    html5QrCode.start(
+      { facingMode: "environment" },   // back camera on phones; webcam on desktop
+      { fps: 10, qrbox: { width: 220, height: 220 } },
+      (decodedText) => {
+        if (decodedText.includes("/scan/")) {
+          document.getElementById("qr-status").textContent = "✓ QR detected — opening order…";
+          closeQrScanner();
+          window.location.href = decodedText;
+        } else {
+          document.getElementById("qr-status").textContent = "⚠ Not a valid order QR code.";
+        }
+      },
+      () => {} // ignore per-frame decode errors
+    ).then(() => {
+      document.getElementById("qr-status").textContent = "Ready — hold the QR code steady";
+    }).catch(err => {
+      // Back camera failed — fall back to any available camera
+      html5QrCode.start(
+        { facingMode: "user" },
+        { fps: 10, qrbox: { width: 220, height: 220 } },
+        (decodedText) => {
+          if (decodedText.includes("/scan/")) {
+            document.getElementById("qr-status").textContent = "✓ QR detected — opening order…";
+            closeQrScanner();
+            window.location.href = decodedText;
+          } else {
+            document.getElementById("qr-status").textContent = "⚠ Not a valid order QR code.";
+          }
+        },
+        () => {}
+      ).then(() => {
+        document.getElementById("qr-status").textContent = "Ready — hold the QR code steady";
+      }).catch(() => {
+        document.getElementById("qr-status").textContent = "❌ Camera unavailable or permission denied.";
+      });
+    });
+  }
+
+  function closeQrScanner() {
+    // Close modal immediately — don't let scanner cleanup block this
+    document.getElementById("qr-modal").style.display = "none";
+    document.getElementById("qr-status").textContent = "";
+
+    if (html5QrCode) {
+      const scanner = html5QrCode;
+      html5QrCode = null;
+      try {
+        scanner.stop()
+          .then(() => { try { scanner.clear(); } catch(e) {} })
+          .catch(() => { try { scanner.clear(); } catch(e) {} });
+      } catch(e) {
+        // stop() threw synchronously (scanner was never running — permission denied)
+        try { scanner.clear(); } catch(e2) {}
+      }
+    }
+  }
+
+  // Close on backdrop click
+  document.getElementById("qr-modal").addEventListener("click", function(e) {
+    if (e.target === this) closeQrScanner();
+  });
+</script>
+
+{{ block.super }}
+{% endblock %}

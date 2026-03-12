@@ -1,0 +1,72 @@
+{% extends "admin/change_list.html" %}
+{% load i18n %}
+
+{% block content %}
+
+{% if bulk_stock_url %}
+<div style="margin-bottom:16px;">
+  <a href="{{ bulk_stock_url }}"
+     style="display:inline-block;padding:9px 20px;background:#8b5cf6;color:#fff;
+            border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;">
+    📦 Bulk Stock Update
+  </a>
+</div>
+{% endif %}
+
+<div style="margin-bottom:24px;overflow:hidden;">
+
+  <h2 style="font-size:15px;font-weight:700;color:#111827;margin:0 0 16px;">
+    📊 Top 10 SKUs by Units Sold
+  </h2>
+
+  <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -16px;padding:0 16px;">
+  <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:440px;">
+    <thead>
+      <tr style="border-bottom:2px solid #e5e7eb;">
+        <th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:700;
+                   text-transform:uppercase;letter-spacing:.05em;color:#6b7280;">#</th>
+        <th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:700;
+                   text-transform:uppercase;letter-spacing:.05em;color:#6b7280;">SKU Code</th>
+        <th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:700;
+                   text-transform:uppercase;letter-spacing:.05em;color:#6b7280;">Product</th>
+        <th style="padding:8px 12px;text-align:right;font-size:11px;font-weight:700;
+                   text-transform:uppercase;letter-spacing:.05em;color:#6b7280;">Units Sold</th>
+        <th style="padding:8px 12px;text-align:right;font-size:11px;font-weight:700;
+                   text-transform:uppercase;letter-spacing:.05em;color:#6b7280;">Orders</th>
+        <th style="padding:8px 12px;text-align:right;font-size:11px;font-weight:700;
+                   text-transform:uppercase;letter-spacing:.05em;color:#6b7280;">Revenue</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in analytics %}
+      <tr style="border-bottom:1px solid #f3f4f6;">
+        <td style="padding:10px 12px;color:#9ca3af;">{{ forloop.counter }}</td>
+        <td style="padding:10px 12px;font-family:monospace;font-size:12px;
+                   font-weight:600;color:#8b5cf6;">
+          {{ row.sku__sku_code }}
+        </td>
+        <td style="padding:10px 12px;">{{ row.sku__product__name }}</td>
+        <td style="padding:10px 12px;text-align:right;font-weight:700;">
+          {{ row.total_qty }}
+        </td>
+        <td style="padding:10px 12px;text-align:right;color:#6b7280;">
+          {{ row.total_orders }}
+        </td>
+        <td style="padding:10px 12px;text-align:right;font-weight:700;color:#10b981;">
+          ₹{{ row.revenue|default:0|floatformat:0 }}
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="6" style="padding:20px;text-align:center;color:#9ca3af;">
+          No data yet.
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+
+{{ block.super }}
+{% endblock %}

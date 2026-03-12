@@ -1,0 +1,79 @@
+
+<div class="row g-2 mx-0">
+
+{% for product in products %}
+    <div class="col-6 col-md-4 col-lg-3 mb-3">
+        <div class="product-card">
+
+            <div class="product-img-box"
+                onmouseenter="startHover(this)"
+                onmouseleave="stopHover(this)">
+
+                <a href="{% url 'product_detail' product.id %}" class="img-link">
+
+                    <!-- MAIN IMAGE -->
+                    <img src="{{ product.image.url }}"
+                        class="product-card-img active">
+
+                    <!-- EXTRA IMAGES -->
+                    {% for img in product.images.all %}
+                        <img src="{{ img.image.url }}"
+                            class="product-card-img">
+                    {% endfor %}
+
+                </a>
+
+                <!-- WISHLIST -->
+                <button class="wishlist-btn-card {% if product.id in wishlist_ids %}wish-active{% endif %}"
+                        onclick="toggleWishlist('{{ product.id }}', this)">
+                    <i class="bi {% if product.id in wishlist_ids %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
+                </button>
+
+            </div>
+
+
+
+
+            <div class="mt-2 small fw-semibold">
+                {{ product.name }}
+            </div>
+
+            <div class="small text-muted">
+                {{ product.category|title }}
+            </div>
+
+            <div class="price-box mt-1">
+
+                <span class="selling-price">
+                    ₹{{ product.min_selling_price }}
+                </span>
+
+                {% if product.discount_percent > 0 %}
+                    <span class="mrp">
+                        ₹{{ product.min_mrp }}
+                    </span>
+
+                    <span class="discount">
+                        ({{ product.discount_percent }}% OFF)
+                    </span>
+                {% endif %}
+
+            </div>
+
+            {% if product.total_stock == 0 %}
+                <div class="out-of-stock-text">
+                    Out Of Stock!
+                </div>
+
+            {% elif product.total_stock <= 3 %}
+                <div class="low-stock-text">
+                    Only Few Left!
+                </div>
+            {% endif %}
+
+        </div>
+    </div>
+{% endfor %}
+
+
+</div>

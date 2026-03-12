@@ -1,0 +1,60 @@
+{% extends "store/base.html" %}
+
+{% block title %}Order Placed | TheZivo{% endblock %}
+
+{% block content %}
+
+<div class="container my-5" style="max-width:560px;">
+    <div class="bg-white rounded shadow-sm p-4 text-center">
+
+        <!-- SUCCESS ICON -->
+        <div style="font-size:56px;">🎉</div>
+
+        <h4 class="fw-bold mt-3">Order Placed Successfully!</h4>
+        <p class="text-muted">
+            Thank you for shopping with Zivo. 
+            We'll get your order packed and shipped soon.
+        </p>
+
+        <hr>
+
+        <!-- ORDER DETAILS -->
+        <div class="text-start mb-3">
+            <div class="d-flex justify-content-between py-2 border-bottom">
+                <span class="text-muted">Order ID</span>
+                <span class="fw-semibold">#{{ order.id }}</span>
+            </div>
+            <div class="d-flex justify-content-between py-2 border-bottom">
+                <span class="text-muted">Name</span>
+                <span>{{ order.name }}</span>
+            </div>
+            <div class="d-flex justify-content-between py-2 border-bottom">
+                <span class="text-muted">Phone</span>
+                <span>{{ order.phone }}</span>
+            </div>
+            <div class="d-flex justify-content-between py-2 border-bottom">
+                <span class="text-muted">Payment</span>
+                <span>{{ order.payment_method }}</span>
+            </div>
+            <div class="d-flex justify-content-between py-2">
+                <span class="text-muted">Total Paid</span>
+                <span class="fw-bold fs-5">₹{{ order.total_amount }}</span>
+            </div>
+        </div>
+
+        <!-- BUTTONS -->
+        <div class="d-flex flex-column gap-2 mt-3">
+            <a href="{% url 'my_orders' %}"
+               class="btn btn-dark w-100">
+                View My Orders
+            </a>
+            <a href="{% url 'home' %}"
+               class="btn btn-outline-dark w-100">
+                Continue Shopping
+            </a>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

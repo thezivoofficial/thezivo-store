@@ -1,0 +1,71 @@
+<div class="product-card">
+
+    {# Prefer in-stock SKU for price; fall back to any SKU so OOS products still show price #}
+    {% with card_sku=default_sku|default:product.sku_set.first %}
+
+    {% with stock=product.total_stock|default:product.prefetched_stock %}
+
+    <div class="product-img-box"
+         onmouseenter="startHover(this)"
+         onmouseleave="stopHover(this)">
+
+        <a href="{% url 'product_detail' product.id %}" class="img-link">
+
+            <!-- Main image -->
+            <img src="{{ product.image.url }}"
+                 class="product-card-img active">
+
+            <!-- Extra images (if available) -->
+            {% if product.images.all %}
+                {% for img in product.images.all %}
+                    <img src="{{ img.image.url }}"
+                         class="product-card-img">
+                {% endfor %}
+            {% endif %}
+
+        </a>
+
+        <!-- Out of Stock overlay -->
+        {% if stock == 0 %}
+            <div class="oos-overlay">Out of Stock</div>
+        {% endif %}
+
+        <!-- Wishlist (hidden for OOS) -->
+        {% if stock > 0 %}
+        <button class="wishlist-btn-card {% if product.id in wishlist_ids %}wish-active{% endif %}"
+                onclick="toggleWishlist('{{ product.id }}', this)">
+            <i class="bi {% if product.id in wishlist_ids %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
+        </button>
+        {% endif %}
+
+    </div>
+
+    <div class="mt-2 small fw-semibold">
+        {{ product.name }}
+    </div>
+
+    <div class="small text-muted">
+        {{ product.category|title }}
+    </div>
+
+    <div class="price-box mt-1">
+
+        <span class="selling-price {% if stock == 0 %}oos-price{% endif %}">
+            ₹{{ card_sku.selling_price }}
+        </span>
+
+        {% if card_sku.discount_percent > 0 %}
+            <span class="mrp">
+                ₹{{ card_sku.mrp }}
+            </span>
+            <span class="discount">
+                ({{ card_sku.discount_percent }}% OFF)
+            </span>
+        {% endif %}
+
+    </div>
+
+    {% endwith %}
+    {% endwith %}
+
+</div>

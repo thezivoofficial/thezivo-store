@@ -1,0 +1,431 @@
+{% extends "store/base.html" %}
+
+{% block title %}My Wishlist | TheZivo{% endblock %}
+
+{% block content %}
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+    .wishlist-page {
+        background: #f8f7f5;
+        min-height: 100vh;
+        padding: 48px 0 80px;
+        font-family: 'DM Sans', sans-serif;
+    }
+
+    .wishlist-header { margin-bottom: 32px; }
+
+    .wishlist-header h1 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2rem;
+        font-weight: 600;
+        color: #111;
+        letter-spacing: -0.3px;
+        margin-bottom: 4px;
+    }
+
+    .wishlist-header p { color: #999; font-size: 0.88rem; font-weight: 300; }
+
+    .wishlist-card {
+        background: #fff;
+        border-radius: 16px;
+        border: 1px solid #ececec;
+        padding: 16px;
+        margin-bottom: 12px;
+        display: flex;
+        gap: 16px;
+        align-items: flex-start;
+        position: relative;
+        transition: box-shadow 0.2s;
+        animation: fadeUp 0.3s ease both;
+    }
+
+    .wishlist-card:nth-child(2) { animation-delay: 60ms; }
+    .wishlist-card:nth-child(3) { animation-delay: 120ms; }
+    .wishlist-card:nth-child(4) { animation-delay: 180ms; }
+    .wishlist-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.06); }
+
+    .wishlist-img {
+        width: 90px; height: 115px; object-fit: cover;
+        border-radius: 10px; flex-shrink: 0;
+        background: #f0f0f0; transition: transform 0.2s;
+        display: block;
+    }
+    .wishlist-img:hover { transform: scale(1.02); }
+
+    .wishlist-info {
+        flex: 1; min-width: 0;
+        display: flex; flex-direction: column;
+    }
+
+    /* Remove button — top-right icon */
+    .btn-remove-wish {
+        position: absolute; top: 14px; right: 14px;
+        background: none; border: none; padding: 4px;
+        cursor: pointer; color: #ccc; line-height: 1;
+        transition: color 0.15s;
+    }
+    .btn-remove-wish:hover { color: #c62828; }
+    .btn-remove-wish i { font-size: 1rem; }
+
+    .wishlist-name {
+        font-family: 'Playfair Display', serif;
+        font-size: 0.98rem; font-weight: 500; color: #111;
+        margin-bottom: 3px; text-decoration: none; display: block;
+        padding-right: 28px; /* avoid overlap with × button */
+    }
+    .wishlist-name:hover { color: #555; }
+
+    .wishlist-meta { font-size: 0.76rem; color: #aaa; margin-bottom: 10px; }
+
+    .wishlist-price {
+        font-family: 'Playfair Display', serif;
+        font-size: 1rem; font-weight: 600; color: #111; margin-bottom: 14px;
+    }
+
+    .out-of-stock-badge {
+        font-size: 0.72rem; font-weight: 600;
+        background: #fdecea; color: #c62828;
+        padding: 3px 9px; border-radius: 4px;
+        display: inline-block; margin-bottom: 14px;
+    }
+
+    /* Action buttons row */
+    .wishlist-actions { display: flex; gap: 8px; }
+
+    .btn-view {
+        font-size: 0.8rem; font-weight: 500; color: #555;
+        text-decoration: none; border: 1.5px solid #e0e0e0;
+        border-radius: 7px; padding: 8px 14px;
+        transition: border-color 0.15s, color 0.15s; white-space: nowrap;
+        display: inline-flex; align-items: center; gap: 5px;
+    }
+    .btn-view:hover { border-color: #bbb; color: #111; }
+
+    .btn-move-to-bag {
+        font-size: 0.82rem; font-weight: 600; color: #fff;
+        background: #111; border: none;
+        border-radius: 7px; padding: 8px 18px; cursor: pointer;
+        transition: background 0.2s; white-space: nowrap;
+        display: inline-flex; align-items: center; gap: 5px;
+    }
+    .btn-move-to-bag:hover { background: #333; }
+
+    .wish-heart { display: none; }
+
+    .empty-wishlist {
+        text-align: center; padding: 80px 24px;
+        background: #fff; border-radius: 16px;
+        border: 1px solid #ececec;
+        animation: fadeUp 0.3s ease both;
+    }
+    .empty-wishlist-icon { font-size: 3.5rem; margin-bottom: 20px; opacity: 0.2; }
+    .empty-wishlist h3 {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.4rem; color: #111; margin-bottom: 8px;
+    }
+    .empty-wishlist p { color: #999; font-size: 0.88rem; margin-bottom: 24px; }
+
+    .btn-shop {
+        background: #111; color: #fff; border: none;
+        padding: 12px 32px; border-radius: 8px;
+        font-family: 'DM Sans', sans-serif; font-weight: 500;
+        font-size: 0.9rem; text-decoration: none; display: inline-block;
+        transition: background 0.2s, transform 0.15s;
+    }
+    .btn-shop:hover { background: #333; color: #fff; transform: translateY(-1px); }
+
+    .modal-content { border-radius: 16px !important; border: none; font-family: 'DM Sans', sans-serif; }
+    .modal-product-img { width: 70px; height: 88px; object-fit: cover; border-radius: 8px; }
+    .modal-product-name { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 500; color: #111; }
+    .modal-price { font-family: 'Playfair Display', serif; font-size: 0.95rem; font-weight: 600; color: #111; }
+
+    .size-label {
+        font-size: 0.7rem; font-weight: 600; color: #aaa;
+        text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px;
+    }
+
+    .wishlist-size-btn {
+        width: 46px; height: 46px; border: 1.5px solid #e0e0e0;
+        border-radius: 8px; background: #fff; font-size: 0.82rem;
+        font-weight: 600; color: #111; cursor: pointer;
+        transition: border-color 0.15s, background 0.15s;
+        font-family: 'DM Sans', sans-serif;
+    }
+    .wishlist-size-btn:hover { border-color: #aaa; background: #fafafa; }
+    .wishlist-size-btn.active { border-color: #111; background: #111; color: #fff; }
+    .wishlist-size-btn.disabled { border-color: #f0f0f0; color: #ccc; cursor: not-allowed; text-decoration: line-through; }
+
+    .btn-confirm {
+        background: #111; color: #fff; border: none; padding: 13px;
+        border-radius: 9px; font-family: 'DM Sans', sans-serif;
+        font-weight: 600; font-size: 0.92rem; width: 100%;
+        cursor: pointer; transition: background 0.2s, transform 0.15s; margin-top: 8px;
+    }
+    .btn-confirm:hover:not(:disabled) { background: #333; transform: translateY(-1px); }
+    .btn-confirm:disabled { background: #ccc; cursor: not-allowed; }
+
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(12px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 576px) {
+        .wishlist-page { padding: 14px 0 80px; }
+        .wishlist-header { margin-bottom: 16px; }
+        .wishlist-header h1 { font-size: 1.5rem; }
+        .wishlist-card { padding: 12px; gap: 12px; }
+        .wishlist-img { width: 76px; height: 96px; }
+        .wishlist-name { font-size: 0.9rem; }
+        .wishlist-price { font-size: 0.95rem; margin-bottom: 10px; }
+        .btn-view { padding: 7px 12px; font-size: 0.77rem; }
+        .btn-move-to-bag { padding: 7px 12px; font-size: 0.77rem; }
+    }
+</style>
+
+<div class="wishlist-page">
+    <div class="container">
+
+        <div class="wishlist-header">
+            <h1>My Wishlist</h1>
+            <p>Items you've saved for later</p>
+        </div>
+
+        <div id="wishlistContent">
+
+            {% if wishlist_items %}
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div id="wishlistList">
+                        {% for item in wishlist_items %}
+                        <div class="wishlist-card" id="wish-card-{{ item.product.id }}">
+
+                            <!-- Remove × top-right -->
+                            <button type="button" class="btn-remove-wish"
+                                    onclick="wishlistRemove('{{ item.product.id }}', this)"
+                                    title="Remove">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+
+                            <a href="{% url 'product_detail' item.product.id %}">
+                                <img src="{{ item.product.image.url }}"
+                                     class="wishlist-img"
+                                     alt="{{ item.product.name }}">
+                            </a>
+
+                            <div class="wishlist-info">
+                                <a href="{% url 'product_detail' item.product.id %}"
+                                   class="wishlist-name">
+                                    {{ item.product.name }}
+                                </a>
+                                <div class="wishlist-meta">
+                                    {{ item.product.brand }} · {{ item.product.category|title }}
+                                </div>
+
+                                {% if item.sku %}
+                                    <div class="wishlist-price">₹{{ item.sku.selling_price }}</div>
+                                {% else %}
+                                    <div class="out-of-stock-badge">Out of Stock</div>
+                                {% endif %}
+
+                                <div class="wishlist-actions">
+                                    <a href="{% url 'product_detail' item.product.id %}"
+                                       class="btn-view">
+                                        <i class="bi bi-eye"></i> View
+                                    </a>
+
+                                    {% if item.sku %}
+                                    <button type="button"
+                                            class="btn-move-to-bag"
+                                            onclick="openWishlistSizeModal(
+                                                {{ item.product.id }},
+                                                '{{ item.product.image.url }}',
+                                                '{{ item.product.name }}'
+                                            )">
+                                        <i class="bi bi-bag-plus"></i> Move to Bag
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            {% else %}
+            <div class="empty-wishlist">
+                <div class="empty-wishlist-icon">♡</div>
+                <h3>Your wishlist is empty</h3>
+                <p>Save items you love and come back to them anytime.</p>
+                <a href="{% url 'home' %}" class="btn-shop">Explore Collection</a>
+            </div>
+            {% endif %}
+
+        </div>
+
+    </div>
+</div>
+
+
+<!-- SIZE MODAL -->
+<div class="modal fade" id="wishlistSizeModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:380px;">
+        <div class="modal-content p-4">
+
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="d-flex gap-3 align-items-center">
+                    <img id="modalProductImg" src="" class="modal-product-img" alt="">
+                    <div>
+                        <div id="modalProductName" class="modal-product-name"></div>
+                        <div class="mt-1 d-flex align-items-center gap-2">
+                            <span id="modalPrice" class="modal-price"></span>
+                            <span id="modalMrp" style="font-size:0.8rem;color:#bbb;text-decoration:line-through;"></span>
+                            <span id="modalDiscount" style="font-size:0.75rem;color:#e53935;font-weight:600;"></span>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" style="flex-shrink:0;"></button>
+            </div>
+
+            <hr style="margin:0 0 16px;">
+
+            <div class="size-label">Select Size</div>
+            <div id="wishlistSizeOptions" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;"></div>
+
+            <button id="wishlistConfirmBtn" class="btn-confirm" disabled>Add to Bag</button>
+
+        </div>
+    </div>
+</div>
+
+
+<script>
+let wishlistModal = null;
+let selectedWishlistSku = null;
+let selectedProductId = null;
+
+document.addEventListener("DOMContentLoaded", function () {
+    const modalEl = document.getElementById("wishlistSizeModal");
+    if (modalEl) wishlistModal = new bootstrap.Modal(modalEl);
+});
+
+function openWishlistSizeModal(productId, img, name) {
+    selectedWishlistSku = null;
+    selectedProductId = productId;
+    document.getElementById("modalProductImg").src = img;
+    document.getElementById("modalProductName").innerText = name;
+
+    const sizeBox = document.getElementById("wishlistSizeOptions");
+    const confirmBtn = document.getElementById("wishlistConfirmBtn");
+    sizeBox.innerHTML = "";
+    confirmBtn.disabled = true;
+
+    fetch(`/get-product-skus/${productId}/`)
+    .then(res => res.json())
+    .then(data => {
+        if (data.skus.length > 0) {
+            const first = data.skus[0];
+            document.getElementById("modalPrice").innerText = "₹" + first.selling_price;
+            document.getElementById("modalMrp").innerText = first.mrp > first.selling_price ? "₹" + first.mrp : "";
+            const disc = first.mrp > first.selling_price
+                ? Math.round(((first.mrp - first.selling_price) / first.mrp) * 100) : 0;
+            document.getElementById("modalDiscount").innerText = disc > 0 ? `${disc}% off` : "";
+        }
+
+        data.skus.forEach(sku => {
+            const btn = document.createElement("button");
+            btn.className = "wishlist-size-btn" + (sku.stock === 0 ? " disabled" : "");
+            btn.innerText = sku.size;
+            if (sku.stock > 0) {
+                btn.onclick = function () {
+                    document.querySelectorAll(".wishlist-size-btn").forEach(b => b.classList.remove("active"));
+                    btn.classList.add("active");
+                    selectedWishlistSku = sku.id;
+                    confirmBtn.disabled = false;
+                };
+            }
+            sizeBox.appendChild(btn);
+        });
+
+        wishlistModal.show();
+    });
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    const confirmBtn = document.getElementById("wishlistConfirmBtn");
+    if (!confirmBtn) return;
+
+    confirmBtn.addEventListener("click", function () {
+        if (!selectedWishlistSku) return;
+
+        fetch("{% url 'add_to_cart' %}", {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}",
+                "X-Requested-With": "XMLHttpRequest",
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: "sku_id=" + selectedWishlistSku
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === "success") {
+                const cartCount = document.getElementById("cart-count");
+                if (cartCount) {
+                    cartCount.innerText = data.cart_count;
+                    cartCount.style.display = "inline-block";
+                }
+                const toast = document.getElementById("addToCartToast");
+                if (toast) new bootstrap.Toast(toast).show();
+                wishlistModal.hide();
+
+                // Remove from wishlist after moving to bag
+                if (selectedProductId) {
+                    wishlistRemove(selectedProductId, null);
+                }
+            }
+        });
+    });
+});
+
+window.wishlistRemove  = function(productId, btn) {
+    const card = document.getElementById("wish-card-" + productId);
+    console.log("Card found:", card);
+
+    fetch("{% url 'toggle_wishlist' %}", {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": "{{ csrf_token }}",
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: "product_id=" + productId
+    })
+    .then(res => res.json())
+    .then(data => {
+        console.log("Server response:", data);
+        if (data.status === "removed") {
+            if (card) {
+                card.style.opacity = "0";
+                card.style.transition = "opacity 0.2s";
+                setTimeout(() => {
+                    card.remove();
+                    const remaining = document.querySelectorAll("[id^='wish-card-']");
+                    console.log("Remaining cards:", remaining.length);
+                    if (remaining.length === 0) {
+                        console.log("Reloading...");
+                        window.location.href = window.location.pathname;
+                    }
+                }, 200);
+            } else {
+                console.log("Card NOT found in DOM for id:", productId);
+            }
+        }
+    })
+    .catch(err => console.error("Fetch error:", err));
+};
+</script>
+
+{% endblock %}

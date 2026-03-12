@@ -1,0 +1,319 @@
+{% extends "store/base.html" %}
+{% block title %}My Profile | TheZivo{% endblock %}
+
+{% block content %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+    .profile-page {
+        background: #f8f7f5;
+        min-height: 100vh;
+        padding: 32px 0 80px;
+        font-family: 'DM Sans', sans-serif;
+    }
+
+    /* ── Header card ── */
+    .profile-header {
+        background: #fff;
+        border-radius: 16px;
+        border: 1px solid #ececec;
+        padding: 24px;
+        margin-bottom: 20px;
+    }
+
+    .profile-header-top {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 0;
+    }
+
+    .profile-avatar {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        background: #111;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        color: #fff;
+        font-family: 'Playfair Display', serif;
+        font-weight: 600;
+        flex-shrink: 0;
+    }
+
+    .profile-name {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.15rem;
+        font-weight: 600;
+        color: #111;
+    }
+
+    .profile-sub {
+        font-size: 0.8rem;
+        color: #999;
+        margin-top: 2px;
+    }
+
+    .btn-edit-toggle {
+        margin-left: auto;
+        background: none;
+        border: 1.5px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 6px 14px;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #555;
+        cursor: pointer;
+        transition: border-color 0.15s, background 0.15s, color 0.15s;
+        flex-shrink: 0;
+    }
+
+    .btn-edit-toggle:hover { border-color: #111; color: #111; background: #fafafa; }
+
+    /* ── Edit form ── */
+    .profile-edit-form {
+        display: none;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #f0f0f0;
+    }
+
+    .profile-edit-form.open { display: block; }
+
+    .edit-field { margin-bottom: 14px; }
+
+    .edit-label {
+        display: block;
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #aaa;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        margin-bottom: 5px;
+    }
+
+    .edit-input {
+        width: 100%;
+        border: 1.5px solid #e8e8e8;
+        border-radius: 8px;
+        padding: 10px 13px;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.9rem;
+        color: #111;
+        background: #fff;
+        outline: none;
+        transition: border-color 0.15s;
+    }
+
+    .edit-input:focus { border-color: #111; }
+
+    .edit-input[disabled] {
+        background: #f8f8f8;
+        color: #bbb;
+        cursor: not-allowed;
+    }
+
+    .edit-hint { font-size: 0.72rem; color: #bbb; margin-top: 3px; }
+
+    .edit-actions { display: flex; gap: 10px; margin-top: 4px; }
+
+    .btn-save-profile {
+        background: #111;
+        color: #fff;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 8px;
+        font-family: 'DM Sans', sans-serif;
+        font-weight: 600;
+        font-size: 0.88rem;
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+
+    .btn-save-profile:hover { background: #333; }
+
+    .btn-cancel-edit {
+        background: none;
+        border: 1.5px solid #e0e0e0;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.88rem;
+        color: #777;
+        cursor: pointer;
+        transition: border-color 0.15s;
+    }
+
+    .btn-cancel-edit:hover { border-color: #bbb; color: #111; }
+
+    /* ── Options grid ── */
+    .profile-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+    }
+
+    .profile-tile {
+        background: #fff;
+        border-radius: 14px;
+        border: 1px solid #ececec;
+        padding: 20px 18px;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        transition: box-shadow 0.2s, border-color 0.2s, transform 0.15s;
+    }
+
+    .profile-tile:hover {
+        box-shadow: 0 6px 24px rgba(0,0,0,0.07);
+        border-color: #d0d0d0;
+        transform: translateY(-1px);
+    }
+
+    .profile-tile-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.15rem;
+        flex-shrink: 0;
+    }
+
+    .tile-orders .profile-tile-icon   { background: #e8f4fd; }
+    .tile-addresses .profile-tile-icon { background: #e8f5e9; }
+    .tile-wishlist .profile-tile-icon  { background: #fce4ec; }
+
+    .profile-tile-label {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #111;
+        margin-bottom: 2px;
+    }
+
+    .profile-tile-sub { font-size: 0.74rem; color: #aaa; }
+
+    .profile-tile-arrow { margin-left: auto; color: #ccc; font-size: 1rem; flex-shrink: 0; }
+
+    .tile-logout { border-color: #ffebee; }
+    .tile-logout .profile-tile-icon { background: #fce4ec; }
+    .tile-logout .profile-tile-label { color: #c62828; }
+    .tile-logout:hover { border-color: #ef9a9a; }
+
+    @media (max-width: 480px) {
+        .profile-page { padding: 14px 0 80px; }
+        .profile-grid { grid-template-columns: 1fr; }
+        .profile-header { padding: 18px 16px; }
+    }
+</style>
+
+<div class="profile-page">
+    <div class="container" style="max-width: 560px;">
+
+        <!-- PROFILE HEADER + EDIT FORM -->
+        <div class="profile-header">
+            <div class="profile-header-top">
+                <div class="profile-avatar">{{ request.customer.name|first|upper }}</div>
+                <div>
+                    <div class="profile-name">{{ request.customer.name }}</div>
+                    <div class="profile-sub">{{ request.customer.phone }}</div>
+                </div>
+                <button class="btn-edit-toggle" id="editToggleBtn" onclick="toggleEdit()">✎ Edit</button>
+            </div>
+
+            <!-- INLINE EDIT FORM -->
+            <div class="profile-edit-form" id="profileEditForm">
+                <form method="post" action="{% url 'update_profile' %}">
+                    {% csrf_token %}
+
+                    <div class="edit-field">
+                        <label class="edit-label">Full Name</label>
+                        <input type="text" name="name" class="edit-input"
+                               value="{{ request.customer.name }}" required>
+                    </div>
+
+                    <div class="edit-field">
+                        <label class="edit-label">Email (optional)</label>
+                        <input type="email" name="email" class="edit-input"
+                               placeholder="your@email.com"
+                               value="{{ request.customer.email|default:'' }}">
+                    </div>
+
+                    <div class="edit-field">
+                        <label class="edit-label">Phone Number</label>
+                        <input type="text" class="edit-input" disabled
+                               value="{{ request.customer.phone }}">
+                        <div class="edit-hint">Phone number cannot be changed. Contact support if needed.</div>
+                    </div>
+
+                    <div class="edit-actions">
+                        <button type="submit" class="btn-save-profile">Save Changes</button>
+                        <button type="button" class="btn-cancel-edit" onclick="toggleEdit()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- OPTIONS GRID -->
+        <div class="profile-grid">
+
+            <a href="{% url 'my_orders' %}" class="profile-tile tile-orders">
+                <div class="profile-tile-icon">📦</div>
+                <div>
+                    <div class="profile-tile-label">My Orders</div>
+                    <div class="profile-tile-sub">
+                        {% if order_count %}{{ order_count }} order{{ order_count|pluralize }}{% else %}No orders yet{% endif %}
+                    </div>
+                </div>
+                <span class="profile-tile-arrow">›</span>
+            </a>
+
+            <a href="{% url 'manage_addresses' %}" class="profile-tile tile-addresses">
+                <div class="profile-tile-icon">📍</div>
+                <div>
+                    <div class="profile-tile-label">My Addresses</div>
+                    <div class="profile-tile-sub">
+                        {% if address_count %}{{ address_count }} saved{% else %}No addresses{% endif %}
+                    </div>
+                </div>
+                <span class="profile-tile-arrow">›</span>
+            </a>
+
+            <a href="{% url 'wishlist' %}" class="profile-tile tile-wishlist">
+                <div class="profile-tile-icon">♡</div>
+                <div>
+                    <div class="profile-tile-label">Wishlist</div>
+                    <div class="profile-tile-sub">Saved items</div>
+                </div>
+                <span class="profile-tile-arrow">›</span>
+            </a>
+
+            <a href="{% url 'logout' %}" class="profile-tile tile-logout">
+                <div class="profile-tile-icon">🚪</div>
+                <div>
+                    <div class="profile-tile-label">Logout</div>
+                    <div class="profile-tile-sub">Sign out</div>
+                </div>
+                <span class="profile-tile-arrow">›</span>
+            </a>
+
+        </div>
+
+    </div>
+</div>
+
+<script>
+function toggleEdit() {
+    var form = document.getElementById('profileEditForm');
+    var btn  = document.getElementById('editToggleBtn');
+    var isOpen = form.classList.toggle('open');
+    btn.textContent = isOpen ? '✕ Cancel' : '✎ Edit';
+}
+</script>
+
+{% endblock %}

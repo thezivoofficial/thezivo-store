@@ -1,0 +1,2180 @@
+<style>
+
+    /*
+    ╔═════════════════════════════════════════════════════════════════╗
+    ║               THEZIVO — GLOBAL STYLESHEET                       ║
+    ║               templates/store/includes/_head_styles.html        ║
+    ╠═════════════════════════════════════════════════════════════════╣
+    ║  This file contains ALL global CSS for TheZivo. It is included  ║
+    ║  in base.html and applies to every page.                        ║
+    ║                                                                 ║
+    ║  Design Tokens                                                  ║
+    ║    Font:       Poppins (UI), Playfair Display (headings)        ║
+    ║    Accent:     #ff3f6c  (Myntra pink)                         ║
+    ║    Background: #f8f7f5  (cream)                               ║
+    ║    Text:       #111     (near-black)                          ║
+    ║    Radius:     8–16px cards, 50% pills                          ║
+    ║    Transition: 0.15–0.25s ease                                  ║
+    ║                                                                 ║
+    ║  TABLE OF CONTENTS                                              ║
+    ║  ─────────────────────────────────────────────────────          ║
+    ║   1.  Price Range Slider       (noUiSlider, filters page)       ║
+    ║   2.  Page Body                (padding below fixed navbar)     ║
+    ║   3.  Side Cart — Qty Pill     (offcanvas cart controls)        ║
+    ║   4.  Side Cart — Size Select  (dropdown inside cart items)     ║
+    ║   5.  Side Cart — Delete Icon  (trash/remove button)            ║
+    ║   6.  Side Cart — Layout       (offcanvas structure)            ║
+    ║   7.  Navbar — Fixed Header    (positioning + z-index)          ║
+    ║   8.  Navbar — Typography      (link font, weight, spacing)     ║
+    ║   9.  Navbar — Alignment       (flex height, vertical center)   ║
+    ║  10.  Navbar — Underline FX    (hover + active indicator)       ║
+    ║  11.  Navbar — Dropdown        (pure CSS hover dropdown menu)   ║
+    ║  12.  Product Grid Cards       (card hover, image ratio)        ║
+    ║  13.  Size Selector — Circles  (product detail radio UI)        ║
+    ║  14.  Product Detail — Images  (main image, wishlist btn)       ║
+    ║  15.  Price Display            (selling, MRP, discount badge)   ║
+    ║  16.  Filters — Category Page  (sidebar, checkboxes, titles)    ║
+    ║  17.  Mobile Breakpoints       (≤768px responsive overrides)    ║
+    ║  18.  Home — Category Cards    (grid section links)             ║
+    ║  19.  Home — Trust Cards       (icons below hero)               ║
+    ║  20.  Hero Carousel            (full-width slides + controls)   ║
+    ║  21.  Product Detail — Gallery (main img 480px + thumbnails)    ║
+    ║  22.  Product Card Slideshow   (hover image cycle on grid)      ║
+    ║  23.  Product Card Wishlist    (heart button, hover reveal)     ║
+    ║  24.  Wishlist Page            (wishlist item image)            ║
+    ║  25.  Out of Stock Badge       (red pill on product cards)      ║
+    ║  26.  Size Pills               (wishlist/detail modal buttons)  ║
+    ║  27.  Size Buttons             (add-to-cart size selector)      ║
+    ║  28.  Cart Size Select         (dropdown in side cart row)      ║
+    ║  29.  Wishlist Size Buttons    (circular size picker in modal)  ║
+    ╚═════════════════════════════════════════════════════════════════╝
+    */
+
+        /* =========================================================
+        MYNTRA STYLE PRICE SLIDER
+        Used in filters (PRICE section) for dual range slider
+        ========================================================= */
+
+        .price-range {
+            position: relative;
+            height: 2px;   /* Visual height of the slider track */
+            margin-top: 8px;
+        }
+
+        /* Base inactive track (full range background) */
+        .price-track {
+            position: absolute;
+            top: -2px;
+            width: 100%;
+            height: 2px;
+            background: #e0e0e0;
+            border-radius: 3px;
+        }
+
+        /* Active selected price range (filled portion) */
+        .price-fill {
+            position: absolute;
+            top: -2px;
+            height: 2px;
+            background: #ff3f6c;
+            border-radius: 3px;
+            z-index: 1;
+            transition: left 0.25s ease, width 0.25s ease;
+        }
+
+        /* Range input overlay (both min & max sliders) */
+        .price-range input[type=range] {
+            position: absolute;
+            top: -15px;
+            width: 100%;
+            pointer-events: none;
+            background: none;
+            -webkit-appearance: none;
+            z-index: 2;
+        }
+
+        /* WebKit slider thumb (Chrome / Edge / Safari) */
+        .price-range input[type=range]::-webkit-slider-thumb {
+            pointer-events: auto;
+            width: 13px;
+            height: 13px;
+            border-radius: 50%;
+            background: #fff;
+            border: 4px solid #ff3f6c;
+            cursor: pointer;
+            -webkit-appearance: none;
+            margin-top: 8px;
+        }
+
+        /* Firefox slider thumb */
+        .price-range input[type=range]::-moz-range-thumb {
+            pointer-events: auto;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #fff;
+            border: 2px solid #2fb5a9;
+            cursor: pointer;
+        }
+
+        /* Layering order for overlapping sliders */
+        #minRange { z-index: 4; }
+        #maxRange { z-index: 5; }
+
+        /* Mobile slider (separate IDs to avoid desktop conflict) */
+        #minRange-mob { z-index: 4; }
+        #maxRange-mob { z-index: 5; }
+
+    /* =========================================================
+    GLOBAL RESET
+    Removes default browser spacing
+    ========================================================= */
+
+    html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+    }
+
+        /* =========================================================
+        BASE BODY STYLING
+        Global typography & navbar offset
+        ========================================================= */
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #fffdfdff; /* cream background */
+            padding-top: 76px; /* adjust if navbar height changes */
+        }
+
+    /* =========================================================
+    CART QUANTITY CONTROLS (Side Cart)
+    ========================================================= */
+
+    .qty-pill {
+        display: flex;
+        align-items: center;
+        border: 1px solid #d8d6d6ff;
+        border-radius: 5px;
+        height: 23px;
+        overflow: hidden;
+    }
+
+    .qty-pill .qty-btn {
+        width: 20px;
+        height: 18px;
+        border: none;
+        background: #fff;
+        font-size: 16px;
+        line-height: 1;
+        cursor: pointer;
+        border-radius: 6px;
+        padding: 0;
+        text-align: center;
+    }
+
+    /* Hover feedback for quantity buttons */
+    .qty-pill .qty-btn:hover {
+        background: #bf5e5eff;
+    }
+
+    /* Quantity number text */
+    .qty-count {
+        min-width: 28px;
+        text-align: center;
+        font-size: 12px;
+        font-weight: 400;
+    }
+
+    /* =========================================================
+    SIZE PILL (Cart / Summary Display)
+    ========================================================= */
+
+    select.size-pill {
+        height: 23px;
+        padding: 0 10px;
+        border-radius: 5px;
+        border: 1px solid #292727ff;
+        font-size: 14px;
+        background-color: #fff;
+        cursor: pointer;
+        font-weight: 550;
+    }
+
+    /* Remove default bootstrap focus ring */
+    select.size-pill:focus {
+        box-shadow: none;
+        border-color: #1c1b1bff;
+    }
+
+    /* =========================================================
+    CART DELETE ICON
+    ========================================================= */
+
+    .cart-delete-icon {
+    font-size: 18px;
+    color: #333;
+    cursor: pointer;
+    }
+
+    .cart-delete-icon:hover {
+        color: #e41010ff;
+        transform: scale(1.1);
+    }
+
+    /* =========================================================
+    SIDE CART (OFFCANVAS)
+    ========================================================= */
+
+    /* Center empty cart message */
+    #sideCart #empty-cart {
+        height: 100% !important;
+    }
+
+    /* Ensure cart stays above content */
+    #sideCart {
+        z-index: 1060 !important;
+    }
+
+    /* Scrollable cart body */
+    #sideCart .offcanvas-body {
+        overflow-y: auto;
+    }
+
+
+    /* Cart footer (checkout area) */
+    #sideCart .offcanvas-footer {
+        border-top: 1px solid #eee;
+        background: #fff;
+    }
+
+
+    /* =========================================================
+    FIXED HEADER / NAVBAR
+    ========================================================= */
+
+    /* Prevent horizontal overflow site-wide */
+    html, body {
+        overflow-x: hidden;
+        max-width: 100%;
+    }
+
+    .fixed-top-navbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 1035; /* above content, below offcanvas */
+        background-color: #fff;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.20);
+        /* Prevent iOS Safari URL-bar jump */
+        transform: translate3d(0, 0, 0);
+        -webkit-transform: translate3d(0, 0, 0);
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        -webkit-perspective: 1000;
+        perspective: 1000;
+        /* Equal top/bottom padding — safe area added on top for notched devices */
+        padding-top: calc(8px + env(safe-area-inset-top, 0px));
+        padding-bottom: 8px;
+    }
+
+    /* =========================================================
+    NAVIGATION TYPOGRAPHY & ALIGNMENT
+    ========================================================= */
+
+    .nav-links a,
+    .nav-dropdown-link {
+        font-family: 'Poppins', sans-serif;
+        font-size: 0.875rem;     /* same as Bootstrap .small */
+        font-weight: 500;        /* same as fw-semibold */
+        letter-spacing: 0.5px;
+    }
+
+    /* ===== UNIFORM NAV ITEM ALIGNMENT ===== */
+    .nav-links {
+        display: flex;
+        align-items: center;
+    }
+
+    .nav-links > a,
+    .nav-dropdown {
+        display: flex;
+        align-items: center;
+        height: 40px;   /* SAME HEIGHT FOR ALL */
+    }
+
+    /* Normalize vertical alignment */
+    .nav-links a {
+        line-height: 1;
+        padding: 0;
+    }
+
+    /* Force consistent nav color */
+    .nav-links a,
+    .nav-links a:visited {
+        color: #111010ff !important;
+    }
+
+    /* =========================================================
+    NAV UNDERLINE (Hover + Active)
+    ========================================================= */
+
+    .nav-links > a,
+    .nav-dropdown-link {
+        position: relative;
+        text-decoration: none;
+    }
+
+    /* underline element */
+    .nav-links > a::before,
+    .nav-dropdown-link::before {
+        content: "";
+        position: absolute;
+        left: 50%;
+        bottom: +6px;
+        width: 0;
+        height: 2.5px;
+        background-color: #e84914ff;
+        transform: translateX(-50%);
+        transition: width 0.25s ease;
+    }
+
+    /* show underline on hover OR active */
+    .nav-links > a:hover::before,
+    .nav-links > a.active::before,
+    .nav-dropdown:hover .nav-dropdown-link::before,
+    .nav-dropdown-link.active::before {
+        width: 100%;
+    }
+
+
+    /* =========================================================
+    PURE CSS NAV DROPDOWN
+    ========================================================= */
+
+    .nav-dropdown {
+        position: relative;
+    }
+
+    .nav-dropdown-menu {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        background: #ffffffff;
+        min-width: 150px;
+        padding: 8px 0;
+        border-radius: 3px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+        z-index: 1000;
+    }
+
+    .nav-dropdown:hover .nav-dropdown-menu {
+        display: block;
+    }
+
+    /* dropdown items */
+    .nav-dropdown-menu a {
+        display: block;
+        padding: 8px 16px;
+        color: #000;
+        text-decoration: none;
+        font-size: 14px;
+    }
+
+    .nav-dropdown-menu a:hover {
+        background-color: #d4d4d4ff;
+    }
+
+    .nav-dropdown-link {
+        display: flex;
+        align-items: center;
+        height: 100%;
+    }
+
+    /* =========================================================
+    PRODUCT GRID CARDS
+    ========================================================= */
+
+    .product-card img {
+        aspect-ratio: 3 / 4;
+        object-fit: cover;
+    }
+
+    .product-card {
+        cursor: pointer;
+    }
+
+    .product-card:hover {
+        transform: translateY(-2px);
+        transition: 0.2s ease;
+    }
+
+
+    /* =========================================================
+    PRODUCT DETAIL PAGE — SIZE SELECTOR
+    ========================================================= */
+
+    /* hide radio button */
+    .size-radio {
+        display: none;
+    }
+
+    /* Size circle UI */
+    .size-circle {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        border: 1.5px solid #d4d5d9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background: #fff;
+    }
+
+    /* hover effect */
+    .size-circle:hover {
+        border-color: #000;
+    }
+
+    /* selected Size */
+    .size-radio:checked + .size-circle {
+        border-color: #ff3f6c;
+        color: #ff3f6c;
+    }
+
+    /* SIZE CIRCLES */
+    .size-options {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    /* OUT OF STOCK SIZE */
+    .size-disabled {
+        border-color: #a70303ff !important;
+        color: #000000ff !important;
+        background: #f7f7f7;
+        cursor: not-allowed;
+        position: relative;
+    }
+
+    /* Diagonal strike line */
+    .size-disabled::after {
+        content: "";
+        position: absolute;
+        width: 70%;
+        height: 1.5px;
+        background: #aa0404ff;
+        transform: rotate(-45deg);
+    }
+
+
+    /* =========================================================
+    § 14  PRODUCT DETAIL — MAIN IMAGE & WISHLIST BUTTON
+    ─────────────────────────────────────────────────────────
+    .product-image-wrapper  → max-width: 400px container
+    .wishlist-btn           → 52px heart toggle on detail page
+    .wishlist-btn.wish-active → filled red heart (AJAX toggled)
+    Full image gallery styles (480px main, thumbnails) in § 21.
+    ========================================================= */
+
+    /* PRODUCT DETAIL IMAGE SIZE */
+    .product-image-wrapper {
+        max-width: 400px;     /* controls size */
+        width: 100%;
+    }
+
+    .wishlist-btn {
+        width: 52px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+    }
+
+    .bi-heart-fill {
+        color: #ff3f6c;
+    }
+
+    .wishlist-btn i {
+        position: relative;
+        top: 2px;   /* Move down */
+    }
+
+
+    /* =========================================================
+    PRICE DISPLAY (GRID & PRODUCT PAGE)
+    ========================================================= */
+
+    .price-box {
+        font-size: 13px;
+        line-height: 1.2;
+    }
+
+    .selling-price {
+        font-weight: 700;
+        color: #100f0fe4;
+    }
+
+    .mrp {
+        font-size: 12px;
+        color: #828181ff;
+        text-decoration: line-through;
+        margin-left: 6px;
+    }
+
+    .discount {
+        font-size: 11px;
+        color: #ff3f6c;
+        margin-left: 4px;
+        font-weight: 600;
+    }
+
+    .low-stock-text {
+        font-size: 11px;
+        color: #eb5809ff; 
+        font-weight: 600;
+        margin-top: 4px;
+    }
+
+    .out-of-stock-text {
+        font-size: 11px;
+        color: #eb5809ff; 
+        font-weight: 600;
+        margin-top: 4px;
+    }
+
+    
+    /* OOS image overlay — bottom strip on product card image */
+    .oos-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(0, 0, 0, 0.55);
+        color: #fff;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+        text-align: center;
+        padding: 7px 0;
+        z-index: 5;
+        pointer-events: none;
+    }
+
+    /* Mute price text for OOS products */
+    .oos-price {
+        color: #aaa !important;
+    }
+
+    .notify-btn {
+        background-color: #ff3f6c;   /* Myntra-like pink */
+        color: #fff;
+        font-weight: 600;
+        border: none;
+    }
+
+    .notify-btn:hover {
+        background-color: #e6365f;
+        color: #fff;
+    }
+
+    /* Product action buttons same height */
+    .product-action-btn {
+        height: 42px;              /* same height */
+        padding: 0 20px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+
+
+
+    /* =========================================================
+    FILTERS — MYNTRA STYLE (CATEGORY PAGE)
+    ========================================================= */
+
+    .sticky-filters {
+        position: sticky;
+        top: 90px;            /* height of navbar */
+        max-height: calc(100vh - 100px);
+        overflow-y: auto;
+        padding-right: 8px;
+        background: #fff;
+    }
+
+    /* COMMON FILTER SECTION */
+    .filter-section {
+        padding-bottom: 16px;
+        margin-bottom: 8px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    /* FILTER TITLE */
+    .filter-title {
+        font-weight: 700;
+        letter-spacing: 1px;
+        font-size: 14px;
+        margin-bottom: 6px;
+    }
+
+    /* FILTER HEADERS (BRAND / SIZE / PRICE) */
+    .filter-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: 700;
+        font-size: 13px;
+        letter-spacing: 0.5px;
+        margin-bottom: 12px;
+    }
+
+    .filter-search {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: #f5f5f6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    .filter-search i {
+        font-size: 14px;
+        color: #555;
+    }
+
+    /* CHECKBOX LIST */
+    .filter-options {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    /* CUSTOM CHECKBOX */
+    .filter-checkbox {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        gap: 10px;
+        font-size: 14px;
+    }
+
+    .filter-checkbox input {
+        display: none;
+    }
+
+    .filter-checkbox .checkmark {
+        width: 16px;
+        height: 16px;
+        border: 1px solid #ccc;
+        border-radius: 2px;
+        position: relative;
+    }
+
+    .filter-checkbox input:checked + .checkmark {
+        background-color: #ff3f6c;
+        border-color: #ff3f6c;
+    }
+
+    .filter-checkbox input:checked + .checkmark::after {
+        content: "";
+        position: absolute;
+        left: 5px;
+        top: 2.5px;
+        width: 4px;
+        height: 8px;
+        border: solid #fff;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+    }
+
+    /* LABEL TEXT */
+    .label-text {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    /* MORE LINK */
+    .filter-more {
+        margin-top: 10px;
+        font-size: 13px;
+        color: #ff3f6c;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+    /* SIZE CHECKBOX STYLE */
+    .size-checkbox .checkmark {
+        border-radius: 2px;
+    }
+
+    /* FILTERS HEADER ROW */
+    .filters-header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+
+    /* CLEAR ALL LINK */
+    .clear-all {
+        font-size: 12px;
+        font-weight: 600;
+        color: #ff3f6c;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .clear-all:hover {
+        text-decoration: underline;
+    }
+
+
+    /* ===============================
+    MOBILE / TABLET OPTIMIZATIONS
+    ================================ */
+    @media (max-width: 991px) {
+
+        body {
+            padding-top: 64px;
+        }
+
+        .container-fluid {
+            padding-left: 12px !important;
+            padding-right: 12px !important;
+        }
+
+        /* Product cards */
+        .product-card img {
+            aspect-ratio: 3 / 4;
+        }
+
+        .price-box {
+            font-size: 12px;
+        }
+
+        .selling-price {
+            font-size: 13px;
+        }
+
+        /* Filter sidebar hidden on mobile (no toggle yet) */
+        .sticky-filters {
+            display: none;
+        }
+    }
+
+    /* ── Desktop search bar ── */
+    .desktop-search {
+        flex: 1;
+        max-width: 520px;
+        min-width: 180px;
+    }
+
+    /* ── Mobile search bar ── */
+    #mobile-search-bar {
+        background: #fff;
+        display: none;        /* hidden by default; JS adds .mob-search-open */
+    }
+    #mobile-search-bar.mob-search-open {
+        display: block !important;
+    }
+    #mobile-search-bar input {
+        width: 100%;
+        border-radius: 50px;
+        border: 1px solid #e0e0e0;
+        padding: 9px 18px;
+        font-size: 14px;
+        outline: none;
+        font-family: inherit;
+    }
+    #mobile-search-bar input:focus {
+        border-color: #ff3f6c;
+        box-shadow: 0 0 0 3px rgba(255, 63, 108, 0.12);
+    }
+
+    /* ── Mobile icon buttons ── */
+    #mobile-search-toggle,
+    #mobile-search-close,
+    .mob-hamburger {
+        background: none;
+        border: none;
+        padding: 4px 6px;
+        cursor: pointer;
+        color: #111;
+        line-height: 1;
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
+    }
+
+    /* ── Mobile nav row ── */
+    .mob-nav-row {
+        min-height: 48px;
+    }
+
+    /* ── Mobile brand text (centered absolute) ── */
+    .mob-brand-center {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        text-align: center;
+        pointer-events: auto;
+        color: #111;
+    }
+    .mob-brand-name {
+        font-size: 22px;
+        font-weight: 900;
+        letter-spacing: 4px;
+        color: #111;
+        line-height: 1;
+        font-family: Georgia, 'Times New Roman', serif;
+        text-transform: uppercase;
+    }
+    .mob-brand-tagline {
+        font-size: 7px;
+        font-weight: 700;
+        letter-spacing: 2.5px;
+        color: #888;
+        margin-top: 2px;
+        text-transform: uppercase;
+    }
+
+    /* ── Offcanvas mobile menu ── */
+    #mobileMenu {
+        width: 280px;
+    }
+    .mob-nav-link {
+        display: flex;
+        align-items: center;
+        padding: 14px 20px;
+        font-size: 15px;
+        font-weight: 600;
+        color: #111;
+        text-decoration: none;
+        border-bottom: 1px solid #f3f4f6;
+        transition: color .15s, background .15s;
+    }
+    .mob-nav-link:hover,
+    .mob-nav-link.mob-nav-active {
+        color: #ff3f6c;
+        background: #fff5f7;
+    }
+    .mob-nav-toggle {
+        width: 100%;
+        background: none;
+        border: none;
+        border-bottom: 1px solid #f3f4f6;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 14px 20px;
+        font-size: 15px;
+        font-weight: 600;
+        color: #111;
+        cursor: pointer;
+        transition: color .15s, background .15s;
+        font-family: inherit;
+    }
+    .mob-nav-toggle:hover {
+        color: #ff3f6c;
+        background: #fff5f7;
+    }
+    .mob-nav-toggle .bi-chevron-down {
+        font-size: 13px;
+        transition: transform .25s ease;
+    }
+    .mob-nav-toggle[aria-expanded="true"] .bi-chevron-down {
+        transform: rotate(180deg);
+    }
+    #mobileMenu .collapse a,
+    #mobileMenu .collapsing a {
+        display: block;
+        padding: 11px 20px 11px 36px;
+        font-size: 14px;
+        font-weight: 500;
+        color: #374151;
+        text-decoration: none;
+        border-bottom: 1px solid #f9fafb;
+        transition: color .15s;
+    }
+    #mobileMenu .collapse a:hover {
+        color: #ff3f6c;
+    }
+
+    /* ── Sticky category footer (Sort + Filter) ── */
+    .mobile-cat-footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 1040;
+        background: #fff;
+        border-top: 1px solid #e5e7eb;
+        display: flex;
+        align-items: stretch;
+        height: calc(52px + env(safe-area-inset-bottom, 0px));
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        /* Prevent iOS Safari URL-bar jump */
+        transform: translate3d(0, 0, 0);
+        -webkit-transform: translate3d(0, 0, 0);
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        -webkit-perspective: 1000;
+        perspective: 1000;
+    }
+    .mob-cat-btn {
+        flex: 1;
+        background: none;
+        border: none;
+        font-size: 14px;
+        font-weight: 700;
+        color: #111;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        font-family: inherit;
+        transition: background .15s;
+    }
+    .mob-cat-btn:active { background: #f3f4f6; }
+    .mob-cat-divider {
+        width: 1px;
+        background: #e5e7eb;
+        margin: 10px 0;
+    }
+
+    /* ── Sort bottom sheet options ── */
+    .sort-option {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        font-size: 15px;
+        font-weight: 500;
+        color: #111;
+        cursor: pointer;
+        border-bottom: 1px solid #f9fafb;
+        transition: background .15s;
+    }
+    .sort-option:hover { background: #fafafa; }
+    .sort-option .sort-check { display: none; color: #ff3f6c; font-size: 16px; }
+    .sort-option.active { font-weight: 700; color: #ff3f6c; }
+    .sort-option.active .sort-check { display: block; }
+
+    /* ════════════════════════════════════════════════════════
+       MOBILE FILTER — two-panel layout
+       (sidebar tabs + content area)
+       ════════════════════════════════════════════════════════ */
+
+    /* Full-width offcanvas on mobile */
+    .mf-offcanvas {
+        width: 100% !important;
+        max-width: 420px;
+        display: flex !important;
+        flex-direction: column;
+        overflow: hidden !important;  /* prevent the offcanvas itself from scrolling */
+        height: 100% !important;
+    }
+
+    /* Header */
+    .mf-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 13px 16px;
+        border-bottom: 1px solid #e5e7eb;
+        flex-shrink: 0;
+    }
+    .mf-clear-all {
+        font-size: 12px;
+        font-weight: 600;
+        color: #ff3f6c;
+        text-decoration: none;
+        letter-spacing: 0.3px;
+        margin-left: auto;
+    }
+    .mf-clear-all:hover { text-decoration: underline; }
+    .mf-no-filter-toast {
+        background: #333;
+        color: #fff;
+        font-size: 12px;
+        text-align: center;
+        padding: 6px 16px;
+        border-bottom: 1px solid #444;
+    }
+
+    /* ── Unsaved-changes bottom sheet overlay ── */
+    .mob-unsaved-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.55);
+        z-index: 1060;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+    }
+    .mob-unsaved-sheet {
+        background: #fff;
+        border-radius: 20px 20px 0 0;
+        padding: 28px 20px 24px;
+        width: 100%;
+        text-align: center;
+        animation: slideUpSheet 0.25s ease;
+    }
+    @keyframes slideUpSheet {
+        from { transform: translateY(100%); }
+        to   { transform: translateY(0); }
+    }
+    .mob-unsaved-icon {
+        font-size: 32px;
+        color: #f59e0b;
+        margin-bottom: 10px;
+    }
+    .mob-unsaved-title {
+        font-weight: 700;
+        font-size: 16px;
+        margin-bottom: 8px;
+        color: #111;
+    }
+    .mob-unsaved-msg {
+        font-size: 13px;
+        color: #6b7280;
+        margin-bottom: 20px;
+        line-height: 1.5;
+    }
+
+    /* Body: left sidebar + right content */
+    .mf-body {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+        min-height: 0;
+    }
+
+    /* ── Left sidebar ── */
+    .mf-sidebar {
+        width: 34%;
+        background: #f7f8fa;
+        border-right: 1px solid #e5e7eb;
+        overflow-y: auto;
+        flex-shrink: 0;
+    }
+
+    .mf-tab {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 14px 10px 14px 12px;
+        font-size: 13px;
+        font-weight: 500;
+        color: #374151;
+        cursor: pointer;
+        border-bottom: 1px solid #e9eaec;
+        transition: background .12s, color .12s;
+        position: relative;
+    }
+
+    .mf-tab:hover { background: #f0f1f3; }
+
+    .mf-tab.active {
+        background: #fff;
+        color: #ff3f6c;
+        font-weight: 700;
+        border-left: 3px solid #ff3f6c;
+        padding-left: 9px;
+    }
+
+    .mf-badge {
+        background: #ff3f6c;
+        color: #fff;
+        font-size: 10px;
+        min-width: 16px;
+        height: 16px;
+        border-radius: 10px;
+        padding: 0 4px;
+        text-align: center;
+        line-height: 16px;
+        flex-shrink: 0;
+    }
+
+    /* ── Right content panel ── */
+    .mf-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 12px 14px;
+        min-width: 0;
+    }
+
+    .mf-panel { display: none; }
+    .mf-panel.active { display: block; }
+
+    /* Brand search input */
+    .mf-search {
+        width: 100%;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-size: 13px;
+        margin-bottom: 10px;
+        outline: none;
+        font-family: inherit;
+        color: #111;
+    }
+    .mf-search:focus { border-color: #ff3f6c; box-shadow: 0 0 0 2px rgba(255,63,108,.1); }
+
+    /* Brand option list */
+    .mf-options {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .mf-checkbox-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 6px;
+        cursor: pointer;
+        border-radius: 6px;
+        font-size: 13px;
+        transition: background .1s;
+    }
+    .mf-checkbox-item:hover { background: #f5f6f8; }
+    .mf-checkbox-item input { display: none; }
+
+    .mf-checkmark {
+        width: 16px;
+        height: 16px;
+        border: 1.5px solid #d1d5db;
+        border-radius: 3px;
+        position: relative;
+        flex-shrink: 0;
+        transition: background .15s, border-color .15s;
+    }
+    .mf-checkbox-item input:checked + .mf-checkmark {
+        background: #ff3f6c;
+        border-color: #ff3f6c;
+    }
+    .mf-checkbox-item input:checked + .mf-checkmark::after {
+        content: "";
+        position: absolute;
+        left: 4px; top: 1.5px;
+        width: 5px; height: 8px;
+        border: solid #fff;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+    }
+
+    .mf-label { flex: 1; color: #111; }
+    .mf-no-result { font-size: 12px; color: #9ca3af; padding: 8px 4px; }
+
+    /* Size pills grid */
+    .mf-size-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 4px 0;
+    }
+    .mf-size-item { cursor: pointer; }
+    .mf-size-item input { display: none; }
+    .mf-size-pill {
+        display: inline-block;
+        padding: 7px 14px;
+        border: 1.5px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 500;
+        color: #374151;
+        cursor: pointer;
+        transition: all .15s;
+        background: #fff;
+        user-select: none;
+    }
+    .mf-size-item input:checked + .mf-size-pill {
+        background: #ff3f6c;
+        border-color: #ff3f6c;
+        color: #fff;
+        font-weight: 600;
+    }
+
+    /* Price values */
+    .mf-price-val {
+        font-size: 13px;
+        font-weight: 600;
+        color: #111;
+    }
+
+    /* ── Footer (Apply / Close / Unsaved prompt) ── */
+    .mf-footer {
+        padding: 14px 16px;
+        padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+        border-top: 2px solid #f0f0f0;
+        background: #fff;
+        flex-shrink: 0;
+        box-shadow: 0 -4px 16px rgba(0,0,0,0.10);
+        transform: translate3d(0, 0, 0);
+        -webkit-transform: translate3d(0, 0, 0);
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        -webkit-perspective: 1000;
+        perspective: 1000;
+    }
+    .mf-footer .btn {
+        height: 46px;
+        font-size: 14px;
+        font-weight: 600;
+        border-radius: 8px;
+        letter-spacing: 0.3px;
+    }
+    .mob-filter-prompt { margin-bottom: 10px; }
+
+    /* Fix navbar height */
+    .navbar {
+        min-height: 64px;
+    }
+
+    /* Remove extra padding Bootstrap adds */
+    .navbar-brand {
+        padding-top: 0;
+        padding-bottom: 0;
+    }
+
+    /* Control logo size properly */
+    .brand-logo {
+        max-height: 44px;   /* THIS is the sweet spot */
+        width: auto;
+        display: block;
+        opacity: 0;
+        animation: logoFadeIn 0.8s ease forwards;
+        transition: transform 0.25s ease, filter 0.25s ease;
+        transform: translateY(1px);
+    }
+
+    @keyframes logoFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(4px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .navbar-brand:hover .brand-logo {
+        transform: translateY(-2px);
+        filter: drop-shadow(0 4px 8px rgba(0,0,0,0.25));
+    }
+
+    .search-item {
+        display: flex;
+        gap: 10px;
+        padding: 10px;
+        cursor: pointer;
+    }
+
+    .search-item:hover {
+        background: #f5f5f5;
+    }
+
+    .search-item img {
+        width: 50px;
+        height: 65px;
+        object-fit: cover;
+        border-radius: 6px;
+    }
+
+    .search-item-name {
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .search-item-meta {
+        font-size: 12px;
+        color: #777;
+    }
+
+    .search-item.active {
+        background: #f0f0f0;
+    }
+
+    .search-highlight {
+        color: #ff3f6c;
+        font-weight: 600;
+    }
+
+    .search-view-all {
+        padding: 10px 12px;
+        font-weight: 600;
+        font-size: 14px;
+        border-top: 1px solid #eee;
+        cursor: pointer;
+    }
+
+    .search-view-all:hover,
+    .search-view-all.active {
+        background: #f0f0f0;
+    }
+
+    #searchViewAll {
+        position: sticky;
+        bottom: 0;
+        background: #fff;
+        z-index: 2;
+        border-top: 1px solid #eee;
+    }
+
+    /* Brand search animation */
+    #brandSearchInput {
+        opacity: 0;
+        max-height: 0;
+        transform: translateY(-6px);
+        transition:
+            opacity 0.2s ease,
+            max-height 0.25s ease,
+            transform 0.25s ease;
+        overflow: hidden;
+    }
+
+    /* Visible state */
+    #brandSearchInput.show {
+        opacity: 1;
+        max-height: 40px; /* enough for input height */
+        transform: translateY(0);
+    }
+
+    /* Remove focus blue shadow for BRAND search only */
+    #brandSearchInput:focus {
+        outline: none !important;
+        box-shadow: none !important;
+        border-color: #ced4da; /* normal border */
+    }
+
+    .qty-controls {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .qty-controls .qty-btn {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: 1px solid #ddd;
+        background: #fff;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+    .qty-controls .qty-btn:hover {
+        background: #f5f5f5;
+    }
+
+    .qty-value {
+        min-width: 20px;
+        text-align: center;
+        font-size: 14px;
+    }
+
+    /* =========================================================
+    § 18-19  HOME PAGE — CATEGORY CARDS & TRUST ICONS
+    ─────────────────────────────────────────────────────────
+    .category-card  → MEN / WOMEN / KIDS section link tiles
+    .trust-card     → icon + label cards (Free Delivery etc.)
+    Both appear below the hero carousel on home.html.
+    ========================================================= */
+
+    /* ── Home page sections ── */
+    .home-section {
+        margin: 28px 0;
+    }
+    .home-trust-section {
+        background: #f7f8fa;
+        padding: 28px 0;
+        margin: 28px 0;
+    }
+    .home-newsletter {
+        padding-bottom: 20px;
+    }
+    .home-section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 14px;
+    }
+    .home-section-title {
+        font-size: 16px;
+        font-weight: 700;
+        margin: 0;
+        letter-spacing: 0.2px;
+    }
+    .home-section-link {
+        font-size: 13px;
+        color: #ff3f6c;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    /* ── Category scroll tiles ── */
+    .category-scroll-row {
+        display: flex;
+        gap: 10px;
+        overflow-x: auto;
+        padding-bottom: 6px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    .category-scroll-row::-webkit-scrollbar { display: none; }
+
+    .home-cat-tile {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-width: 90px;
+        flex-shrink: 0;
+        padding: 16px 10px;
+        border-radius: 16px;
+        text-decoration: none;
+        transition: transform .15s ease, box-shadow .15s ease;
+    }
+    .home-cat-tile:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0,0,0,.12);
+    }
+    .home-cat-icon { font-size: 26px; line-height: 1; }
+    .home-cat-name {
+        font-size: 12px;
+        font-weight: 700;
+        margin-top: 8px;
+        letter-spacing: 0.3px;
+    }
+
+    /* Tile colors */
+    .home-cat-men     { background: #e8edf5; color: #1a2d5a; }
+    .home-cat-women   { background: #fce8f0; color: #9b1b53; }
+    .home-cat-tshirts { background: #e0f2fe; color: #0369a1; }
+    .home-cat-shirts  { background: #e8f5e9; color: #1b5e20; }
+    .home-cat-kurtis  { background: #fdf3e7; color: #92400e; }
+    .home-cat-jeans   { background: #ede7f6; color: #4527a0; }
+
+    /* Desktop: wrap into rows */
+    @media (min-width: 768px) {
+        .category-scroll-row {
+            flex-wrap: wrap;
+            overflow-x: visible;
+        }
+        .home-cat-tile {
+            min-width: calc(16.66% - 10px);
+            flex: 1;
+        }
+    }
+
+    /* ── Trust tiles ── */
+    .trust-scroll-row {
+        display: flex;
+        gap: 10px;
+        overflow-x: auto;
+        padding-bottom: 6px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    .trust-scroll-row::-webkit-scrollbar { display: none; }
+
+    .trust-tile {
+        min-width: 130px;
+        flex-shrink: 0;
+        background: #fff;
+        border-radius: 14px;
+        padding: 18px 12px;
+        text-align: center;
+        box-shadow: 0 2px 10px rgba(0,0,0,.06);
+    }
+    .trust-icon { font-size: 26px; line-height: 1; }
+    .trust-label {
+        font-size: 13px;
+        font-weight: 700;
+        margin-top: 8px;
+        color: #111;
+    }
+    .trust-sub {
+        font-size: 11px;
+        color: #9ca3af;
+        margin-top: 3px;
+    }
+
+    @media (min-width: 768px) {
+        .trust-scroll-row {
+            flex-wrap: wrap;
+            overflow-x: visible;
+        }
+        .trust-tile {
+            min-width: calc(25% - 10px);
+            flex: 1;
+        }
+    }
+
+    /* ── Newsletter ── */
+    .newsletter-form {
+        display: flex;
+        gap: 8px;
+        max-width: 480px;
+        margin: 0 auto;
+    }
+    .newsletter-form input {
+        flex: 1;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 10px 14px;
+        font-size: 14px;
+        outline: none;
+        font-family: inherit;
+    }
+    .newsletter-form input:focus { border-color: #ff3f6c; }
+    .newsletter-form .btn { flex-shrink: 0; border-radius: 8px; font-size: 14px; }
+
+    @media (max-width: 480px) {
+        .newsletter-form { flex-direction: column; }
+        .newsletter-form .btn { width: 100%; }
+    }
+
+    /* ── Hero buttons ── */
+    .hero-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    /* Keep old category-card/trust-card for backward compat */
+    .category-card {
+        display: block;
+        background: #f5f5f5;
+        padding: 40px 20px;
+        text-align: center;
+        font-weight: 600;
+        border-radius: 14px;
+        color: #000;
+        text-decoration: none;
+        transition: transform .15s ease, box-shadow .15s ease;
+    }
+    .category-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 18px rgba(0,0,0,.12);
+    }
+    .trust-card {
+        background: #fff;
+        padding: 25px 15px;
+        border-radius: 14px;
+        box-shadow: 0 4px 14px rgba(0,0,0,.06);
+        font-size: 28px;
+    }
+    .trust-card h6 {
+        font-size: 15px;
+        margin-top: 8px;
+    }
+
+    /* =========================================================
+    § 20  HERO CAROUSEL
+    ─────────────────────────────────────────────────────────
+    Full-width Bootstrap carousel on home.html.
+    Background images are set here as CSS — update URLs when
+    hero images change in /static/images/:
+      .hero-slide-1 → hero1.jpg
+      .hero-slide-2 → hero2.jpg
+      .hero-slide-3 → hero3.jpg
+    .hero-slide  → 65vh, dark overlay via ::before (rgba 0.45)
+    .hero-text   → overlay text block (z-index:3, padded)
+    Controls: prev/next arrows fade in on carousel hover.
+    Mobile: height drops to 50vh, arrows hidden.
+    ========================================================= */
+
+    .hero-carousel {
+        margin-bottom: 40px;
+    }
+
+    .hero-slide {
+        height: 65vh;
+        display: flex;
+        align-items: center;
+        position: relative;
+        color: #fff;
+    }
+
+    .hero-slide::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: rgba(0,0,0,0.45);
+    }
+
+    .hero-slide-1 {
+        background: url("/static/images/hero1.jpg") center/cover no-repeat;
+    }
+
+    .hero-slide-2 {
+        background: url("/static/images/hero2.jpg") center/cover no-repeat;
+    }
+
+    .hero-slide-3 {
+        background: url("/static/images/hero3.jpg") center/cover no-repeat;
+    }
+
+    .hero-text {
+        position: relative;
+        z-index: 3;
+        max-width: 620px;
+        padding-left: 40px;
+        padding-right: 40px;
+    }
+
+    .hero-text h1 {
+        font-size: 48px;
+        font-weight: 700;
+    }
+
+    .hero-text p {
+        font-size: 18px;
+        margin: 15px 0 25px;
+    }
+
+    /* MOBILE OPTIMIZATION */
+    @media (max-width: 768px) {
+        .hero-slide {
+            height: 52vh;
+            justify-content: center;
+        }
+
+        .hero-text {
+            text-align: center;
+            padding: 0 24px;
+        }
+
+        .hero-btns {
+            justify-content: center;
+        }
+
+        .hero-text h1 {
+            font-size: 24px;
+        }
+
+        .hero-text p {
+            font-size: 13px;
+            margin: 10px 0 18px;
+        }
+
+        .hero-text .btn {
+            padding: 8px 20px;
+            font-size: 13px;
+        }
+    }
+
+    /* HERO CAROUSEL CONTROLS — FINAL */
+
+    .hero-carousel .carousel-control-prev,
+    .hero-carousel .carousel-control-next {
+        width: auto;
+        top: 50%;
+        transform: translateY(-50%);
+        opacity: 0;
+        transition: opacity 0.25s ease;
+        z-index: 2;
+    }
+
+    .hero-carousel .carousel-control-prev {
+        left: 24px;
+    }
+
+    .hero-carousel .carousel-control-next {
+        right: 24px;
+    }
+
+    .hero-carousel:hover .carousel-control-prev,
+    .hero-carousel:hover .carousel-control-next {
+        opacity: 1;
+    }
+
+    .hero-carousel .carousel-control-prev-icon,
+    .hero-carousel .carousel-control-next-icon {
+        background-color: rgba(0, 0, 0, 0.06);
+        border: 1px solid rgba(0, 0, 0, 0.25);
+        border-radius: 50%;
+        width: 44px;
+        height: 44px;
+        background-size: 50% 50%;
+    }
+
+    /* Smooth hover feedback */
+    .hero-carousel .carousel-control-prev-icon:hover,
+    .hero-carousel .carousel-control-next-icon:hover {
+        background-color: rgba(0, 0, 0, 0.15);
+    }
+
+    .hero-carousel .carousel-control-prev-icon:hover,
+    .hero-carousel .carousel-control-next-icon:hover {
+        transform: scale(1.05);
+    }
+
+    /* Mobile: hide arrows */
+    @media (max-width: 768px) {
+        .hero-carousel .carousel-control-prev,
+        .hero-carousel .carousel-control-next {
+            display: none;
+        }
+    }
+
+    .free-delivery-cart.pending {
+        background: #fff0f6;
+        color: #c4004b;
+        border-radius: 6px;
+        padding: 10px 14px;
+        font-size: 14px;
+        font-weight: 500;
+        margin-bottom: 12px;
+    }
+
+    .free-delivery-cart.success {
+        background: #e9f8f1;
+        color: #0f8a5f;
+        border-radius: 6px;
+        padding: 10px 14px;
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 12px;
+        animation: popIn 0.25s ease;
+    }
+
+    .free-delivery-checkout.pending {
+        background: #fafafa;
+        color: #b0003a;
+        border-left: 3px solid #ff4d88;
+        padding: 8px 12px;
+        font-size: 13px;
+        margin-bottom: 14px;
+    }
+
+    .free-delivery-checkout.success {
+        background: #f0fbf6;
+        color: #0f8a5f;
+        border-left: 3px solid #38c793;
+        padding: 8px 12px;
+        font-size: 13px;
+        margin-bottom: 14px;
+        font-weight: 600;
+        animation: popIn 0.25s ease;
+    }
+
+    @keyframes popIn {
+        from { transform: scale(0.97); opacity: 0.6; }
+        to   { transform: scale(1); opacity: 1; }
+    }
+
+    .product-gallery {
+        max-width: 450px;
+    }
+
+    /* =========================================================
+    § 21  PRODUCT DETAIL — IMAGE GALLERY
+    ─────────────────────────────────────────────────────────
+    Main image and thumbnail strip on product_detail.html.
+    .product-image   → 480px tall, object-fit:cover, rounded
+    .thumbnail-img   → 70x90px, clicking swaps main image
+    .thumbnail-row   → flex row of thumbnails centered below
+    Mobile: .product-image → 320px, .thumbnail-img → 55x70px
+    ========================================================= */
+    /* MAIN PRODUCT IMAGE */
+    .product-image {
+        width: 100%;
+        height: 480px;              /* Fixed height */
+        object-fit: cover;         /* Crop nicely */
+        border-radius: 10px;
+        background: #f5f5f5;
+    }
+
+
+    /* THUMBNAILS */
+    .thumbnail-img {
+        width: 70px;
+        height: 90px;
+        object-fit: cover;         /* Crop */
+        cursor: pointer;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        transition: 0.2s;
+        background: #f5f5f5;
+    }
+
+    .thumbnail-row {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+    }
+
+    .thumbnail-img:hover {
+        transform: scale(1.05);
+        border-color: #000;
+    }
+
+    @media (max-width: 768px) {
+        .product-image {
+            height: 320px;
+        }
+
+        .thumbnail-img {
+            width: 55px;
+            height: 70px;
+        }
+    }
+
+    /* =========================================================
+    § 22  PRODUCT CARD — HOVER IMAGE SLIDESHOW
+    ─────────────────────────────────────────────────────────
+    Hovering a product card on grid pages cycles images.
+    .product-img-box         → relative container, 350px tall
+    .product-card-img        → all images stacked, opacity:0
+    .product-card-img.active → visible image (opacity:1, z-index:2)
+    .img-link                → <a> covering full image area (z-index:1)
+    JS adds .hover-active on mouseenter; interval cycles .active.
+    See startSlideshow() in _scripts.html.
+    ========================================================= */
+    /* IMAGE BOX */
+    .product-img-box {
+        position: relative;
+        aspect-ratio: 3 / 4;
+        overflow: hidden;
+    }
+
+    /* IMAGE */
+    .product-card-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+
+        position: absolute;
+        top: 0;
+        left: 0;
+
+        opacity: 0;
+        transition: opacity 0.8s ease;
+        will-change: opacity;
+
+    }
+
+    /* Show active image */
+    .product-card-img.active {
+        opacity: 1;
+        z-index: 2;
+    }
+
+    .product-card-img.active {
+        opacity: 1;
+        z-index: 2;
+    }
+
+    /* =========================================================
+    § 23  PRODUCT CARD — WISHLIST HEART BUTTON
+    ─────────────────────────────────────────────────────────
+    Heart button overlaid top-right corner of each product card.
+    Hidden (opacity:0) by default, revealed on hover.
+    States:
+      default       → white bg, grey outline heart
+      :hover        → scale(1.15), solid red heart
+      .wish-active  → pink bg (#ffecec), always-red heart
+    JS toggles .wish-active via toggleWishlist() in _scripts.html.
+    ========================================================= */
+    /* WISHLIST */
+    .wishlist-btn-card {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+
+        background: none;
+        border: none;
+        border-radius: 0;
+
+        width: auto;
+        height: auto;
+        padding: 4px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        cursor: pointer;
+
+        z-index: 10;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+    }
+
+    .wishlist-btn-card i {
+        font-size: 1.25rem;
+        color: #fff;
+        filter: drop-shadow(0 1px 4px rgba(0,0,0,0.6));
+        transition: color 0.2s ease;
+    }
+
+    .wishlist-btn-card:hover i {
+        color: #e63946;
+    }
+
+    /* SHOW WHEN ACTIVE (desktop hover) or already wishlisted */
+    .product-img-box.hover-active .wishlist-btn-card,
+    .wishlist-btn-card.wish-active {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    /* On touch devices: always visible, no background, heart turns red when active */
+    @media (hover: none) {
+        .wishlist-btn-card {
+            opacity: 1 !important;
+            pointer-events: auto !important;
+        }
+        .wishlist-btn-card.wish-active i { color: #e63946 !important; }
+    }
+
+
+    /* Make link cover full image area */
+    .img-link {
+        position: relative;
+        display: block;
+        width: 100%;
+        height: 100%;
+
+        z-index: 1;   /* 🔥 BELOW BUTTON */
+    }
+
+    /* Prevent link blocking slideshow */
+    .product-card-img {
+        pointer-events: none;
+    }
+
+    /* Active wishlist */
+    .wishlist-btn-card.wish-active i {
+        color: #e63946;
+    }
+
+    /* ─── § 24  WISHLIST PAGE ITEM IMAGE ─────────────────────
+    Fixed 90x110px thumbnail shown left of each row on wishlist.html.
+    ──────────────────────────────────────────────────────── */
+    /* Wishlist Image */
+    .wishlist-img {
+        width: 90px;
+        height: 110px;
+        object-fit: cover;
+        border-radius: 10px;
+        flex-shrink: 0;
+    }
+
+    /* ─── § 25  OUT OF STOCK BADGE ───────────────────────────
+    Red pill on product cards when stock is 0.
+    Rendered in product_grid.html:
+      {% if not product.is_in_stock %} .out-stock-badge {% endif %}
+    ──────────────────────────────────────────────────────── */
+    /* Out of Stock Badge */
+    .out-stock-badge {
+        background-color: #dc3545;   /* Bootstrap danger red */
+        color: #fff;
+        font-size: 11px;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-weight: 600;
+    }
+
+    /* =========================================================
+    § 26  SIZE PILLS  (wishlist modal + product detail modal)
+    ─────────────────────────────────────────────────────────
+    Rounded pill buttons for selecting size before adding to
+    cart from the wishlist modal or product detail modal.
+    States: default | :hover | .disabled (strikethrough) | .active
+    NOTE: select.size-pill in § 4 is a separate <select> element
+    scoped to cart rows — different component, same class prefix.
+    ========================================================= */
+    .size-pill {
+        padding: 6px 14px;
+        border: 1px solid #333;
+        border-radius: 20px;
+        font-size: 14px;
+        cursor: pointer;
+        background: #fff;
+    }
+
+    .size-pill:hover {
+        background: #f5f5f5;
+    }
+
+    .size-pill.disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        text-decoration: line-through;
+    }
+
+    .size-pill.active {
+        background: #111;
+        color: #fff;
+    }
+
+    /* S27 SIZE BUTTONS (product_detail add-to-cart)
+    States: default | .active black | .disabled grey */
+    .size-btn {
+        min-width: 45px;
+        height: 40px;
+        border: 1px solid #ccc;
+        border-radius: 20px;
+        background: white;
+        font-weight: 500;
+        cursor: pointer;
+    }
+
+    .size-btn.active {
+        background: #000;
+        color: white;
+        border-color: #000;
+    }
+
+    .size-btn.disabled {
+        background: #eee;
+        color: #999;
+        border-color: #ddd;
+        cursor: not-allowed;
+    }
+
+    /* S28 CART SIZE SELECT WIDTH FIX
+    Constrains <select class="size-pill"> in compact cart rows. */
+
+    .cart-size-select {
+        min-width: 70px;
+        max-width: 90px;
+        flex-shrink: 0;
+        padding: 2px 6px;
+        font-size: 13px;
+    }
+
+    /* S29 WISHLIST SIZE BUTTONS (circular modal picker)
+    44px circles in wishlist Select Size modal.
+    States: default | :hover (pink) | .active | .disabled */
+
+    .wishlist-size-btn {
+
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        border: 1px solid #ccc;
+        background: white;
+        font-weight: 400;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+
+    .wishlist-size-btn:hover {
+        border-color: #ff4d88;
+    }
+
+
+    .wishlist-size-btn.active {
+
+        background: #ffffffff;
+        color: #ff4d88;
+        border-color: #ff4d88;
+    }
+
+
+    .wishlist-size-btn.disabled {
+
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+
+
+/* ================================================================
+§ 30  SIDE CART
+─────────────────────────────────────────────────────────────────
+Lean offcanvas bag: image, read-only size/colour, qty pill, price.
+No size-change dropdown — editing lives on the main cart page.
+================================================================ */
+
+.sc-item {
+    display: flex; gap: 14px;
+    padding: 14px 0; border-bottom: 1px solid #f5f5f5; position: relative;
+}
+
+.sc-item:last-child { border-bottom: none; }
+.sc-item-img {
+    width: 72px; height: 90px; object-fit: cover;
+    border-radius: 10px; flex-shrink: 0; border: 1px solid #ececec;
+}
+
+.sc-item-info { flex: 1; min-width: 0; padding-right: 24px; }
+.sc-item-name {
+    font-size: 0.84rem; font-weight: 600; color: #111;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px;
+}
+
+.sc-item-meta { font-size: 0.75rem; color: #aaa; margin-bottom: 10px; }
+.sc-item-bottom { display: flex; align-items: center; justify-content: space-between; }
+
+.sc-item-qty {
+    display: flex; align-items: center;
+    background: #f5f5f5; border-radius: 8px; padding: 2px;
+}
+
+.sc-qty-btn {
+    width: 28px; height: 28px; border: none; background: transparent;
+    cursor: pointer; font-size: 1rem; color: #555;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 6px; transition: background 0.12s; line-height: 1;
+}
+
+.sc-qty-btn:hover { background: #e8e8e8; color: #111; }
+
+.sc-qty-val { min-width: 26px; text-align: center; font-size: 0.84rem; font-weight: 700; color: #111; }
+
+.sc-item-price { font-size: 0.9rem; font-weight: 700; color: #111; }
+
+.sc-delete-btn {
+    position: absolute; top: 14px; right: 0;
+    width: 22px; height: 22px; border: none; background: none;
+    color: #ccc; cursor: pointer; font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0; transition: color 0.15s;
+}
+
+.sc-delete-btn:hover { color: #e53935; }
+
+.sc-footer-actions { display: flex; gap: 10px; margin-top: 14px; }
+
+.sc-btn-bag {
+    flex: 1; padding: 11px; background: #fff;
+    border: 1.5px solid #ddd; border-radius: 10px;
+    font-size: 0.82rem; font-weight: 600; color: #111; cursor: pointer;
+    text-align: center; text-decoration: none; transition: border-color 0.15s;
+    font-family: 'DM Sans', sans-serif;
+    display: flex; align-items: center; justify-content: center;
+}
+
+.sc-btn-bag:hover { border-color: #111; }
+
+.sc-btn-checkout {
+    flex: 2; padding: 11px; background: #111;
+    border: 1.5px solid #111; border-radius: 10px;
+    font-size: 0.82rem; font-weight: 600; color: #fff; cursor: pointer;
+    text-align: center; text-decoration: none; transition: background 0.15s;
+    font-family: 'DM Sans', sans-serif;
+    display: flex; align-items: center; justify-content: center;
+}
+
+.sc-btn-checkout:hover { background: #333; color: #fff; }
+
+
+    </style>

@@ -1,0 +1,44 @@
+{% if items %}
+
+<div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+    <span style="font-size:0.82rem; color:#888;">Subtotal</span>
+    <span id="cart-subtotal" style="font-size:0.82rem; font-weight:600; color:#111;">₹{{ cart_subtotal }}</span>
+</div>
+
+<div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+    <span style="font-size:0.82rem; color:#888;">Delivery</span>
+    <span style="font-size:0.82rem; font-weight:600;">
+        {% if delivery_charge == 0 %}
+            <span style="color:#2e7d32;">FREE</span>
+        {% else %}
+            <span style="color:#111;">₹{{ delivery_charge }}</span>
+        {% endif %}
+    </span>
+</div>
+
+{% if free_delivery_remaining > 0 %}
+<div id="freeDeliveryMsg"
+     class="free-delivery-cart pending"
+     data-remaining="{{ free_delivery_remaining }}">
+    Add ₹{{ free_delivery_remaining }} more for free delivery
+</div>
+{% else %}
+<div id="freeDeliveryMsg"
+     class="free-delivery-cart success"
+     data-remaining="0">
+    🎉 You've unlocked free delivery!
+</div>
+{% endif %}
+
+<div style="border-top:1px solid #f0f0f0; margin:12px 0 10px;
+            display:flex; justify-content:space-between; padding-top:10px;">
+    <span style="font-weight:700; font-size:0.95rem;">Total</span>
+    <span id="cart-total" style="font-weight:700; font-size:0.95rem;">₹{{ cart_total }}</span>
+</div>
+
+<div class="sc-footer-actions">
+    <button class="sc-btn-bag" onclick="viewBag()">View Bag</button>
+    <a href="{% url 'checkout' %}" class="sc-btn-checkout">Checkout →</a>
+</div>
+
+{% endif %}

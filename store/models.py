@@ -1,0 +1,307 @@
+from django.db import models
+from django.contrib.auth.hashers import make_password, check_password as _check_password
+
+
+class Customer(models.Model):
+    phone       = models.CharField(max_length=15, unique=True)
+    name        = models.CharField(max_length=150)
+    email       = models.EmailField(blank=True)
+    password    = models.CharField(max_length=128)
+    is_active   = models.BooleanField(default=True)
+    date_joined = models.DateTimeField(auto_now_add=True)
+
+    def set_password(self, raw):
+        self.password = make_password(raw)
+
+    def check_password(self, raw):
+        return _check_password(raw, self.password)
+
+    def __str__(self):
+        return f"{self.name} ({self.phone})"
+
+    class Meta:
+        ordering = ["-date_joined"]
+        verbose_name = "Customer"
+
+
+class Product(models.Model):
+    GENDER_CHOICES = (
+        ("men", "Men"),
+        ("women", "Women"),
+        ("unisex", "Unisex"),
+    )
+
+    CATEGORY_CHOICES = (
+        ("shirts", "Shirts"),
+        ("tshirts", "T-Shirts"),
+        ("jeans", "Jeans"),
+        ("ethnic", "Ethnic Wear"),
+        ("kurtis", "Kurtis"),
+        ("dresses", "Dresses"),
+        ("tops", "Tops"),
+    )
+
+    name = models.CharField(max_length=200)
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, db_index=True)
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, db_index=True)
+    image = models.ImageField(upload_to="products/")
+    active = models.BooleanField(default=True, db_index=True)
+    brand = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def prefetched_stock(self):
+        """Sum of stock across prefetched sku_set. Used when sku_set is prefetched (home page)."""
+        return sum(sku.stock for sku in self.sku_set.all())
+
+    class Meta:
+        ordering = ["-id"]
+        verbose_name_plural = "Products"
+    
+class ProductImage(models.Model):
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name="images"
+    )
+    image = models.ImageField(upload_to="products/extra/")
+    is_primary = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Image - {self.product.name}"
+
+
+class SKU(models.Model):
+    sku_code = models.CharField(
+        max_length=20,
+        unique=True
+    )
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    size = models.CharField(max_length=10)
+    color = models.CharField(max_length=50)
+    mrp = models.PositiveIntegerField()
+    selling_price = models.PositiveIntegerField()
+    stock = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    @property
+    def discount_percent(self):
+        if self.mrp > self.selling_price:
+            return int(((self.mrp - self.selling_price) / self.mrp) * 100)
+        return 0
+
+    def __str__(self):
+        return f"{self.product.name} - {self.size} - {self.color}"
+    
+    class Meta:
+        verbose_name = "SKU"
+        ordering = ["product", "size"]
+
+
+class Order(models.Model):
+
+    customer = models.ForeignKey(
+        "Customer",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="orders",
+    )
+    
+    def save(self, *args, **kwargs):
+        from django.utils import timezone
+        if self.pk:
+            old = Order.objects.filter(pk=self.pk).first()
+            if old:
+                if old.status != "SHIPPED" and self.status == "SHIPPED":
+                    if not self.shipped_at:
+                        self.shipped_at = timezone.now()
+                if old.status != "DELIVERED" and self.status == "DELIVERED":
+                    if not self.delivered_at:
+                        self.delivered_at = timezone.now()
+        super().save(*args, **kwargs)
+
+    name = models.CharField(max_length=100)
+    phone = models.CharField(max_length=15)
+    address = models.TextField()
+    city = models.CharField(max_length=100, blank=True, default="")
+    state = models.CharField(max_length=100, blank=True, default="")
+    pincode = models.CharField(max_length=10, blank=True, default="")
+    
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    shipped_at = models.DateTimeField(null=True, blank=True)
+    delivered_at = models.DateTimeField(null=True, blank=True)
+
+    @property
+    def items_subtotal(self):
+        """Sum of item prices only (excludes delivery). Uses prefetch cache if available."""
+        return sum(item.price * item.quantity for item in self.items.all())
+
+    @property
+    def delivery_charge(self):
+        """Delivery charge = total_amount minus items subtotal."""
+        return self.total_amount - self.items_subtotal
+
+    @property
+    def invoice_number(self):
+        """Human-readable invoice number: INV-YYYY-XXXXX"""
+        return f"INV-{self.created_at.strftime('%Y')}-{self.id:05d}"
+    
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ("PLACED", "Placed"),
+            ("CONFIRMED", "Confirmed"),
+            ("SHIPPED", "Shipped"),
+            ("DELIVERED", "Delivered"),
+            ("CANCELLED", "Cancelled"),
+        ],
+        default="PLACED"
+    )
+    
+    payment_method = models.CharField(
+        max_length=10,
+        choices=[
+            ("COD", "Cash on Delivery"),
+            ("ONLINE", "Online Payment")
+        ]
+    )
+    
+    payment_status = models.CharField(
+        max_length=20,
+        choices=[
+            ("PENDING", "Pending"),
+            ("PAID", "Paid"),
+            ("FAILED", "Failed"),
+        ],
+        default="PENDING"
+    )
+    
+    # 🔹 Razorpay fields
+    razorpay_order_id = models.CharField(max_length=100, blank=True, null=True)
+    razorpay_payment_id = models.CharField(max_length=100, blank=True, null=True)
+    razorpay_signature = models.CharField(max_length=200, blank=True, null=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    
+    def __str__(self):
+        return f"Order #{self.id} | {self.payment_method} | {self.payment_status}"
+    
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name_plural = "Orders"
+
+
+class OrderItem(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")
+    sku = models.ForeignKey(SKU, on_delete=models.CASCADE)
+    quantity = models.IntegerField()
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    class Meta:
+        verbose_name = "Order Item"
+        verbose_name_plural = "Order Items"
+    
+    
+class StockNotification(models.Model):
+    customer = models.ForeignKey("Customer", on_delete=models.CASCADE, null=True, blank=True)
+    product  = models.ForeignKey(Product, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("customer", "product")
+        ordering = ["-created_at"]
+        verbose_name = "Stock Notification"
+
+    def __str__(self):
+        return f"{self.customer} → {self.product}"
+    
+class Address(models.Model):
+    customer = models.ForeignKey("Customer", on_delete=models.CASCADE, related_name="addresses", null=True, blank=True)
+    name = models.CharField(max_length=100)
+    phone = models.CharField(max_length=20)
+    address = models.TextField()
+    city = models.CharField(max_length=100)
+    state = models.CharField(max_length=100)
+    pincode = models.CharField(max_length=10)
+    is_default = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-is_default", "-created_at"]
+
+    def __str__(self):
+        return f"{self.name} - {self.city}"
+
+    def save(self, *args, **kwargs):
+        if self.is_default:
+            Address.objects.filter(
+                customer=self.customer, is_default=True
+            ).exclude(pk=self.pk).update(is_default=False)
+        super().save(*args, **kwargs)
+
+
+class SiteSettings(models.Model):
+    """Singleton model — only one row ever exists. Controls store-wide toggles."""
+    cod_enabled = models.BooleanField(
+        default=True,
+        verbose_name="Cash on Delivery enabled",
+        help_text="Uncheck to disable COD and force all customers to pay online.",
+    )
+
+    # Store identity — printed on invoices & shipping labels
+    store_name    = models.CharField(max_length=100, default="Zivo Fashion Store")
+    store_phone   = models.CharField(max_length=20, blank=True, default="")
+    store_address = models.TextField(
+        blank=True, default="",
+        help_text="Full return/pickup address printed on shipping labels.",
+    )
+
+    class Meta:
+        verbose_name = "Site Settings"
+        verbose_name_plural = "Site Settings"
+
+    def __str__(self):
+        return "Site Settings"
+
+    @classmethod
+    def get(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+
+class CartItem(models.Model):
+    customer = models.ForeignKey(
+        Customer, on_delete=models.CASCADE, related_name="cart_items"
+    )
+    sku = models.ForeignKey(SKU, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("customer", "sku")
+        verbose_name = "Cart Item"
+        verbose_name_plural = "Cart Items"
+
+    def __str__(self):
+        return f"{self.customer} — {self.sku} x{self.quantity}"
+
+
+class WishlistItem(models.Model):
+    customer = models.ForeignKey(
+        Customer, on_delete=models.CASCADE, related_name="wishlist_items"
+    )
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("customer", "product")
+        verbose_name = "Wishlist Item"
+        verbose_name_plural = "Wishlist Items"
+
+    def __str__(self):
+        return f"{self.customer} — {self.product}"

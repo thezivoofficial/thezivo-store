@@ -1,0 +1,597 @@
+    /* =========================================================
+    MYNTRA STYLE PRICE SLIDER
+    Used in filters (PRICE section) for dual range slider
+    ========================================================= */
+
+    .price-range {
+        position: relative;
+        height: 2px;          /* Visual height of the slider track */
+        margin-top: 8px;
+    }
+
+    /* Base inactive track (full range background) */
+    .price-track {
+        position: absolute;
+        top: -2px;
+        width: 100%;
+        height: 2px;
+        background: #e0e0e0;
+        border-radius: 3px;
+    }
+
+    /* Active selected price range (filled portion) */
+    .price-fill {
+        position: absolute;
+        top: -2px;
+        height: 2px;
+        background: #ff3f6c; /* Myntra pink */
+        border-radius: 3px;
+        z-index: 1;
+    }
+
+    /* Range input overlay (both min & max sliders) */
+    .price-range input[type=range] {
+        position: absolute;
+        top: -15px;
+        width: 100%;
+        pointer-events: none; /* Prevent track drag */
+        background: none;
+        -webkit-appearance: none;
+        z-index: 2;
+    }
+
+    /* WebKit slider thumb (Chrome / Edge / Safari) */
+    .price-range input[type=range]::-webkit-slider-thumb {
+        pointer-events: auto; /* Enable thumb drag */
+        width: 13px;
+        height: 13px;
+        border-radius: 50%;
+        background: #fff;
+        border: 4px solid #ff3f6c;
+        cursor: pointer;
+        -webkit-appearance: none;
+        margin-top: 8px;
+    }
+
+    /* Firefox slider thumb */
+    .price-range input[type=range]::-moz-range-thumb {
+        pointer-events: auto;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #fff;
+        border: 2px solid #2fb5a9;
+        cursor: pointer;
+    }
+
+    /* Layering order for overlapping sliders */
+    #minRange { z-index: 4; }
+    #maxRange { z-index: 5; }
+
+
+/* =========================================================
+   GLOBAL RESET
+   Removes default browser spacing
+========================================================= */
+
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+
+/* =========================================================
+   BASE BODY STYLING
+   Global typography & navbar offset
+========================================================= */
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #fffdfdff; /* Soft off-white background */
+    padding-top: 76px;           /* Space for fixed navbar */
+}
+
+
+/* =========================================================
+   CART QUANTITY CONTROLS (Side Cart)
+========================================================= */
+
+.qty-pill {
+    display: flex;
+    align-items: center;
+    border: 1px solid #161414ff;
+    border-radius: 5px;
+    height: 23px;
+    overflow: hidden;
+}
+
+/* Plus / minus buttons */
+.qty-btn {
+    width: 20px;
+    height: 18px;
+    border: none;
+    background: #fff;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    border-radius: 6px;
+    padding: 0;
+    text-align: center;
+}
+
+/* Hover feedback for quantity buttons */
+.qty-btn:hover {
+    background: #bf5e5eff;
+}
+
+/* Quantity number text */
+.qty-count {
+    min-width: 28px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 550;
+}
+
+
+/* =========================================================
+   SIZE PILL (Cart / Summary Display)
+========================================================= */
+
+.size-pill {
+    height: 23px;
+    padding: 0 10px;
+    border-radius: 5px;
+    border: 1px solid #161414ff;
+    font-size: 14px;
+    background-color: #fff;
+    cursor: pointer;
+    font-weight: 550;
+}
+
+/* Remove default bootstrap focus ring */
+.size-pill:focus {
+    box-shadow: none;
+    border-color: #000;
+}
+
+
+/* =========================================================
+   CART DELETE ICON
+========================================================= */
+
+.cart-delete-icon {
+    font-size: 18px;
+    color: #333;
+    cursor: pointer;
+}
+
+.cart-delete-icon:hover {
+    color: #e41010ff;
+    transform: scale(1.1);
+}
+
+
+/* =========================================================
+   SIDE CART (OFFCANVAS)
+========================================================= */
+
+/* Center empty cart message */
+#sideCart #empty-cart {
+    height: 100% !important;
+}
+
+/* Ensure cart stays above content */
+#sideCart {
+    z-index: 1060 !important;
+}
+
+/* Scrollable cart body */
+#sideCart .offcanvas-body {
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* Cart footer (checkout area) */
+#sideCart .offcanvas-footer {
+    border-top: 1px solid #eee;
+    background: #fff;
+}
+
+
+/* =========================================================
+   FIXED HEADER / NAVBAR
+========================================================= */
+
+.fixed-top-navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1035; /* Above content, below offcanvas */
+    background-color: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.20);
+}
+
+
+/* =========================================================
+   NAVIGATION TYPOGRAPHY & ALIGNMENT
+========================================================= */
+
+.nav-links a,
+.nav-dropdown-link {
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+.nav-links {
+    display: flex;
+    align-items: center;
+}
+
+.nav-links > a,
+.nav-dropdown {
+    display: flex;
+    align-items: center;
+    height: 40px;
+}
+
+/* Normalize vertical alignment */
+.nav-links a {
+    line-height: 1;
+    padding: 0;
+}
+
+/* Force consistent nav color */
+.nav-links a,
+.nav-links a:visited {
+    color: #111010ff !important;
+}
+
+
+/* =========================================================
+   NAV UNDERLINE (Hover + Active)
+========================================================= */
+
+.nav-links > a,
+.nav-dropdown-link {
+    position: relative;
+    text-decoration: none;
+}
+
+.nav-links > a::before,
+.nav-dropdown-link::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: +6px;
+    width: 0;
+    height: 2.5px;
+    background-color: #e84914ff;
+    transform: translateX(-50%);
+    transition: width 0.25s ease;
+}
+
+.nav-links > a:hover::before,
+.nav-links > a.active::before,
+.nav-dropdown:hover .nav-dropdown-link::before,
+.nav-dropdown-link.active::before {
+    width: 100%;
+}
+
+
+/* =========================================================
+   PURE CSS NAV DROPDOWN
+========================================================= */
+
+.nav-dropdown {
+    position: relative;
+}
+
+.nav-dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: #fff;
+    min-width: 150px;
+    padding: 8px 0;
+    border-radius: 8px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+    z-index: 1000;
+}
+
+.nav-dropdown:hover .nav-dropdown-menu {
+    display: block;
+}
+
+.nav-dropdown-menu a {
+    display: block;
+    padding: 8px 16px;
+    color: #000;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.nav-dropdown-menu a:hover {
+    background-color: #f5f5f5;
+}
+
+
+/* =========================================================
+   PRODUCT GRID CARDS
+========================================================= */
+
+.product-card {
+    cursor: pointer;
+}
+
+.product-card img {
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+}
+
+.product-card:hover {
+    transform: translateY(-2px);
+    transition: 0.2s ease;
+}
+
+
+/* =========================================================
+   PRODUCT DETAIL PAGE — SIZE SELECTOR
+========================================================= */
+
+/* Hide native radio button */
+.size-radio {
+    display: none;
+}
+
+/* Size circle UI */
+.size-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1.5px solid #d4d5d9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: #fff;
+}
+
+/* Hover effect */
+.size-circle:hover {
+    border-color: #000;
+}
+
+/* Selected size */
+.size-radio:checked + .size-circle {
+    border-color: #ff3f6c;
+    color: #ff3f6c;
+}
+
+/* Size container */
+.size-options {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* Out-of-stock size */
+.size-disabled {
+    border-color: #a70303ff !important;
+    color: #000000ff !important;
+    background: #f7f7f7;
+    cursor: not-allowed;
+    position: relative;
+}
+
+/* Diagonal strike line */
+.size-disabled::after {
+    content: "";
+    position: absolute;
+    width: 70%;
+    height: 1.5px;
+    background: #aa0404ff;
+    transform: rotate(-45deg);
+}
+
+
+/* =========================================================
+   PRODUCT DETAIL — IMAGES & WISHLIST
+========================================================= */
+
+.product-image-wrapper {
+    max-width: 400px;
+    width: 100%;
+}
+
+.product-image {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.wishlist-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
+
+.bi-heart-fill {
+    color: #ff3f6c;
+}
+
+
+/* =========================================================
+   PRICE DISPLAY (GRID & PRODUCT PAGE)
+========================================================= */
+
+.price-box {
+    font-size: 13px;
+    line-height: 1.2;
+}
+
+.selling-price {
+    font-weight: 700;
+    color: #100f0fe4;
+}
+
+.mrp {
+    font-size: 12px;
+    color: #828181ff;
+    text-decoration: line-through;
+    margin-left: 6px;
+}
+
+.discount {
+    font-size: 11px;
+    color: #ff3f6c;
+    margin-left: 4px;
+    font-weight: 600;
+}
+
+.low-stock-text {
+    font-size: 11px;
+    color: #eb5809ff;
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+
+/* =========================================================
+   FILTERS — MYNTRA STYLE (CATEGORY PAGE)
+========================================================= */
+
+.sticky-filters {
+    position: sticky;
+    top: 90px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+    padding-right: 8px;
+    background: #fff;
+}
+
+.filter-section {
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.filter-title {
+    font-weight: 700;
+    letter-spacing: 1px;
+    font-size: 13px;
+    margin-bottom: 12px;
+}
+
+.filter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+}
+
+.filter-search {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #f5f5f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.filter-search i {
+    font-size: 14px;
+    color: #555;
+}
+
+.filter-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.filter-checkbox {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    gap: 10px;
+    font-size: 14px;
+}
+
+.filter-checkbox input {
+    display: none;
+}
+
+.filter-checkbox .checkmark {
+    width: 16px;
+    height: 16px;
+    border: 1px solid #ccc;
+    border-radius: 2px;
+    position: relative;
+}
+
+.filter-checkbox input:checked + .checkmark {
+    background-color: #ff3f6c;
+    border-color: #ff3f6c;
+}
+
+.filter-checkbox input:checked + .checkmark::after {
+    content: "";
+    position: absolute;
+    left: 5px;
+    top: 2.5px;
+    width: 4px;
+    height: 8px;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.label-text {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.filter-more {
+    margin-top: 10px;
+    font-size: 13px;
+    color: #ff3f6c;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.size-checkbox .checkmark {
+    border-radius: 2px;
+}
+
+.filters-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.clear-all {
+    font-size: 12px;
+    font-weight: 600;
+    color: #ff3f6c;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.clear-all:hover {
+    text-decoration: underline;
+}

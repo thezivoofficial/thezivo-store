@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  @page {
+    size: A4;
+    margin: 18mm 16mm 18mm 16mm;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 10px;
+    color: #111;
+    background: #fff;
+  }
+
+  /* ── Header ── */
+  .header-table {
+    width: 100%;
+    margin-bottom: 20px;
+  }
+  .brand {
+    font-size: 24px;
+    font-weight: bold;
+    color: #7c3aed;
+    letter-spacing: -0.5px;
+  }
+  .brand-sub {
+    font-size: 9px;
+    color: #9ca3af;
+    margin-top: 2px;
+  }
+  .invoice-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: #111;
+    text-align: right;
+  }
+  .invoice-sub {
+    font-size: 9px;
+    color: #9ca3af;
+    text-align: right;
+    margin-top: 3px;
+  }
+
+  /* ── Divider ── */
+  .divider {
+    border-top: 2px solid #e5e7eb;
+    margin: 12px 0;
+  }
+  .divider-thin {
+    border-top: 1px solid #f3f4f6;
+    margin: 8px 0;
+  }
+
+  /* ── Section label ── */
+  .section-lbl {
+    font-size: 8px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #9ca3af;
+    margin-bottom: 5px;
+  }
+
+  /* ── Address blocks ── */
+  .addr-table {
+    width: 100%;
+    margin-bottom: 14px;
+  }
+  .addr-name {
+    font-size: 12px;
+    font-weight: bold;
+    color: #111;
+    margin-bottom: 3px;
+  }
+  .addr-line {
+    font-size: 10px;
+    color: #374151;
+    line-height: 1.7;
+  }
+
+  /* ── Status/payment badges ── */
+  .badge {
+    display: inline;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 8px;
+    font-weight: bold;
+    color: #fff;
+  }
+  .badge-blue   { background: #3b82f6; }
+  .badge-yellow { background: #f59e0b; }
+  .badge-purple { background: #8b5cf6; }
+  .badge-green  { background: #10b981; }
+  .badge-red    { background: #ef4444; }
+  .badge-gray   { background: #9ca3af; }
+
+  /* ── Items table ── */
+  .items-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 10px;
+  }
+  .items-table thead tr {
+    background: #f3f4f6;
+  }
+  .items-table th {
+    padding: 7px 10px;
+    font-size: 8px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6b7280;
+    text-align: left;
+  }
+  .items-table th.r { text-align: right; }
+  .items-table th.c { text-align: center; }
+  .items-table td {
+    padding: 8px 10px;
+    font-size: 10px;
+    border-bottom: 1px solid #f3f4f6;
+    color: #111;
+    vertical-align: top;
+  }
+  .items-table td.r { text-align: right; }
+  .items-table td.c { text-align: center; }
+  .items-table .last-row td { border-bottom: none; }
+  .prod-name { font-weight: bold; color: #111; }
+  .prod-meta { font-size: 8px; color: #9ca3af; margin-top: 2px; }
+
+  /* ── Totals ── */
+  .totals-table {
+    width: 200px;
+    border-collapse: collapse;
+    margin-left: auto;
+    margin-top: 6px;
+  }
+  .totals-table td {
+    padding: 3px 6px;
+    font-size: 10px;
+    color: #6b7280;
+    border: none;
+  }
+  .totals-table td.val { text-align: right; font-weight: 600; color: #111; }
+  .totals-table .grand td {
+    font-size: 13px;
+    font-weight: bold;
+    padding-top: 7px;
+    border-top: 2px solid #e5e7eb;
+  }
+  .totals-table .grand td.val { color: #7c3aed; }
+
+  /* ── Footer ── */
+  .inv-footer {
+    text-align: center;
+    margin-top: 28px;
+    font-size: 9px;
+    color: #9ca3af;
+    border-top: 1px dashed #e5e7eb;
+    padding-top: 14px;
+  }
+  .inv-footer strong { color: #7c3aed; }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<table class="header-table">
+  <tr>
+    <td style="width:50%;">
+      <div class="brand">{{ store.store_name|default:"Zivo" }}</div>
+      <div class="brand-sub">Fashion Store</div>
+    </td>
+    <td style="width:50%;text-align:right;">
+      <div class="invoice-title">TAX INVOICE</div>
+      <div style="font-size:13px;font-weight:bold;color:#111;margin-top:4px;letter-spacing:-.3px;">{{ order.invoice_number }}</div>
+      <div class="invoice-sub">Order #{{ order.id }}</div>
+      <div class="invoice-sub">{{ order.created_at|date:"d M Y, H:i" }}</div>
+    </td>
+  </tr>
+</table>
+
+<div class="divider"></div>
+
+<!-- Billing / Ship To + Order Info -->
+<table class="addr-table">
+  <tr>
+    <td style="width:50%;vertical-align:top;padding-right:16px;">
+      <div class="section-lbl">Ship To</div>
+      <div class="addr-name">{{ order.name }}</div>
+      <div class="addr-line">{{ order.phone }}</div>
+      <div class="addr-line">{{ order.address }}</div>
+      <div class="addr-line">
+        {% if order.city %}{{ order.city }}{% endif %}{% if order.state %}, {{ order.state }}{% endif %}{% if order.pincode %} — {{ order.pincode }}{% endif %}
+      </div>
+    </td>
+    <td style="width:50%;vertical-align:top;padding-left:16px;border-left:1px solid #f3f4f6;">
+      <div class="section-lbl">Order Details</div>
+      <div class="addr-line" style="margin-bottom:4px;">
+        <strong>Status:</strong>&nbsp;
+        {% with s=order.status %}
+          {% if s == "PLACED" %}<span class="badge badge-blue">PLACED</span>
+          {% elif s == "CONFIRMED" %}<span class="badge badge-yellow">CONFIRMED</span>
+          {% elif s == "SHIPPED" %}<span class="badge badge-purple">SHIPPED</span>
+          {% elif s == "DELIVERED" %}<span class="badge badge-green">DELIVERED</span>
+          {% elif s == "CANCELLED" %}<span class="badge badge-red">CANCELLED</span>
+          {% else %}<span class="badge badge-gray">{{ s }}</span>{% endif %}
+        {% endwith %}
+      </div>
+      <div class="addr-line" style="margin-bottom:4px;">
+        <strong>Payment:</strong>&nbsp;
+        {% if order.payment_method == "COD" %}Cash on Delivery{% else %}Online (Razorpay){% endif %}
+        &nbsp;
+        {% if order.payment_status == "PAID" %}<span class="badge badge-green">PAID</span>
+        {% elif order.payment_status == "PENDING" %}<span class="badge badge-yellow">PENDING</span>
+        {% else %}<span class="badge badge-red">FAILED</span>{% endif %}
+      </div>
+      {% if order.razorpay_payment_id %}
+      <div class="addr-line" style="color:#9ca3af;">Ref: {{ order.razorpay_payment_id }}</div>
+      {% endif %}
+      <div class="addr-line" style="margin-top:8px;">
+        <strong>From:</strong>&nbsp;{{ store.store_name|default:"Zivo Fashion Store" }}
+        {% if store.store_phone %}<br>{{ store.store_phone }}{% endif %}
+        {% if store.store_address %}<br>{{ store.store_address }}{% endif %}
+      </div>
+    </td>
+  </tr>
+</table>
+
+<div class="divider"></div>
+
+<!-- Items table -->
+<table class="items-table">
+  <thead>
+    <tr>
+      <th style="width:24px;">#</th>
+      <th>Product</th>
+      <th style="width:50px;">Size</th>
+      <th style="width:50px;">Color</th>
+      <th class="c" style="width:36px;">Qty</th>
+      <th class="r" style="width:60px;">Unit (Rs.)</th>
+      <th class="r" style="width:64px;">Total (Rs.)</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in items %}
+    <tr {% if forloop.last %}class="last-row"{% endif %}>
+      <td style="color:#9ca3af;">{{ forloop.counter }}</td>
+      <td>
+        <div class="prod-name">{{ item.sku.product.name }}</div>
+        <div class="prod-meta">SKU: {{ item.sku.sku_code }}</div>
+      </td>
+      <td>{{ item.sku.size }}</td>
+      <td>{{ item.sku.color }}</td>
+      <td class="c">{{ item.quantity }}</td>
+      <td class="r">Rs. {{ item.price|floatformat:0 }}</td>
+      <td class="r" style="font-weight:bold;">Rs. {{ item.price|floatformat:0 }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<!-- Totals -->
+<table class="totals-table">
+  <tr>
+    <td>Subtotal</td>
+    <td class="val">Rs.{{ subtotal|floatformat:0 }}</td>
+  </tr>
+  <tr>
+    <td>Delivery</td>
+    <td class="val">{% if delivery == 0 %}FREE{% else %}Rs.{{ delivery }}{% endif %}</td>
+  </tr>
+  <tr class="grand">
+    <td>Grand Total</td>
+    <td class="val">Rs.{{ total|floatformat:0 }}</td>
+  </tr>
+</table>
+
+<!-- Footer -->
+<div class="inv-footer">
+  Thank you for shopping with <strong>{{ store.store_name|default:"Zivo" }}</strong>!
+  &nbsp;&middot;&nbsp; For support, contact us via WhatsApp.
+</div>
+
+</body>
+</html>

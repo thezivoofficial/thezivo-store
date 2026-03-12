@@ -1,0 +1,474 @@
+{% extends "store/base.html" %}
+{% block title %}My Addresses | TheZivo{% endblock %}
+
+{% block content %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+    .addresses-page {
+        background: #f8f7f5;
+        min-height: 100vh;
+        padding: 48px 0 80px;
+        font-family: 'DM Sans', sans-serif;
+    }
+
+    .page-header {
+        margin-bottom: 32px;
+    }
+
+    .page-header h1 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2rem;
+        font-weight: 600;
+        color: #111;
+        margin-bottom: 4px;
+    }
+
+    .page-header p {
+        color: #999;
+        font-size: 0.88rem;
+    }
+
+    .address-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 16px;
+    }
+
+    .address-card {
+        background: #fff;
+        border-radius: 14px;
+        border: 1.5px solid #ececec;
+        padding: 20px;
+        position: relative;
+        transition: box-shadow 0.2s, border-color 0.2s;
+        animation: fadeIn 0.3s ease both;
+    }
+
+    .address-card.is-default {
+        border-color: #111;
+    }
+
+    .address-card:hover {
+        box-shadow: 0 6px 24px rgba(0,0,0,0.07);
+    }
+
+    .default-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.68rem;
+        font-weight: 600;
+        background: #111;
+        color: #fff;
+        padding: 3px 10px;
+        border-radius: 4px;
+        margin-bottom: 12px;
+    }
+
+    .btn-addr-default {
+        background: #fff;
+        color: #111;
+        border: 1.5px solid #111;
+        font-size: 0.78rem;
+        font-weight: 600;
+        padding: 6px 14px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-family: 'DM Sans', sans-serif;
+        position: relative;
+        overflow: hidden;
+        transition: background 0.25s, color 0.25s, transform 0.15s;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        letter-spacing: 0.2px;
+    }
+
+    .btn-addr-default::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(120deg, transparent 0%, rgba(0,0,0,0.06) 50%, transparent 100%);
+        transform: translateX(-100%);
+        transition: transform 0.45s ease;
+    }
+
+    .btn-addr-default:hover::before {
+        transform: translateX(100%);
+    }
+
+    .btn-addr-default:hover {
+        background: #111;
+        color: #fff;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .btn-addr-default:active {
+        transform: translateY(0);
+        box-shadow: none;
+    }
+
+    .btn-addr-select {
+        background: #111;
+        color: #fff;
+        border: 1.5px solid #111;
+        font-size: 0.78rem;
+        font-weight: 600;
+        padding: 6px 14px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-family: 'DM Sans', sans-serif;
+        position: relative;
+        overflow: hidden;
+        transition: background 0.25s, color 0.25s, transform 0.15s;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        letter-spacing: 0.2px;
+    }
+
+    .btn-addr-select::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%);
+        transform: translateX(-100%);
+        transition: transform 0.45s ease;
+    }
+
+    .btn-addr-select:hover::before {
+        transform: translateX(100%);
+    }
+
+    .btn-addr-select:hover {
+        background: #333;
+        border-color: #333;
+        color: #fff;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .btn-addr-select:active {
+        transform: translateY(0);
+        box-shadow: none;
+    }
+
+    .addr-name {
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: #111;
+        margin-bottom: 6px;
+    }
+
+    .addr-text {
+        font-size: 0.85rem;
+        color: #666;
+        line-height: 1.65;
+        margin-bottom: 6px;
+    }
+
+    .addr-phone {
+        font-size: 0.82rem;
+        color: #999;
+        margin-bottom: 16px;
+    }
+
+    .addr-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        border-top: 1px solid #f5f5f5;
+        padding-top: 14px;
+    }
+
+    .btn-addr {
+        font-size: 0.78rem;
+        font-weight: 500;
+        padding: 6px 14px;
+        border-radius: 6px;
+        border: 1px solid #e0e0e0;
+        background: none;
+        cursor: pointer;
+        text-decoration: none;
+        color: #333;
+        transition: background 0.15s, border-color 0.15s;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .btn-addr:hover {
+        background: #f5f5f5;
+        border-color: #bbb;
+        color: #111;
+    }
+
+    .btn-addr.danger {
+        color: #c62828;
+        border-color: #ffcdd2;
+    }
+
+    .btn-addr.danger:hover {
+        background: #fce4ec;
+        border-color: #ef9a9a;
+        color: #c62828;
+    }
+
+    .btn-addr.primary {
+        background: #111;
+        color: #fff;
+        border-color: #111;
+    }
+
+    .btn-addr.primary:hover {
+        background: #333;
+        border-color: #333;
+        color: #fff;
+    }
+
+    /* ADD NEW CARD */
+    .add-address-card {
+        background: #fff;
+        border-radius: 14px;
+        border: 1.5px dashed #d0d0d0;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        min-height: 180px;
+        cursor: pointer;
+        text-decoration: none;
+        transition: border-color 0.2s, background 0.2s;
+        animation: fadeIn 0.3s ease both;
+        gap: 10px;
+    }
+
+    .add-address-card:hover {
+        border-color: #111;
+        background: #fafafa;
+    }
+
+    .add-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #f0f0f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        color: #888;
+    }
+
+    .add-address-card span {
+        font-size: 0.88rem;
+        font-weight: 500;
+        color: #555;
+    }
+
+    /* DELETE MODAL */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.4);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-overlay.show { display: flex; }
+
+    .modal-box {
+        background: #fff;
+        border-radius: 16px;
+        padding: 32px;
+        max-width: 380px;
+        width: 90%;
+        text-align: center;
+    }
+
+    .modal-box h5 {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.15rem;
+        color: #111;
+        margin-bottom: 8px;
+    }
+
+    .modal-box p {
+        font-size: 0.83rem;
+        color: #888;
+        margin-bottom: 24px;
+    }
+
+    .modal-actions {
+        display: flex;
+        gap: 12px;
+    }
+
+    .btn-modal-keep {
+        flex: 1;
+        background: #f5f5f5;
+        border: none;
+        padding: 11px;
+        border-radius: 8px;
+        font-family: 'DM Sans', sans-serif;
+        font-weight: 500;
+        font-size: 0.88rem;
+        cursor: pointer;
+    }
+
+    .btn-modal-keep:hover { background: #eee; }
+
+    .btn-modal-delete {
+        flex: 1;
+        background: #c62828;
+        color: #fff;
+        border: none;
+        padding: 11px;
+        border-radius: 8px;
+        font-family: 'DM Sans', sans-serif;
+        font-weight: 500;
+        font-size: 0.88rem;
+        cursor: pointer;
+    }
+
+    .btn-modal-delete:hover { background: #b71c1c; }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+</style>
+
+<div class="addresses-page">
+    <div class="container" style="max-width: 900px;">
+
+        {% if request.GET.next == "checkout" %}
+        <a href="{% url 'checkout' %}"
+           style="display:inline-flex; align-items:center; gap:6px;
+                  font-size:0.85rem; color:#888; text-decoration:none;
+                  margin-bottom:20px; transition:color 0.15s;">
+            ← Back to Checkout
+        </a>
+        <div style="background:#fff8e1; border:1px solid #ffe082; border-radius:10px;
+                    padding:12px 16px; font-size:0.85rem; color:#e65100;
+                    margin-bottom:24px;">
+            💡 Select an address below to use it for your current order
+        </div>
+        {% endif %}
+
+        <div class="page-header">
+            <h1>My Addresses</h1>
+            <p>Manage your saved delivery addresses</p>
+        </div>
+
+        {% if messages %}
+            {% for msg in messages %}
+            <div class="alert alert-{{ msg.tags }} alert-dismissible fade show mb-4"
+                 style="border-radius:10px; font-size:0.88rem;">
+                {{ msg }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="address-grid">
+
+            {% for addr in addresses %}
+            <div class="address-card {% if addr.is_default %}is-default{% endif %}">
+
+                {% if addr.is_default %}
+                <div class="default-badge">✓ Default</div>
+                {% endif %}
+
+                <div class="addr-name">{{ addr.name }}</div>
+                <div class="addr-text">
+                    {{ addr.address }}<br>
+                    {{ addr.city }}, {{ addr.state }} - {{ addr.pincode }}
+                </div>
+                <div class="addr-phone">📞 {{ addr.phone }}</div>
+
+                <div class="addr-actions">
+                    <a href="{% url 'edit_address' addr.id %}{% if request.GET.next %}?next={{ request.GET.next }}{% endif %}"
+                    class="btn-addr">
+                        ✎ Edit
+                    </a>
+
+                    {% if not addr.is_default %}
+                    <form method="post" action="{% url 'set_default_address' addr.id %}" style="margin:0;">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.GET.next|default:'manage_addresses' }}">
+                        <button type="submit" class="btn-addr-default">
+                            Set Default
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    {% if request.GET.next == "checkout" %}
+                    <form method="post" action="{% url 'set_default_address' addr.id %}" style="margin:0;">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="checkout">
+                        <button type="submit" class="btn-addr-select">
+                            ✓ Select & Use
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    <button class="btn-addr danger"
+                            onclick="confirmDelete({{ addr.id }}, '{{ addr.city }}')">
+                        🗑 Remove
+                    </button>
+                </div>
+
+            </div>
+            {% endfor %}
+
+            <!-- ADD NEW -->
+            <a href="{% url 'add_address' %}" class="add-address-card">
+                <div class="add-icon">+</div>
+                <span>Add New Address</span>
+            </a>
+
+        </div>
+
+    </div>
+</div>
+
+<!-- DELETE CONFIRM MODAL -->
+<div class="modal-overlay" id="deleteOverlay" onclick="closeModal(event)">
+    <div class="modal-box">
+        <h5>Remove Address?</h5>
+        <p id="deleteModalText">This address will be permanently removed.</p>
+        <div class="modal-actions">
+            <button class="btn-modal-keep" onclick="closeModal()">Keep</button>
+            <form id="deleteForm" method="post" style="flex:1;">
+                {% csrf_token %}
+                <button type="submit" class="btn-modal-delete" style="width:100%;">
+                    Remove
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete(addressId, city) {
+    document.getElementById("deleteForm").action = "/addresses/" + addressId + "/delete/";
+    document.getElementById("deleteModalText").innerText =
+        "Your address in " + city + " will be permanently removed.";
+    document.getElementById("deleteOverlay").classList.add("show");
+}
+
+function closeModal(e) {
+    if (!e || e.target === document.getElementById("deleteOverlay")) {
+        document.getElementById("deleteOverlay").classList.remove("show");
+    }
+}
+</script>
+
+{% endblock %}

@@ -1,0 +1,462 @@
+{% extends "admin/index.html" %}
+{% load i18n %}
+
+{% block content %}
+
+<style>
+  .tz-grid       { display:grid; gap:16px; margin-bottom:24px; }
+  .tz-4col       { grid-template-columns: repeat(4,1fr); }
+  .tz-2col       { grid-template-columns: repeat(2,1fr); }
+  /* min-width:0 prevents grid cells from expanding beyond their column */
+  .tz-grid > *   { min-width: 0; }
+  .tz-card       { background:#fff; border-radius:12px; padding:20px 24px;
+                   box-shadow:0 1px 4px rgba(0,0,0,.08);
+                   min-width: 0; overflow: hidden; }
+  .dark .tz-card { background:#1e1e2d; box-shadow:0 1px 4px rgba(0,0,0,.3); }
+
+  .tz-stat-label { font-size:12px; font-weight:600; text-transform:uppercase;
+                   letter-spacing:.05em; color:#6b7280; margin-bottom:6px; }
+  .tz-stat-value { font-size:28px; font-weight:700; color:#111827; line-height:1; }
+  .dark .tz-stat-value { color:#f3f4f6; }
+  .tz-stat-sub   { font-size:12px; color:#9ca3af; margin-top:4px; }
+
+  .tz-accent-blue   { border-left:4px solid #3b82f6; }
+  .tz-accent-green  { border-left:4px solid #10b981; }
+  .tz-accent-purple { border-left:4px solid #8b5cf6; }
+  .tz-accent-orange { border-left:4px solid #f59e0b; }
+
+  .tz-chart-wrap { position:relative; height:220px; overflow:hidden; max-width:100%; }
+
+  .tz-section-title { font-size:15px; font-weight:700; color:#111827;
+                      margin-bottom:14px; }
+  .dark .tz-section-title { color:#f3f4f6; }
+
+  .tz-table      { width:100%; border-collapse:collapse; font-size:13px; }
+  .tz-table th   { text-align:left; padding:8px 12px; font-size:11px;
+                   font-weight:700; text-transform:uppercase; letter-spacing:.05em;
+                   color:#6b7280; border-bottom:2px solid #e5e7eb; }
+  .dark .tz-table th { border-color:#374151; }
+  .tz-table td   { padding:10px 12px; border-bottom:1px solid #f3f4f6; }
+  .dark .tz-table td { border-color:#2d2d3d; color:#d1d5db; }
+  .tz-table tr:last-child td { border-bottom:none; }
+  .tz-table tr:hover td { background:rgba(168,85,247,.04); }
+
+  .tz-badge      { display:inline-block; padding:2px 10px; border-radius:20px;
+                   font-size:11px; font-weight:600; color:#fff; }
+
+  /* ── Scrollable table wrapper ── */
+  .tz-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  @media(max-width:900px){
+    .tz-4col { grid-template-columns:repeat(2,1fr); }
+    .tz-2col { grid-template-columns:1fr; }
+  }
+  @media(max-width:600px){
+    .tz-4col { grid-template-columns:repeat(2,1fr); }
+    .tz-card  { padding:14px 12px; }
+    .tz-stat-value { font-size:22px; }
+    .tz-section-title { font-size:13px; margin-bottom:10px; }
+    .tz-chart-wrap { height:170px; }
+    /* Prevent canvas overflow */
+    .tz-chart-wrap canvas { max-width:100% !important; }
+    .tz-grid { gap:10px; }
+    /* Compact table text */
+    .tz-table th, .tz-table td { padding:7px 8px; font-size:12px; }
+    .tz-badge { padding:2px 7px; font-size:10px; }
+  }
+  @media(max-width:480px){
+    .tz-4col { grid-template-columns:1fr 1fr; }
+    .tz-grid  { gap:8px; margin-bottom:14px; }
+    .tz-card  { padding:10px 10px; border-radius:10px; }
+    .tz-stat-label { font-size:10px; }
+    .tz-stat-value { font-size:19px; }
+    .tz-stat-sub   { font-size:10px; }
+    .tz-chart-wrap { height:150px; }
+  }
+</style>
+
+<!-- ── Revenue cards ──────────────────────────────────────────────────── -->
+<div class="tz-grid tz-4col">
+
+  <div class="tz-card tz-accent-green">
+    <div class="tz-stat-label">Today's Revenue</div>
+    <div class="tz-stat-value">₹{{ revenue_today|floatformat:0 }}</div>
+    <div class="tz-stat-sub">{{ orders_today }} order{{ orders_today|pluralize }} today</div>
+  </div>
+
+  <div class="tz-card tz-accent-blue">
+    <div class="tz-stat-label">This Week</div>
+    <div class="tz-stat-value">₹{{ revenue_week|floatformat:0 }}</div>
+    <div class="tz-stat-sub">Last 7 days — paid orders</div>
+  </div>
+
+  <div class="tz-card tz-accent-purple">
+    <div class="tz-stat-label">This Month</div>
+    <div class="tz-stat-value">₹{{ revenue_month|floatformat:0 }}</div>
+    <div class="tz-stat-sub">Since 1st of this month</div>
+  </div>
+
+  <div class="tz-card tz-accent-orange">
+    <div class="tz-stat-label">All-Time Revenue</div>
+    <div class="tz-stat-value">₹{{ revenue_total|floatformat:0 }}</div>
+    <div class="tz-stat-sub">
+      {{ orders_placed }} pending&nbsp;·&nbsp;{{ orders_shipped }} shipped
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Charts row ─────────────────────────────────────────────────────── -->
+<div class="tz-grid tz-2col">
+
+  <div class="tz-card">
+    <div class="tz-section-title">Revenue — Last 30 Days</div>
+    <div class="tz-chart-wrap">
+      <canvas id="revenueChart"></canvas>
+    </div>
+  </div>
+
+  <div class="tz-card">
+    <div class="tz-section-title">Orders by Status</div>
+    <div class="tz-chart-wrap" style="height:220px;display:flex;align-items:center;justify-content:center;">
+      <canvas id="statusChart" style="max-height:200px;max-width:200px;"></canvas>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Top products + Low stock ───────────────────────────────────────── -->
+<div class="tz-grid tz-2col">
+
+  <div class="tz-card">
+    <div class="tz-section-title">Top 5 Selling Products</div>
+    {% if top_product_names %}
+      <div class="tz-chart-wrap">
+        <canvas id="topProductsChart"></canvas>
+      </div>
+    {% else %}
+      <p style="color:#9ca3af;font-size:13px;">No sales data yet.</p>
+    {% endif %}
+  </div>
+
+  <div class="tz-card">
+    <div class="tz-section-title">⚠ Low Stock Alerts (≤ 5)</div>
+    {% if low_stock %}
+      <div class="tz-table-wrap"><table class="tz-table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>SKU</th>
+            <th>Size</th>
+            <th>Color</th>
+            <th>Stock</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for sku in low_stock %}
+          <tr>
+            <td>{{ sku.product.name }}</td>
+            <td style="font-family:monospace;font-size:12px;">{{ sku.sku_code }}</td>
+            <td>{{ sku.size }}</td>
+            <td>{{ sku.color }}</td>
+            <td>
+              {% if sku.stock == 0 %}
+                <span class="tz-badge" style="background:#ef4444;">OUT</span>
+              {% else %}
+                <span class="tz-badge" style="background:#f59e0b;">{{ sku.stock }}</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table></div>
+    {% else %}
+      <p style="color:#10b981;font-size:13px;">✓ All products have healthy stock.</p>
+    {% endif %}
+  </div>
+
+</div>
+
+<!-- ── Category & Gender revenue charts ──────────────────────────────── -->
+<div class="tz-grid tz-2col">
+
+  <div class="tz-card">
+    <div class="tz-section-title">Revenue by Category</div>
+    {% if cat_labels %}
+      <div class="tz-chart-wrap">
+        <canvas id="catChart"></canvas>
+      </div>
+    {% else %}
+      <p style="color:#9ca3af;font-size:13px;">No sales data yet.</p>
+    {% endif %}
+  </div>
+
+  <div class="tz-card">
+    <div class="tz-section-title">Revenue by Gender</div>
+    {% if gen_labels %}
+      <div class="tz-chart-wrap" style="height:220px;display:flex;align-items:center;justify-content:center;">
+        <canvas id="genChart" style="max-height:200px;max-width:200px;"></canvas>
+      </div>
+    {% else %}
+      <p style="color:#9ca3af;font-size:13px;">No sales data yet.</p>
+    {% endif %}
+  </div>
+
+</div>
+
+<!-- ── Top customers ──────────────────────────────────────────────────── -->
+<div class="tz-card" style="margin-bottom:24px;">
+  <div class="tz-section-title">Top Customers by Spend</div>
+  <div class="tz-table-wrap"><table class="tz-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Customer</th>
+        <th>Phone</th>
+        <th style="text-align:right;">Orders</th>
+        <th style="text-align:right;">Total Spent</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for c in top_customers %}
+      <tr>
+        <td style="color:#9ca3af;">{{ forloop.counter }}</td>
+        <td>
+          <strong>{{ c.customer__name|default:c.name }}</strong>
+        </td>
+        <td style="font-family:monospace;font-size:12px;">{{ c.customer__phone|default:c.phone }}</td>
+        <td style="text-align:right;">{{ c.order_count }}</td>
+        <td style="text-align:right;font-weight:700;color:#10b981;">
+          ₹{{ c.total_spent|floatformat:0 }}
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5" style="text-align:center;color:#9ca3af;padding:20px;">No paid orders yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+
+<!-- ── Recent orders ──────────────────────────────────────────────────── -->
+<div class="tz-card" style="margin-bottom:24px;">
+  <div class="tz-section-title">Recent Orders</div>
+  <div class="tz-table-wrap"><table class="tz-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Customer</th>
+        <th>Phone</th>
+        <th>Amount</th>
+        <th>Status</th>
+        <th>Payment</th>
+        <th>Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for order in recent_orders %}
+      {% with s=order.status %}
+      <tr>
+        <td>
+          <a href="{% url 'admin:store_order_change' order.id %}"
+             style="font-weight:600;color:#8b5cf6;">#{{ order.id }}</a>
+        </td>
+        <td>{{ order.name }}</td>
+        <td style="font-family:monospace;font-size:12px;">{{ order.phone }}</td>
+        <td><strong>₹{{ order.total_amount|floatformat:0 }}</strong></td>
+        <td>
+          {% if s == "PLACED" %}
+            <span class="tz-badge" style="background:#3b82f6;">PLACED</span>
+          {% elif s == "CONFIRMED" %}
+            <span class="tz-badge" style="background:#f59e0b;">CONFIRMED</span>
+          {% elif s == "SHIPPED" %}
+            <span class="tz-badge" style="background:#8b5cf6;">SHIPPED</span>
+          {% elif s == "DELIVERED" %}
+            <span class="tz-badge" style="background:#10b981;">DELIVERED</span>
+          {% elif s == "CANCELLED" %}
+            <span class="tz-badge" style="background:#ef4444;">CANCELLED</span>
+          {% else %}
+            <span class="tz-badge" style="background:#9ca3af;">{{ s }}</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if order.payment_method == "COD" %}💵 COD{% else %}💳 Online{% endif %}
+          {% if order.payment_status == "PAID" %}
+            <span class="tz-badge" style="background:#10b981;margin-left:4px;">PAID</span>
+          {% elif order.payment_status == "PENDING" %}
+            <span class="tz-badge" style="background:#f59e0b;margin-left:4px;">PENDING</span>
+          {% endif %}
+        </td>
+        <td style="color:#9ca3af;font-size:12px;">{{ order.created_at|date:"d M, H:i" }}</td>
+      </tr>
+      {% endwith %}
+      {% empty %}
+      <tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:20px;">No orders yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+
+<!-- ── Chart.js ───────────────────────────────────────────────────────── -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+(function() {
+  const isDark = document.documentElement.classList.contains("dark");
+  const gridColor  = isDark ? "rgba(255,255,255,.06)" : "rgba(0,0,0,.06)";
+  const labelColor = isDark ? "#9ca3af" : "#6b7280";
+
+  // ── Revenue line chart ─────────────────────────────────────────────
+  const days     = {{ chart_days|safe }};
+  const revenues = {{ chart_revenues|safe }};
+
+  new Chart(document.getElementById("revenueChart"), {
+    type: "line",
+    data: {
+      labels: days,
+      datasets: [{
+        label: "Revenue (₹)",
+        data: revenues,
+        borderColor: "#8b5cf6",
+        backgroundColor: "rgba(139,92,246,.12)",
+        borderWidth: 2,
+        pointRadius: 2,
+        pointHoverRadius: 5,
+        fill: true,
+        tension: 0.4,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: {
+          ticks: {
+            color: labelColor,
+            maxTicksLimit: 8,
+            font: { size: 11 },
+          },
+          grid: { color: gridColor },
+        },
+        y: {
+          ticks: { color: labelColor, font: { size: 11 } },
+          grid: { color: gridColor },
+        }
+      }
+    }
+  });
+
+  // ── Orders donut chart ─────────────────────────────────────────────
+  const statusLabels = {{ status_labels|safe }};
+  const statusData   = {{ status_data|safe }};
+  const statusColors = {{ status_colors|safe }};
+
+  if (statusData.length) {
+    new Chart(document.getElementById("statusChart"), {
+      type: "doughnut",
+      data: {
+        labels: statusLabels,
+        datasets: [{
+          data: statusData,
+          backgroundColor: statusColors,
+          borderWidth: 2,
+          borderColor: isDark ? "#1e1e2d" : "#fff",
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: "bottom",
+            labels: { color: labelColor, font: { size: 12 }, padding: 12 },
+          }
+        }
+      }
+    });
+  }
+
+  // ── Top products bar chart ─────────────────────────────────────────
+  const topNames = {{ top_product_names|safe }};
+  const topSales = {{ top_product_sales|safe }};
+
+  if (topNames.length) {
+    new Chart(document.getElementById("topProductsChart"), {
+      type: "bar",
+      data: {
+        labels: topNames,
+        datasets: [{
+          label: "Units Sold",
+          data: topSales,
+          backgroundColor: ["#8b5cf6","#3b82f6","#10b981","#f59e0b","#ef4444"],
+          borderRadius: 6,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: labelColor, font: { size: 11 } }, grid: { display: false } },
+          y: { ticks: { color: labelColor, font: { size: 11 } }, grid: { color: gridColor } },
+        }
+      }
+    });
+  }
+
+  // ── Revenue by category bar chart ──────────────────────────────────
+  const catLabels = {{ cat_labels|safe }};
+  const catData   = {{ cat_data|safe }};
+
+  if (catLabels.length) {
+    new Chart(document.getElementById("catChart"), {
+      type: "bar",
+      data: {
+        labels: catLabels,
+        datasets: [{
+          label: "Revenue (₹)",
+          data: catData,
+          backgroundColor: [
+            "#8b5cf6","#3b82f6","#10b981","#f59e0b","#ef4444","#06b6d4","#ec4899",
+          ],
+          borderRadius: 6,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: labelColor, font: { size: 11 } }, grid: { display: false } },
+          y: { ticks: { color: labelColor, font: { size: 11 } }, grid: { color: gridColor } },
+        }
+      }
+    });
+  }
+
+  // ── Revenue by gender donut chart ──────────────────────────────────
+  const genLabels = {{ gen_labels|safe }};
+  const genData   = {{ gen_data|safe }};
+
+  if (genLabels.length) {
+    new Chart(document.getElementById("genChart"), {
+      type: "doughnut",
+      data: {
+        labels: genLabels,
+        datasets: [{
+          data: genData,
+          backgroundColor: ["#8b5cf6","#ec4899","#3b82f6"],
+          borderWidth: 2,
+          borderColor: isDark ? "#1e1e2d" : "#fff",
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: "bottom",
+            labels: { color: labelColor, font: { size: 12 }, padding: 12 },
+          }
+        }
+      }
+    });
+  }
+})();
+</script>
+
+{% endblock %}
