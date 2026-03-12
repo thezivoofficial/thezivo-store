@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 from decouple import config
 from django.urls import reverse_lazy
+import dj_database_url
 
 SITE_URL = config('SITE_URL', default='http://127.0.0.1:8000')
 
@@ -212,7 +213,10 @@ WSGI_APPLICATION = 'Trendza_store.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-if config('DB_ENGINE', default='django.db.backends.sqlite3') == 'django.db.backends.postgresql':
+DATABASE_URL = config('DATABASE_URL', default='')
+if DATABASE_URL:
+    DATABASES = {'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)}
+elif config('DB_ENGINE', default='') == 'django.db.backends.postgresql':
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
