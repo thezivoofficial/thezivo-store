@@ -16,3 +16,4 @@ cloudinary==1.44.0
 django-cloudinary-storage==0.3.0
 django-extensions==4.1
 dj-database-url==2.3.0
+xhtml2pdf==0.2.17
