@@ -1,5 +1,2 @@
 [phases.setup]
-nixPkgs = ["python312", "python312Packages.pip", "gcc", "cairo", "pkg-config", "gobject-introspection", "pango", "gdk-pixbuf"]
-
-[variables]
-PKG_CONFIG_PATH = "/root/.nix-profile/lib/pkgconfig:/root/.nix-profile/share/pkgconfig"
+nixPkgs = ["python312", "python312Packages.pip", "gcc", "cairo", "cairo.dev", "pkg-config", "gobject-introspection", "pango", "gdk-pixbuf"]
