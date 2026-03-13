@@ -1,2 +1,5 @@
 [phases.setup]
 nixPkgs = ["python312", "python312Packages.pip", "cairo", "pango", "gdk-pixbuf", "gobject-introspection", "fontconfig", "freetype"]
+
+[variables]
+LD_LIBRARY_PATH = "/root/.nix-profile/lib"
