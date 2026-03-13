@@ -1383,8 +1383,7 @@ def order_detail(request, order_id):
 
 @customer_login_required
 def download_invoice(request, order_id):
-    from io import BytesIO
-    from xhtml2pdf import pisa
+    from weasyprint import HTML
 
     order = get_object_or_404(Order, id=order_id, customer=request.customer)
     items = order.items.select_related("sku__product").all()
@@ -1400,11 +1399,8 @@ def download_invoice(request, order_id):
         "store":    SiteSettings.get(),
     }, request=request)
 
-    buffer = BytesIO()
-    pisa.CreatePDF(html, dest=buffer)
-    buffer.seek(0)
-
-    response = HttpResponse(buffer, content_type="application/pdf")
+    pdf = HTML(string=html).write_pdf()
+    response = HttpResponse(pdf, content_type="application/pdf")
     response["Content-Disposition"] = f'attachment; filename="Invoice-Order-{order.id}.pdf"'
     return response
 
