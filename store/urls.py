@@ -41,6 +41,8 @@ urlpatterns = [
     path("addresses/<int:address_id>/edit/", views.edit_address, name="edit_address"),
     path("addresses/<int:address_id>/delete/", views.delete_address, name="delete_address"),
     path("addresses/<int:address_id>/set-default/", views.set_default_address, name="set_default_address"),
-
-
+    path("apply-coupon/", views.apply_coupon, name="apply_coupon"),
+    path("remove-coupon/", views.remove_coupon, name="remove_coupon"),
+    path("product/<int:product_id>/review/", views.submit_review, name="submit_review"),
+    path("check-pincode/", views.check_pincode, name="check_pincode"),
 ]

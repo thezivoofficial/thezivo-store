@@ -52,6 +52,18 @@ class Product(models.Model):
         return self.name
 
     @property
+    def avg_rating(self):
+        reviews = self.reviews.all()
+        if not reviews.exists():
+            return None
+        total = sum(r.rating for r in reviews)
+        return round(total / reviews.count(), 1)
+
+    @property
+    def review_count(self):
+        return self.reviews.count()
+
+    @property
     def prefetched_stock(self):
         """Sum of stock across prefetched sku_set. Used when sku_set is prefetched (home page)."""
         return sum(sku.stock for sku in self.sku_set.all())
@@ -183,7 +195,10 @@ class Order(models.Model):
     razorpay_order_id = models.CharField(max_length=100, blank=True, null=True)
     razorpay_payment_id = models.CharField(max_length=100, blank=True, null=True)
     razorpay_signature = models.CharField(max_length=200, blank=True, null=True)
-    
+
+    coupon          = models.ForeignKey('Coupon', null=True, blank=True, on_delete=models.SET_NULL)
+    discount_amount = models.PositiveIntegerField(default=0)
+
     created_at = models.DateTimeField(auto_now_add=True)
     
     
@@ -305,3 +320,54 @@ class WishlistItem(models.Model):
 
     def __str__(self):
         return f"{self.customer} — {self.product}"
+
+
+class Coupon(models.Model):
+    code             = models.CharField(max_length=20, unique=True, db_index=True)
+    discount_amount  = models.PositiveIntegerField(help_text="Flat ₹ discount applied to order total")
+    min_order        = models.PositiveIntegerField(default=0, help_text="Minimum cart subtotal required")
+    is_active        = models.BooleanField(default=True)
+    valid_from       = models.DateField(null=True, blank=True)
+    valid_to         = models.DateField(null=True, blank=True)
+    usage_limit      = models.PositiveIntegerField(null=True, blank=True, help_text="Leave blank for unlimited")
+    used_count       = models.PositiveIntegerField(default=0)
+    one_per_customer = models.BooleanField(default=False, help_text="Each customer can use this only once")
+    show_in_banner   = models.BooleanField(default=False, help_text="Show this coupon in the site-wide announcement banner")
+
+    def is_valid(self):
+        from django.utils import timezone
+        today = timezone.now().date()
+        if not self.is_active:
+            return False, "This coupon is inactive."
+        if self.valid_from and today < self.valid_from:
+            return False, "This coupon is not yet valid."
+        if self.valid_to and today > self.valid_to:
+            return False, "This coupon has expired."
+        if self.usage_limit is not None and self.used_count >= self.usage_limit:
+            return False, "This coupon has reached its usage limit."
+        return True, "OK"
+
+    class Meta:
+        verbose_name = "Coupon"
+        ordering = ["-id"]
+
+    def __str__(self):
+        return f"{self.code} (₹{self.discount_amount} off)"
+
+
+class Review(models.Model):
+    customer   = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="reviews")
+    product    = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="reviews")
+    order_item = models.ForeignKey(OrderItem, null=True, blank=True, on_delete=models.SET_NULL)
+    rating     = models.PositiveSmallIntegerField()  # 1–5
+    title      = models.CharField(max_length=120, blank=True)
+    comment    = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("customer", "product")
+        ordering = ["-created_at"]
+        verbose_name = "Review"
+
+    def __str__(self):
+        return f"{self.customer.name} → {self.product.name} ({self.rating}★)"

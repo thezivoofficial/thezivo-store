@@ -697,12 +697,47 @@
                         {% endfor %}
                     </div>
 
+                    <!-- COUPON -->
+                    <div style="padding:12px 24px; border-top:1px solid #f5f5f5;">
+                        <div id="coupon-input-row" {% if coupon_code_applied %}style="display:none;"{% endif %}>
+                            <div class="d-flex gap-2">
+                                <input id="coupon-input" type="text" placeholder="Promo code" maxlength="20"
+                                       style="flex:1; border:1.5px solid #e8e8e8; border-radius:8px; padding:9px 12px;
+                                              font-family:'DM Sans',sans-serif; font-size:0.85rem; outline:none;"
+                                       onfocus="this.style.borderColor='#111'" onblur="this.style.borderColor='#e8e8e8'">
+                                <button onclick="applyCoupon()"
+                                        style="padding:9px 14px; background:#111; color:#fff; border:none;
+                                               border-radius:8px; font-family:'DM Sans',sans-serif; font-weight:600;
+                                               font-size:0.82rem; cursor:pointer; white-space:nowrap;">Apply</button>
+                            </div>
+                            <div id="coupon-error" style="font-size:0.75rem; color:#c62828; margin-top:5px; display:none;"></div>
+                        </div>
+                        <div id="coupon-applied-row" {% if not coupon_code_applied %}style="display:none;"{% else %}style="display:flex; align-items:center; justify-content:space-between; padding:8px 10px; background:#f1f8f1; border-radius:8px; font-size:0.82rem;"{% endif %}>
+                            <span style="color:#2e7d32; font-weight:600;">✓ <span id="coupon-label">{{ coupon_code_applied }}</span> applied</span>
+                            <button onclick="removeCoupon()"
+                                    style="background:none; border:none; color:#c62828; font-size:0.75rem;
+                                           cursor:pointer; font-weight:600; padding:0;">Remove</button>
+                        </div>
+                    </div>
+
                     <div class="summary-totals" id="checkoutTotals">
 
                         <div class="totals-row">
                             <span>Subtotal</span>
                             <span>₹{{ total }}</span>
                         </div>
+
+                        {% if coupon_discount > 0 %}
+                        <div class="totals-row" id="discount-line" style="color:#2e7d32;">
+                            <span>Discount</span>
+                            <span>-₹{{ coupon_discount }}</span>
+                        </div>
+                        {% else %}
+                        <div class="totals-row" id="discount-line" style="display:none; color:#2e7d32;">
+                            <span>Discount</span>
+                            <span id="discount-val">-₹0</span>
+                        </div>
+                        {% endif %}
 
                         <div class="totals-row">
                             <span>Delivery</span>
@@ -883,6 +918,66 @@ function selectPayment(method) {
             ? "Place Order"
             : "Pay ₹{{ final_amount }}";
     }
+}
+
+function getCsrf() {
+    return document.querySelector('[name=csrfmiddlewaretoken]')?.value
+        || document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+}
+
+function applyCoupon() {
+    var code = (document.getElementById('coupon-input')?.value || '').trim();
+    var errEl = document.getElementById('coupon-error');
+    if (!code) { if (errEl) { errEl.textContent = 'Enter a coupon code.'; errEl.style.display = 'block'; } return; }
+    fetch('/apply-coupon/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCsrf(), 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'code=' + encodeURIComponent(code)
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.status === 'ok') {
+            document.getElementById('coupon-input-row').style.display = 'none';
+            var row = document.getElementById('coupon-applied-row');
+            row.style.display = 'flex';
+            row.style.alignItems = 'center';
+            row.style.justifyContent = 'space-between';
+            row.style.padding = '8px 10px';
+            row.style.background = '#f1f8f1';
+            row.style.borderRadius = '8px';
+            row.style.fontSize = '0.82rem';
+            document.getElementById('coupon-label').textContent = code.toUpperCase();
+            var dl = document.getElementById('discount-line');
+            if (dl) { dl.style.display = 'flex'; dl.querySelector('#discount-val, span:last-child').textContent = '-₹' + d.discount; }
+            var finalEl = document.querySelector('.totals-row.final span:last-child');
+            if (finalEl) finalEl.textContent = '₹' + d.final_amount;
+            var payBtn = document.getElementById('pay-btn');
+            if (payBtn && payBtn.textContent.trim() !== 'Place Order') payBtn.textContent = 'Pay ₹' + d.final_amount;
+            if (errEl) errEl.style.display = 'none';
+        } else {
+            if (errEl) { errEl.textContent = d.message || 'Invalid coupon.'; errEl.style.display = 'block'; }
+        }
+    });
+}
+
+function removeCoupon() {
+    fetch('/remove-coupon/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCsrf(), 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: ''
+    })
+    .then(r => r.json())
+    .then(d => {
+        document.getElementById('coupon-applied-row').style.display = 'none';
+        document.getElementById('coupon-input-row').style.display = 'block';
+        document.getElementById('coupon-input').value = '';
+        var dl = document.getElementById('discount-line');
+        if (dl) dl.style.display = 'none';
+        var finalEl = document.querySelector('.totals-row.final span:last-child');
+        if (finalEl) finalEl.textContent = '₹' + d.final_amount;
+        var payBtn = document.getElementById('pay-btn');
+        if (payBtn && payBtn.textContent.trim() !== 'Place Order') payBtn.textContent = 'Pay ₹' + d.final_amount;
+    });
 }
 </script>
 

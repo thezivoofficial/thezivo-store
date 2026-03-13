@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404
-from .models import Product, SKU, Order, OrderItem, StockNotification, ProductImage, Address, SiteSettings, CartItem, WishlistItem
+from .models import Product, SKU, Order, OrderItem, StockNotification, ProductImage, Address, SiteSettings, CartItem, WishlistItem, Coupon, Review
 from django.shortcuts import redirect
 from django.http import JsonResponse, HttpResponse
 from django.db.models import Min, F, ExpressionWrapper, IntegerField, Sum, Q
@@ -362,12 +362,40 @@ def product_detail(request, product_id):
     in_stock = any(sku.stock > 0 for sku in skus)
     default_sku = skus.filter(stock__gt=0).first() or skus.first()
 
-
     # Build color_variants: {color_name: first_sku_of_that_color}
     color_variants = {}
     for sku in skus:
         if sku.color not in color_variants:
             color_variants[sku.color] = sku
+
+    # ── Recently viewed (session-based, max 8) ──────────────────────────
+    viewed = request.session.get('recently_viewed', [])
+    viewed = [x for x in viewed if x != product.id]
+    viewed.insert(0, product.id)
+    request.session['recently_viewed'] = viewed[:8]
+    request.session.modified = True
+    recent_ids = viewed[1:5]
+    recently_viewed = list(Product.objects.filter(id__in=recent_ids, active=True).prefetch_related('images'))
+    recently_viewed.sort(key=lambda p: recent_ids.index(p.id) if p.id in recent_ids else 99)
+
+    # ── Related products (same category + gender) ───────────────────────
+    related = list(
+        Product.objects.filter(category=product.category, gender=product.gender, active=True)
+        .exclude(id=product.id).prefetch_related('images')[:6]
+    )
+
+    # ── Reviews ─────────────────────────────────────────────────────────
+    reviews = product.reviews.select_related('customer').order_by('-created_at')[:20]
+    customer_review = None
+    can_review = False
+    if request.customer:
+        customer_review = product.reviews.filter(customer=request.customer).first()
+        if not customer_review:
+            can_review = OrderItem.objects.filter(
+                order__customer=request.customer,
+                sku__product=product,
+                order__status__in=['DELIVERED', 'SHIPPED']
+            ).exists()
 
     return render(request, "store/product_detail.html", {
         "product": product,
@@ -376,6 +404,11 @@ def product_detail(request, product_id):
         "default_sku": default_sku,
         "in_stock": in_stock,
         "color_variants": color_variants,
+        "recently_viewed": recently_viewed,
+        "related": related,
+        "reviews": reviews,
+        "customer_review": customer_review,
+        "can_review": can_review,
     })
 
 
@@ -692,6 +725,15 @@ def checkout(request):
     # ✅ DELIVERY & FINAL AMOUNT (ON FULL CART TOTAL)
     delivery_charge, final_amount, remaining = calculate_delivery_and_final(total)
 
+    # ── Coupon ──────────────────────────────────────────────────────────
+    coupon_session = request.session.get('coupon')
+    coupon_discount = 0
+    coupon_code_applied = ''
+    if coupon_session:
+        coupon_discount = min(coupon_session.get('discount', 0), final_amount)
+        coupon_code_applied = coupon_session.get('code', '')
+        final_amount = max(0, final_amount - coupon_discount)
+
     from .models import SiteSettings
     cod_enabled = SiteSettings.get().cod_enabled
 
@@ -703,6 +745,8 @@ def checkout(request):
         "final_amount": final_amount,
         "free_delivery_remaining": remaining,
         "cod_enabled": cod_enabled,
+        "coupon_discount": coupon_discount,
+        "coupon_code_applied": coupon_code_applied,
     }
 
     # ---------- POST ----------
@@ -762,6 +806,13 @@ def checkout(request):
 
         # ---------- COD ----------
         if payment_method == "cod":
+            coupon_obj = None
+            if coupon_code_applied:
+                try:
+                    coupon_obj = Coupon.objects.get(code__iexact=coupon_code_applied, is_active=True)
+                except Coupon.DoesNotExist:
+                    pass
+
             with transaction.atomic():
                 order = Order.objects.create(
                     customer=request.customer or None,
@@ -774,7 +825,9 @@ def checkout(request):
                     total_amount=final_amount,
                     payment_status="PENDING",
                     payment_method="COD",
-                    status="PLACED"
+                    status="PLACED",
+                    coupon=coupon_obj,
+                    discount_amount=coupon_discount,
                 )
 
                 for item in items:
@@ -784,15 +837,27 @@ def checkout(request):
                         quantity=item["quantity"],
                         price=item["sku"].selling_price
                     )
-
                     item["sku"].stock -= item["quantity"]
                     item["sku"].save()
 
+                if coupon_obj:
+                    Coupon.objects.filter(pk=coupon_obj.pk).update(used_count=F('used_count') + 1)
+
+            request.session.pop('coupon', None)
             clear_cart(request)
+            from .utils import send_order_email
+            send_order_email(order, 'order_confirmation.html', f'Order Confirmed – #{order.id}')
             return redirect("order_success", order_id=order.id)
 
         # ---------- ONLINE ----------
         if payment_method == "online":
+            coupon_obj = None
+            if coupon_code_applied:
+                try:
+                    coupon_obj = Coupon.objects.get(code__iexact=coupon_code_applied, is_active=True)
+                except Coupon.DoesNotExist:
+                    pass
+
             order = Order.objects.create(
                 customer=request.customer or None,
                 name=name,
@@ -804,7 +869,9 @@ def checkout(request):
                 total_amount=final_amount,
                 payment_method="ONLINE",
                 payment_status="PENDING",
-                status="CREATED"
+                status="CREATED",
+                coupon=coupon_obj,
+                discount_amount=coupon_discount,
             )
 
             for item in items:
@@ -938,8 +1005,15 @@ def verify_payment(request):
             item.sku.stock -= item.quantity
             item.sku.save()
 
+        if order.coupon_id:
+            Coupon.objects.filter(pk=order.coupon_id).update(used_count=F('used_count') + 1)
+
+    request.session.pop('coupon', None)
     # ✅ CLEAR CART HERE (CRITICAL)
     clear_cart(request)
+
+    from .utils import send_order_email
+    send_order_email(order, 'order_confirmation.html', f'Order Confirmed – #{order.id}')
 
     return JsonResponse({
         "status": "success",
@@ -1574,3 +1648,116 @@ def cancel_order(request, order_id):
         messages.error(request, f"Order #{order.id} cannot be cancelled as it is already {order.status.lower()}.")
 
     return redirect("my_orders")
+
+
+# ─────────────────────────── Coupon views ───────────────────────────
+
+@require_POST
+def apply_coupon(request):
+    code = request.POST.get('code', '').strip().upper()
+    cart = get_cart(request)
+    subtotal = sum(
+        SKU.objects.get(id=sku_id).selling_price * qty
+        for sku_id, qty in cart.items()
+        if SKU.objects.filter(id=sku_id).exists()
+    )
+    delivery_charge, final_amount, _ = calculate_delivery_and_final(subtotal)
+
+    try:
+        coupon = Coupon.objects.get(code__iexact=code)
+    except Coupon.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Invalid coupon code.'})
+
+    valid, msg = coupon.is_valid()
+    if not valid:
+        return JsonResponse({'status': 'error', 'message': msg})
+
+    if subtotal < coupon.min_order:
+        return JsonResponse({'status': 'error', 'message': f'Minimum order of ₹{coupon.min_order} required.'})
+
+    if coupon.one_per_customer and request.customer:
+        already_used = Order.objects.filter(customer=request.customer, coupon=coupon).exists()
+        if already_used:
+            return JsonResponse({'status': 'error', 'message': 'You have already used this coupon.'})
+
+    discount = min(coupon.discount_amount, final_amount)
+    request.session['coupon'] = {'code': coupon.code, 'discount': discount}
+    request.session.modified = True
+
+    return JsonResponse({
+        'status': 'ok',
+        'code': coupon.code,
+        'discount': discount,
+        'final_amount': max(0, final_amount - discount),
+    })
+
+
+@require_POST
+def remove_coupon(request):
+    request.session.pop('coupon', None)
+    request.session.modified = True
+    cart = get_cart(request)
+    subtotal = sum(
+        SKU.objects.get(id=sku_id).selling_price * qty
+        for sku_id, qty in cart.items()
+        if SKU.objects.filter(id=sku_id).exists()
+    )
+    _, final_amount, _ = calculate_delivery_and_final(subtotal)
+    return JsonResponse({'status': 'ok', 'final_amount': final_amount})
+
+
+# ─────────────────────────── Review view ────────────────────────────
+
+@require_POST
+@customer_login_required
+def submit_review(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    customer = request.customer
+
+    qualifying_item = OrderItem.objects.filter(
+        order__customer=customer,
+        sku__product=product,
+        order__status__in=['DELIVERED', 'SHIPPED']
+    ).first()
+
+    if not qualifying_item:
+        return JsonResponse({'status': 'error', 'message': 'Only verified buyers can review.'})
+
+    if Review.objects.filter(customer=customer, product=product).exists():
+        return JsonResponse({'status': 'error', 'message': 'You have already reviewed this product.'})
+
+    try:
+        rating = int(request.POST.get('rating', 0))
+        assert 1 <= rating <= 5
+    except (ValueError, AssertionError):
+        return JsonResponse({'status': 'error', 'message': 'Please select a rating between 1 and 5.'})
+
+    review = Review.objects.create(
+        customer=customer,
+        product=product,
+        order_item=qualifying_item,
+        rating=rating,
+        title=request.POST.get('title', '').strip()[:120],
+        comment=request.POST.get('comment', '').strip(),
+    )
+
+    return JsonResponse({
+        'status': 'ok',
+        'avg_rating': product.avg_rating,
+        'review_count': product.review_count,
+        'reviewer_name': customer.name,
+        'rating': review.rating,
+        'title': review.title,
+        'comment': review.comment,
+        'created_at': review.created_at.strftime('%d %b %Y'),
+    })
+
+
+# ─────────────────────────── Pincode check ──────────────────────────
+
+@require_POST
+def check_pincode(request):
+    pincode = request.POST.get('pincode', '').strip()
+    if len(pincode) == 6 and pincode.isdigit():
+        return JsonResponse({'available': True, 'message': 'Delivery available in 5–7 business days'})
+    return JsonResponse({'available': False, 'message': 'Enter a valid 6-digit pincode'})

@@ -1,4 +1,5 @@
-from .models import SKU, CartItem, WishlistItem
+from django.db import models as db_models
+from .models import SKU, CartItem, WishlistItem, Coupon
 from .utils import calculate_delivery_and_final
 
 
@@ -43,6 +44,20 @@ def cart_context(request):
         "delivery_charge": delivery_charge,
         "free_delivery_remaining": remaining,
     }
+
+
+def announcement_banner(request):
+    from django.utils import timezone
+    today = timezone.now().date()
+    coupons = Coupon.objects.filter(
+        is_active=True,
+        show_in_banner=True,
+    ).filter(
+        db_models.Q(valid_from__isnull=True) | db_models.Q(valid_from__lte=today)
+    ).filter(
+        db_models.Q(valid_to__isnull=True) | db_models.Q(valid_to__gte=today)
+    )
+    return {"banner_coupons": coupons}
 
 
 def wishlist_count(request):

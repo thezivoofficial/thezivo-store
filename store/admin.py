@@ -11,8 +11,8 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import path, reverse
 from django.utils.html import format_html
 from unfold.admin import ModelAdmin, TabularInline
-from .models import Product, SKU, Order, OrderItem, StockNotification, ProductImage, Address, Customer, SiteSettings
-from .utils import send_whatsapp
+from .models import Product, SKU, Order, OrderItem, StockNotification, ProductImage, Address, Customer, SiteSettings, Coupon, Review
+from .utils import send_whatsapp, send_order_email
 from django.conf import settings
 
 
@@ -435,6 +435,7 @@ class OrderAdmin(ModelAdmin):
         for order in queryset.filter(status__in=["PLACED", "CONFIRMED"]):
             order.status = "SHIPPED"
             order.save()
+            send_order_email(order, 'order_shipped.html', f'Your Order #{order.id} Has Been Shipped!')
             n += 1
         self.message_user(request, f"{n} order(s) marked as Shipped.")
 
@@ -661,3 +662,23 @@ class SiteSettingsAdmin(ModelAdmin):
         # Redirect straight to the edit page — no need for a list
         obj, _ = SiteSettings.objects.get_or_create(pk=1)
         return redirect(reverse("admin:store_sitesettings_change", args=[obj.pk]))
+
+
+# ── Coupon ────────────────────────────────────────────────────────────────────
+
+@admin.register(Coupon)
+class CouponAdmin(ModelAdmin):
+    list_display = ("code", "discount_amount", "min_order", "is_active", "used_count", "usage_limit", "valid_from", "valid_to")
+    list_filter = ("is_active", "one_per_customer")
+    search_fields = ("code",)
+    list_editable = ("is_active",)
+
+
+# ── Review ────────────────────────────────────────────────────────────────────
+
+@admin.register(Review)
+class ReviewAdmin(ModelAdmin):
+    list_display = ("customer", "product", "rating", "title", "created_at")
+    list_filter = ("rating",)
+    search_fields = ("customer__name", "product__name", "title")
+    readonly_fields = ("customer", "product", "order_item", "rating", "title", "comment", "created_at")

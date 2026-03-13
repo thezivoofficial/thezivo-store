@@ -1127,4 +1127,81 @@ function updateCartUI(data) {
 
 
 
+
+<script>
+function checkPin() {
+    var pin = (document.getElementById('pin-input')?.value || '').trim();
+    var el = document.getElementById('pin-result');
+    if (!el) return;
+    if (!pin) { el.textContent = 'Enter a pincode.'; el.style.color = '#c62828'; return; }
+    var csrf = document.querySelector('[name=csrfmiddlewaretoken]')?.value
+               || document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+    fetch('/check-pincode/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrf, 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'pincode=' + encodeURIComponent(pin)
+    })
+    .then(r => r.json())
+    .then(d => {
+        el.textContent = d.message;
+        el.style.color = d.available ? '#2e7d32' : '#c62828';
+    });
+}
+
+var _reviewRating = 0;
+function setRating(val) {
+    _reviewRating = val;
+    document.querySelectorAll('#star-selector span').forEach(function(s, i) {
+        s.style.color = i < val ? '#f5a623' : '#ddd';
+    });
+}
+
+function submitReview(productId) {
+    var errEl = document.getElementById('review-error');
+    if (_reviewRating === 0) {
+        if (errEl) { errEl.textContent = 'Please select a star rating.'; errEl.style.display = 'block'; }
+        return;
+    }
+    var csrf = document.querySelector('[name=csrfmiddlewaretoken]')?.value
+               || document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+    var title = document.getElementById('review-title')?.value || '';
+    var comment = document.getElementById('review-comment')?.value || '';
+    fetch('/product/' + productId + '/review/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrf, 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'rating=' + _reviewRating + '&title=' + encodeURIComponent(title) + '&comment=' + encodeURIComponent(comment)
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.status === 'ok') {
+            var form = document.querySelector('#reviews .product-info-card, [onclick^="submitReview"]')?.closest('div[style*="background:#fff"]');
+            // Hide the review form
+            var reviewForms = document.querySelectorAll('#reviews > div');
+            reviewForms.forEach(function(f) { if (f.querySelector('[onclick^="submitReview"]')) f.style.display = 'none'; });
+            // Prepend new review to list
+            var list = document.getElementById('reviews-list');
+            if (!list) {
+                var section = document.getElementById('reviews');
+                list = document.createElement('div');
+                list.id = 'reviews-list';
+                section.appendChild(list);
+            }
+            var stars = '';
+            for (var i = 1; i <= 5; i++) stars += i <= d.rating ? '★' : '☆';
+            var div = document.createElement('div');
+            div.style.cssText = 'background:#fff;border:1px solid #ececec;border-radius:14px;padding:22px;margin-bottom:14px;';
+            div.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">'
+                + '<div><span style="color:#f5a623;font-size:1rem;letter-spacing:1px;">' + stars + '</span>'
+                + (d.title ? '<span style="font-size:0.9rem;font-weight:600;color:#111;margin-left:8px;">' + d.title + '</span>' : '') + '</div>'
+                + '<span style="font-size:0.75rem;color:#bbb;">' + d.created_at + '</span></div>'
+                + (d.comment ? '<p style="font-size:0.85rem;color:#555;margin:0 0 8px;line-height:1.6;">' + d.comment + '</p>' : '')
+                + '<div style="font-size:0.75rem;color:#aaa;">— ' + d.reviewer_name + '</div>';
+            list.prepend(div);
+        } else {
+            if (errEl) { errEl.textContent = d.message || 'Could not submit review.'; errEl.style.display = 'block'; }
+        }
+    });
+}
+</script>
+
 </body>

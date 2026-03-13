@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Order Confirmation</title>
+</head>
+<body style="margin:0;padding:0;background:#f8f7f5;font-family:'Helvetica Neue',Arial,sans-serif;color:#111;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f8f7f5;padding:32px 0;">
+  <tr><td align="center">
+    <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#fff;border-radius:16px;border:1px solid #ececec;overflow:hidden;">
+
+      <!-- HEADER -->
+      <tr><td style="background:#111;padding:28px 32px;text-align:center;">
+        <div style="font-size:1.4rem;font-weight:700;color:#fff;letter-spacing:1px;">{{ store_name|upper }}</div>
+        <div style="font-size:0.8rem;color:rgba(255,255,255,0.6);margin-top:4px;">Order Confirmation</div>
+      </td></tr>
+
+      <!-- GREETING -->
+      <tr><td style="padding:32px 32px 0;">
+        <h2 style="font-size:1.2rem;font-weight:600;margin:0 0 8px;">Thank you for your order! 🎉</h2>
+        <p style="font-size:0.88rem;color:#666;margin:0 0 24px;line-height:1.6;">
+          Hi {{ order.name }}, your order has been placed successfully.<br>
+          We'll notify you when it's shipped.
+        </p>
+        <div style="background:#f8f7f5;border-radius:10px;padding:14px 18px;margin-bottom:24px;font-size:0.85rem;">
+          <strong>Order #{{ order.id }}</strong> &nbsp;·&nbsp; {{ order.payment_method }}
+          &nbsp;·&nbsp; {{ order.created_at|date:"d M Y" }}
+        </div>
+      </td></tr>
+
+      <!-- ITEMS -->
+      <tr><td style="padding:0 32px;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #f0f0f0;">
+          <tr style="background:#fafafa;">
+            <th style="padding:10px 12px;text-align:left;font-size:0.72rem;color:#aaa;text-transform:uppercase;letter-spacing:0.6px;font-weight:600;">Item</th>
+            <th style="padding:10px 12px;text-align:center;font-size:0.72rem;color:#aaa;text-transform:uppercase;letter-spacing:0.6px;font-weight:600;">Qty</th>
+            <th style="padding:10px 12px;text-align:right;font-size:0.72rem;color:#aaa;text-transform:uppercase;letter-spacing:0.6px;font-weight:600;">Price</th>
+          </tr>
+          {% for item in items %}
+          <tr style="border-bottom:1px solid #f5f5f5;">
+            <td style="padding:12px;font-size:0.85rem;color:#111;">
+              {{ item.sku.product.name }}<br>
+              <span style="font-size:0.75rem;color:#999;">Size: {{ item.sku.size }} &nbsp;·&nbsp; {{ item.sku.color }}</span>
+            </td>
+            <td style="padding:12px;text-align:center;font-size:0.85rem;color:#666;">{{ item.quantity }}</td>
+            <td style="padding:12px;text-align:right;font-size:0.85rem;font-weight:600;color:#111;">₹{{ item.price }}</td>
+          </tr>
+          {% endfor %}
+          {% if order.discount_amount > 0 %}
+          <tr>
+            <td colspan="2" style="padding:10px 12px;font-size:0.82rem;color:#2e7d32;">Discount {% if order.coupon %}({{ order.coupon.code }}){% endif %}</td>
+            <td style="padding:10px 12px;text-align:right;font-size:0.82rem;color:#2e7d32;">-₹{{ order.discount_amount }}</td>
+          </tr>
+          {% endif %}
+          <tr style="background:#fafafa;">
+            <td colspan="2" style="padding:14px 12px;font-size:0.95rem;font-weight:700;color:#111;">Total</td>
+            <td style="padding:14px 12px;text-align:right;font-size:0.95rem;font-weight:700;color:#111;">₹{{ order.total_amount }}</td>
+          </tr>
+        </table>
+      </td></tr>
+
+      <!-- DELIVERY ADDRESS -->
+      <tr><td style="padding:24px 32px;">
+        <div style="font-size:0.72rem;font-weight:600;color:#aaa;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px;">Delivery Address</div>
+        <div style="font-size:0.88rem;color:#444;line-height:1.7;">
+          {{ order.name }}<br>
+          {{ order.address }}<br>
+          {{ order.city }}{% if order.state %}, {{ order.state }}{% endif %} — {{ order.pincode }}<br>
+          📞 {{ order.phone }}
+        </div>
+      </td></tr>
+
+      <!-- FOOTER -->
+      <tr><td style="background:#f8f7f5;padding:20px 32px;text-align:center;border-top:1px solid #f0f0f0;">
+        <p style="font-size:0.78rem;color:#aaa;margin:0;">
+          Need help? Reach us at <a href="mailto:{{ store_name|lower }}@gmail.com" style="color:#111;">{{ store_name|lower }}@gmail.com</a><br>
+          © {{ store_name }}. All rights reserved.
+        </p>
+      </td></tr>
+
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>

@@ -569,6 +569,27 @@
                         </form>
                     </div>
 
+                    <!-- PINCODE CHECK -->
+                    <div style="margin-bottom:20px; padding-bottom:20px; border-bottom:1px solid #f0f0f0;">
+                        <div class="section-label">Check Delivery</div>
+                        <div class="d-flex gap-2 align-items-center">
+                            <input id="pin-input" type="text" inputmode="numeric" maxlength="6"
+                                   placeholder="Enter pincode"
+                                   style="border:1.5px solid #e8e8e8; border-radius:8px; padding:9px 14px;
+                                          font-family:'DM Sans',sans-serif; font-size:0.88rem; width:145px;
+                                          outline:none; transition:border-color 0.15s;"
+                                   onfocus="this.style.borderColor='#111'"
+                                   onblur="this.style.borderColor='#e8e8e8'">
+                            <button onclick="checkPin()"
+                                    style="padding:9px 16px; border:1.5px solid #111; border-radius:8px;
+                                           background:#fff; font-family:'DM Sans',sans-serif; font-size:0.82rem;
+                                           font-weight:600; cursor:pointer; transition:all 0.15s; color:#111;"
+                                    onmouseover="this.style.background='#111';this.style.color='#fff'"
+                                    onmouseout="this.style.background='#fff';this.style.color='#111'">Check</button>
+                        </div>
+                        <div id="pin-result" style="font-size:0.78rem; margin-top:6px; min-height:18px;"></div>
+                    </div>
+
                     <!-- ACTIONS -->
                     <div class="action-row">
                         {% if not in_stock %}
@@ -609,6 +630,90 @@
             </div>
 
         </div>
+
+        <!-- RELATED PRODUCTS -->
+        {% if related %}
+        <section class="mt-5 px-1">
+            <h5 class="mb-3" style="font-family:'Playfair Display',serif; font-size:1.1rem; font-weight:600; color:#111;">You May Also Like</h5>
+            <div class="product-row-scroll d-flex gap-3 pb-2">
+                {% for p in related %}{% include "store/product_card.html" %}{% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- RECENTLY VIEWED -->
+        {% if recently_viewed %}
+        <section class="mt-5 px-1">
+            <h5 class="mb-3" style="font-family:'Playfair Display',serif; font-size:1.1rem; font-weight:600; color:#111;">Recently Viewed</h5>
+            <div class="product-row-scroll d-flex gap-3 pb-2">
+                {% for p in recently_viewed %}{% include "store/product_card.html" %}{% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- REVIEWS & RATINGS -->
+        <section class="mt-5 px-1" id="reviews">
+            <h5 class="mb-4" style="font-family:'Playfair Display',serif; font-size:1.1rem; font-weight:600; color:#111;">
+                Customer Reviews
+                {% if product.avg_rating %}
+                <span style="font-family:'DM Sans',sans-serif; font-size:0.9rem; font-weight:500; color:#888; margin-left:8px;">
+                    ★ {{ product.avg_rating }} ({{ product.review_count }} review{{ product.review_count|pluralize }})
+                </span>
+                {% endif %}
+            </h5>
+
+            {% if can_review %}
+            <div style="background:#fff; border:1px solid #ececec; border-radius:16px; padding:28px; margin-bottom:28px;">
+                <div style="font-size:0.75rem; font-weight:600; color:#aaa; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:16px;">Write a Review</div>
+                <div style="margin-bottom:14px;">
+                    <div style="font-size:0.78rem; color:#888; margin-bottom:8px;">Your Rating</div>
+                    <div id="star-selector" style="display:flex; gap:6px;">
+                        {% for i in "12345" %}
+                        <span data-val="{{ forloop.counter }}"
+                              onclick="setRating({{ forloop.counter }})"
+                              style="font-size:1.6rem; cursor:pointer; color:#ddd; transition:color 0.15s; line-height:1;">★</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                <input id="review-title" type="text" placeholder="Review title (optional)" maxlength="120"
+                       style="width:100%; border:1.5px solid #e8e8e8; border-radius:8px; padding:10px 14px;
+                              font-family:'DM Sans',sans-serif; font-size:0.88rem; margin-bottom:10px; outline:none;"
+                       onfocus="this.style.borderColor='#111'" onblur="this.style.borderColor='#e8e8e8'">
+                <textarea id="review-comment" placeholder="Share your experience..." rows="3"
+                          style="width:100%; border:1.5px solid #e8e8e8; border-radius:8px; padding:10px 14px;
+                                 font-family:'DM Sans',sans-serif; font-size:0.88rem; resize:none; outline:none;
+                                 margin-bottom:14px;"
+                          onfocus="this.style.borderColor='#111'" onblur="this.style.borderColor='#e8e8e8'"></textarea>
+                <div id="review-error" style="font-size:0.8rem; color:#c62828; margin-bottom:10px; display:none;"></div>
+                <button onclick="submitReview({{ product.id }})"
+                        style="background:#111; color:#fff; border:none; padding:11px 28px; border-radius:8px;
+                               font-family:'DM Sans',sans-serif; font-weight:600; font-size:0.85rem; cursor:pointer;
+                               transition:background 0.2s;" onmouseover="this.style.background='#333'"
+                        onmouseout="this.style.background='#111'">Submit Review</button>
+            </div>
+            {% endif %}
+
+            {% if reviews %}
+            <div id="reviews-list">
+                {% for r in reviews %}
+                <div style="background:#fff; border:1px solid #ececec; border-radius:14px; padding:22px; margin-bottom:14px;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+                        <div>
+                            <span style="color:#f5a623; font-size:1rem; letter-spacing:1px;">{% for i in "12345" %}{% if forloop.counter <= r.rating %}★{% else %}☆{% endif %}{% endfor %}</span>
+                            {% if r.title %}<span style="font-size:0.9rem; font-weight:600; color:#111; margin-left:8px;">{{ r.title }}</span>{% endif %}
+                        </div>
+                        <span style="font-size:0.75rem; color:#bbb;">{{ r.created_at|date:"d M Y" }}</span>
+                    </div>
+                    {% if r.comment %}<p style="font-size:0.85rem; color:#555; margin:0 0 8px; line-height:1.6;">{{ r.comment }}</p>{% endif %}
+                    <div style="font-size:0.75rem; color:#aaa;">— {{ r.customer.name }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            {% elif not can_review %}
+            <p style="font-size:0.88rem; color:#bbb; padding:20px 0;">No reviews yet. Be the first to review this product!</p>
+            {% endif %}
+        </section>
+
     </div>
 </div>
 

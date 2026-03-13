@@ -129,6 +129,11 @@ UNFOLD = {
                         "icon": "style",
                         "link": reverse_lazy("admin:store_sku_changelist"),
                     },
+                    {
+                        "title": "Reviews",
+                        "icon": "star",
+                        "link": reverse_lazy("admin:store_review_changelist"),
+                    },
                 ],
             },
             {
@@ -162,6 +167,11 @@ UNFOLD = {
                 "title": "Settings",
                 "separator": True,
                 "items": [
+                    {
+                        "title": "Coupons",
+                        "icon": "local_offer",
+                        "link": reverse_lazy("admin:store_coupon_changelist"),
+                    },
                     {
                         "title": "Site Settings",
                         "icon": "settings",
@@ -202,6 +212,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'store.context_processors.cart_context',
                 'store.context_processors.wishlist_count',
+                'store.context_processors.announcement_banner',
             ],
         },
     },
@@ -307,6 +318,15 @@ TWILIO_ACCOUNT_SID = config('TWILIO_ACCOUNT_SID')
 TWILIO_AUTH_TOKEN = config('TWILIO_AUTH_TOKEN')
 TWILIO_WHATSAPP_FROM = config('TWILIO_WHATSAPP_FROM')
 ADMIN_ALERT_PHONE = config('ADMIN_ALERT_PHONE', default='')
+
+# ── Email (Hostinger SMTP) ───────────────────────────────────────────────────
+EMAIL_BACKEND       = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST          = 'smtp.hostinger.com'
+EMAIL_PORT          = 587
+EMAIL_USE_TLS       = True
+EMAIL_HOST_USER     = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+DEFAULT_FROM_EMAIL  = config('EMAIL_HOST_USER', default='')
 
 # ── Security headers ────────────────────────────────────────────────────────
 SECURE_CONTENT_TYPE_NOSNIFF = True

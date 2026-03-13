@@ -4,6 +4,30 @@ FREE_DELIVERY_LIMIT = 799
 DELIVERY_CHARGE = 59
 
 
+def send_order_email(order, template_name, subject):
+    """Send an HTML order email to the customer. Silently skips if no email."""
+    from django.template.loader import render_to_string
+    from django.core.mail import send_mail
+
+    customer = order.customer
+    if not customer or not customer.email:
+        return
+    items = order.items.select_related('sku__product').all()
+    html = render_to_string(f'store/emails/{template_name}', {
+        'order': order,
+        'items': items,
+        'store_name': 'Zivo',
+    })
+    send_mail(
+        subject,
+        '',
+        settings.DEFAULT_FROM_EMAIL,
+        [customer.email],
+        html_message=html,
+        fail_silently=True,
+    )
+
+
 def calculate_delivery_and_final(subtotal):
     if subtotal >= FREE_DELIVERY_LIMIT:
         return 0, subtotal, 0

@@ -19,6 +19,37 @@
 </head>
 <body>
 
+{% if banner_coupons %}
+<div id="promo-banner" style="background:#111;color:#fff;padding:9px 36px 9px 0;font-size:0.82rem;letter-spacing:0.3px;position:relative;overflow:hidden;white-space:nowrap;">
+  <div class="promo-ticker">
+    {% for c in banner_coupons %}
+      Use code <strong style="background:#fff;color:#111;padding:1px 7px;border-radius:4px;margin:0 3px;letter-spacing:1px;">{{ c.code }}</strong>
+      for <strong>₹{{ c.discount_amount }} off</strong>
+      {% if c.min_order %} on orders above ₹{{ c.min_order }}{% endif %}
+      &nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp;
+    {% endfor %}
+    {% for c in banner_coupons %}
+      Use code <strong style="background:#fff;color:#111;padding:1px 7px;border-radius:4px;margin:0 3px;letter-spacing:1px;">{{ c.code }}</strong>
+      for <strong>₹{{ c.discount_amount }} off</strong>
+      {% if c.min_order %} on orders above ₹{{ c.min_order }}{% endif %}
+      &nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp;
+    {% endfor %}
+  </div>
+  <button onclick="this.parentElement.style.display='none'" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,0.6);font-size:1rem;cursor:pointer;line-height:1;z-index:2;">✕</button>
+</div>
+<style>
+.promo-ticker {
+  display: inline-block;
+  animation: ticker-scroll 24s linear infinite;
+}
+.promo-ticker:hover { animation-play-state: paused; }
+@keyframes ticker-scroll {
+  0%   { transform: translateX(100vw); }
+  100% { transform: translateX(-100%); }
+}
+</style>
+{% endif %}
+
 {% include "store/includes/_navbar.html" %}
 
 <div class="container-fluid px-2 px-md-5 my-3">
