@@ -9,7 +9,6 @@ razorpay==2.0.0
 reportlab==4.4.10
 requests==2.32.5
 twilio==9.9.0
-weasyprint==68.1
 gunicorn==23.0.0
 whitenoise==6.9.0
 cloudinary==1.44.0

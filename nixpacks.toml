@@ -1,2 +1,2 @@
 [phases.setup]
-nixPkgs = ["python312", "python312Packages.pip", "cairo", "pango", "gdk-pixbuf", "gobject-introspection", "fontconfig", "freetype"]
+nixPkgs = ["python312", "python312Packages.pip"]

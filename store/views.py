@@ -1383,25 +1383,173 @@ def order_detail(request, order_id):
 
 @customer_login_required
 def download_invoice(request, order_id):
-    from weasyprint import HTML
+    import io
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.units import mm
+    from reportlab.lib import colors
+    from reportlab.lib.styles import ParagraphStyle
+    from reportlab.lib.enums import TA_RIGHT, TA_CENTER, TA_LEFT
+    from reportlab.platypus import (
+        SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, HRFlowable
+    )
 
     order = get_object_or_404(Order, id=order_id, customer=request.customer)
     items = order.items.select_related("sku__product").all()
     subtotal = sum(item.price * item.quantity for item in items)
     delivery, total, _ = calculate_delivery_and_final(subtotal)
+    store = SiteSettings.get()
+    store_name = store.store_name if store else "Zivo"
 
-    html = render_to_string("store/customer_invoice.html", {
-        "order":    order,
-        "items":    items,
-        "subtotal": subtotal,
-        "delivery": delivery,
-        "total":    total,
-        "store":    SiteSettings.get(),
-    }, request=request)
+    # ── Styles ────────────────────────────────────────────────────────────
+    purple  = colors.HexColor('#7c3aed')
+    gray    = colors.HexColor('#9ca3af')
+    lgray   = colors.HexColor('#f3f4f6')
+    border  = colors.HexColor('#e5e7eb')
+    dark    = colors.HexColor('#111111')
+    midgray = colors.HexColor('#374151')
+    green   = colors.HexColor('#10b981')
+    blue    = colors.HexColor('#3b82f6')
+    red     = colors.HexColor('#ef4444')
+    yellow  = colors.HexColor('#f59e0b')
 
-    pdf = HTML(string=html).write_pdf()
-    response = HttpResponse(pdf, content_type="application/pdf")
-    response["Content-Disposition"] = f'attachment; filename="Invoice-Order-{order.id}.pdf"'
+    def ps(size=10, bold=False, color=dark, align=TA_LEFT):
+        return ParagraphStyle('_', fontSize=size,
+                              fontName='Helvetica-Bold' if bold else 'Helvetica',
+                              textColor=color, alignment=align,
+                              leading=size * 1.4, spaceAfter=0)
+
+    # ── Build PDF ─────────────────────────────────────────────────────────
+    buf = io.BytesIO()
+    doc = SimpleDocTemplate(buf, pagesize=A4,
+                            leftMargin=16*mm, rightMargin=16*mm,
+                            topMargin=18*mm, bottomMargin=18*mm)
+    W = A4[0] - 32*mm  # usable width
+    story = []
+
+    # Header
+    hdr = Table([[
+        Paragraph(f'<b><font size=20 color="#7c3aed">{store_name}</font></b><br/>'
+                  f'<font size=8 color="#9ca3af">Fashion Store</font>', ps()),
+        Paragraph(f'<b><font size=14>TAX INVOICE</font></b><br/>'
+                  f'<b><font size=11>{order.invoice_number}</font></b><br/>'
+                  f'<font size=8 color="#9ca3af">Order #{order.id}</font><br/>'
+                  f'<font size=8 color="#9ca3af">'
+                  f'{order.created_at.strftime("%d %b %Y, %H:%M")}</font>',
+                  ps(align=TA_RIGHT)),
+    ]], colWidths=[W * 0.5, W * 0.5])
+    hdr.setStyle(TableStyle([('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                              ('BOTTOMPADDING', (0, 0), (-1, -1), 4*mm)]))
+    story += [hdr, HRFlowable(width='100%', thickness=2, color=border),
+              Spacer(1, 3*mm)]
+
+    # Ship To / Order Details
+    status_colors = {'PLACED': blue, 'CONFIRMED': yellow, 'SHIPPED': purple,
+                     'DELIVERED': green, 'CANCELLED': red}
+    sc = status_colors.get(order.status, gray)
+    pay_label = 'Cash on Delivery' if order.payment_method == 'COD' else 'Online (Razorpay)'
+    pc = green if order.payment_status == 'PAID' else (yellow if order.payment_status == 'PENDING' else red)
+
+    ship_lines = [
+        Paragraph('<font size=8 color="#9ca3af"><b>SHIP TO</b></font>', ps()),
+        Paragraph(f'<b>{order.name}</b>', ps(11)),
+        Paragraph(order.phone, ps(10, color=midgray)),
+        Paragraph(order.address, ps(10, color=midgray)),
+        Paragraph(f'{order.city or ""}, {order.state or ""} — {order.pincode or ""}',
+                  ps(10, color=midgray)),
+    ]
+    order_lines = [
+        Paragraph('<font size=8 color="#9ca3af"><b>ORDER DETAILS</b></font>', ps()),
+        Paragraph(f'<b>Status:</b> <font color="{sc.hexval()}">{order.status}</font>',
+                  ps(10)),
+        Paragraph(f'<b>Payment:</b> {pay_label} '
+                  f'<font color="{pc.hexval()}">{order.payment_status}</font>',
+                  ps(10)),
+        Paragraph(f'<b>From:</b> {store_name}', ps(10)),
+    ]
+    if store and store.store_phone:
+        order_lines.append(Paragraph(store.store_phone, ps(10, color=midgray)))
+
+    addr = Table([[ship_lines, order_lines]], colWidths=[W * 0.5, W * 0.5])
+    addr.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('LINEAFTER', (0, 0), (0, -1), 0.5, border),
+        ('LEFTPADDING', (1, 0), (1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 3*mm),
+    ]))
+    story += [addr, HRFlowable(width='100%', thickness=2, color=border),
+              Spacer(1, 3*mm)]
+
+    # Items table
+    col_w = [8*mm, W - 8*mm - 14*mm - 14*mm - 10*mm - 18*mm - 19*mm,
+             14*mm, 14*mm, 10*mm, 18*mm, 19*mm]
+    rows = [[
+        Paragraph('<b>#</b>', ps(8, color=gray)),
+        Paragraph('<b>PRODUCT</b>', ps(8, color=gray)),
+        Paragraph('<b>SIZE</b>', ps(8, color=gray)),
+        Paragraph('<b>COLOR</b>', ps(8, color=gray)),
+        Paragraph('<b>QTY</b>', ps(8, color=gray, align=TA_CENTER)),
+        Paragraph('<b>UNIT (Rs.)</b>', ps(8, color=gray, align=TA_RIGHT)),
+        Paragraph('<b>TOTAL (Rs.)</b>', ps(8, color=gray, align=TA_RIGHT)),
+    ]]
+    for idx, item in enumerate(items, 1):
+        rows.append([
+            Paragraph(str(idx), ps(9, color=gray)),
+            Paragraph(f'<b>{item.sku.product.name}</b><br/>'
+                      f'<font size=8 color="#9ca3af">SKU: {item.sku.sku_code}</font>',
+                      ps(10)),
+            Paragraph(item.sku.size, ps(10)),
+            Paragraph(item.sku.color, ps(10)),
+            Paragraph(str(item.quantity), ps(10, align=TA_CENTER)),
+            Paragraph(f'Rs. {item.price:,.0f}', ps(10, align=TA_RIGHT)),
+            Paragraph(f'<b>Rs. {item.price * item.quantity:,.0f}</b>',
+                      ps(10, align=TA_RIGHT)),
+        ])
+
+    tbl = Table(rows, colWidths=col_w, repeatRows=1)
+    tbl.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), lgray),
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.white]),
+        ('LINEBELOW', (0, 0), (-1, -1), 0.5, border),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 5),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+        ('LEFTPADDING', (0, 0), (-1, -1), 4),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 4),
+    ]))
+    story += [tbl, Spacer(1, 3*mm)]
+
+    # Totals
+    def money(v): return f'Rs. {v:,.0f}'
+    totals = Table([
+        ['Subtotal', money(subtotal)],
+        ['Delivery', 'FREE' if delivery == 0 else money(delivery)],
+        [Paragraph('<b>Grand Total</b>', ps(13, bold=True)),
+         Paragraph(f'<b><font color="#7c3aed">{money(total)}</font></b>',
+                   ps(13, bold=True, align=TA_RIGHT))],
+    ], colWidths=[W * 0.75, W * 0.25])
+    totals.setStyle(TableStyle([
+        ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+        ('FONTNAME', (1, 0), (1, 1), 'Helvetica-Bold'),
+        ('TEXTCOLOR', (0, 0), (-1, 1), midgray),
+        ('LINEABOVE', (0, 2), (-1, 2), 2, border),
+        ('TOPPADDING', (0, 2), (-1, 2), 5),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+    ]))
+    story += [totals, Spacer(1, 8*mm)]
+
+    # Footer
+    story.append(HRFlowable(width='100%', thickness=1, color=border, dash=(4, 4)))
+    story.append(Spacer(1, 3*mm))
+    story.append(Paragraph(
+        f'Thank you for shopping with <b><font color="#7c3aed">{store_name}</font></b>!'
+        ' &nbsp;·&nbsp; For support, contact us via WhatsApp.',
+        ps(9, color=gray, align=TA_CENTER)
+    ))
+
+    doc.build(story)
+    buf.seek(0)
+    response = HttpResponse(buf, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="Invoice-Order-{order.id}.pdf"'
     return response
 
 
