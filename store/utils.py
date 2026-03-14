@@ -18,14 +18,17 @@ def send_order_email(order, template_name, subject):
         'items': items,
         'store_name': 'Zivo',
     })
-    send_mail(
-        subject,
-        '',
-        settings.DEFAULT_FROM_EMAIL,
-        [customer.email],
-        html_message=html,
-        fail_silently=True,
-    )
+    try:
+        send_mail(
+            subject,
+            '',
+            settings.DEFAULT_FROM_EMAIL,
+            [customer.email],
+            html_message=html,
+            fail_silently=False,
+        )
+    except Exception:
+        pass
 
 
 def calculate_delivery_and_final(subtotal):
