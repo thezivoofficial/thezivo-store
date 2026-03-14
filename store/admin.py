@@ -234,7 +234,7 @@ class OrderAdmin(ModelAdmin):
     list_display = (
         "id", "name", "phone", "city",
         "display_status", "display_payment",
-        "total_amount", "created_at",
+        "total_amount", "display_emails", "created_at",
     )
     list_display_links = (
         "id", "name", "phone", "city",
@@ -398,6 +398,12 @@ class OrderAdmin(ModelAdmin):
         method = "💵 COD" if obj.payment_method == "COD" else "💳 Online"
         return format_html("{} {}", method, format_html(badge))
     display_payment.short_description = "Payment"
+
+    def display_emails(self, obj):
+        conf = '✅' if obj.confirmation_email_sent else '❌'
+        ship = '✅' if obj.shipped_email_sent else '—'
+        return format_html('<span title="Confirmation">📧{}</span> <span title="Shipped">🚚{}</span>', conf, ship)
+    display_emails.short_description = "Emails"
 
     # ── CSV export ───────────────────────────────────────────────────────────
 

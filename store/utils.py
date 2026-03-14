@@ -27,6 +27,13 @@ def send_order_email(order, template_name, subject):
             html_message=html,
             fail_silently=False,
         )
+        # Mark the flag on the order
+        if 'confirmation' in template_name:
+            order.confirmation_email_sent = True
+            order.save(update_fields=['confirmation_email_sent'])
+        elif 'shipped' in template_name:
+            order.shipped_email_sent = True
+            order.save(update_fields=['shipped_email_sent'])
     except Exception:
         pass
 

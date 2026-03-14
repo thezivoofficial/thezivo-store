@@ -199,6 +199,9 @@ class Order(models.Model):
     coupon          = models.ForeignKey('Coupon', null=True, blank=True, on_delete=models.SET_NULL)
     discount_amount = models.PositiveIntegerField(default=0)
 
+    confirmation_email_sent = models.BooleanField(default=False)
+    shipped_email_sent      = models.BooleanField(default=False)
+
     created_at = models.DateTimeField(auto_now_add=True)
     
     
