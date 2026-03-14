@@ -319,15 +319,15 @@ TWILIO_AUTH_TOKEN = config('TWILIO_AUTH_TOKEN')
 TWILIO_WHATSAPP_FROM = config('TWILIO_WHATSAPP_FROM')
 ADMIN_ALERT_PHONE = config('ADMIN_ALERT_PHONE', default='')
 
-# ── Email (Hostinger SMTP) ───────────────────────────────────────────────────
+# ── Email (Brevo SMTP) ────────────────────────────────────────────────────────
 EMAIL_BACKEND       = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST          = 'smtp.hostinger.com'
-EMAIL_PORT          = 465
-EMAIL_USE_TLS       = False
-EMAIL_USE_SSL       = True
-EMAIL_HOST_USER     = config('EMAIL_HOST_USER', default='')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
-DEFAULT_FROM_EMAIL  = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST          = 'smtp-relay.brevo.com'
+EMAIL_PORT          = 587
+EMAIL_USE_TLS       = True
+EMAIL_USE_SSL       = False
+EMAIL_HOST_USER     = config('EMAIL_HOST_USER', default='')      # Brevo account email
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')  # Brevo SMTP key
+DEFAULT_FROM_EMAIL  = config('DEFAULT_FROM_EMAIL', default='support@thezivo.com')
 
 # ── Security headers ────────────────────────────────────────────────────────
 SECURE_CONTENT_TYPE_NOSNIFF = True
