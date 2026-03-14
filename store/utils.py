@@ -5,37 +5,41 @@ DELIVERY_CHARGE = 59
 
 
 def send_order_email(order, template_name, subject):
-    """Send an HTML order email to the customer. Silently skips if no email."""
+    """Send an HTML order email in a background thread so it never blocks the request."""
+    import threading
     from django.template.loader import render_to_string
     from django.core.mail import send_mail
 
     customer = order.customer
     if not customer or not customer.email:
         return
+
     items = order.items.select_related('sku__product').all()
     html = render_to_string(f'store/emails/{template_name}', {
         'order': order,
         'items': items,
         'store_name': 'Zivo',
     })
-    try:
-        send_mail(
-            subject,
-            '',
-            settings.DEFAULT_FROM_EMAIL,
-            [customer.email],
-            html_message=html,
-            fail_silently=False,
-        )
-        # Mark the flag on the order
-        if 'confirmation' in template_name:
-            order.confirmation_email_sent = True
-            order.save(update_fields=['confirmation_email_sent'])
-        elif 'shipped' in template_name:
-            order.shipped_email_sent = True
-            order.save(update_fields=['shipped_email_sent'])
-    except Exception:
-        pass
+    order_id = order.id
+    recipient = customer.email
+
+    def _send():
+        try:
+            send_mail(
+                subject,
+                '',
+                settings.DEFAULT_FROM_EMAIL,
+                [recipient],
+                html_message=html,
+                fail_silently=False,
+            )
+            from .models import Order
+            flag = 'confirmation_email_sent' if 'confirmation' in template_name else 'shipped_email_sent'
+            Order.objects.filter(id=order_id).update(**{flag: True})
+        except BaseException:
+            pass
+
+    threading.Thread(target=_send, daemon=True).start()
 
 
 def calculate_delivery_and_final(subtotal):
