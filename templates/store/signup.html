@@ -24,6 +24,7 @@
                 <input type="text"
                     name="name"
                     class="form-control"
+                    value="{{ form_data.name }}"
                     required>
             </div>
 
@@ -33,6 +34,7 @@
                     name="phone"
                     class="form-control"
                     placeholder="9876543210 or +919876543210"
+                    value="{{ form_data.phone }}"
                     pattern="[6-9][0-9]{9}|\+91[6-9][0-9]{9}|\+(?!91)[1-9][0-9]{6,12}"
                     title="Enter a 10-digit Indian number (e.g. 9876543210) or with country code (+919876543210)"
                     required>
@@ -44,7 +46,8 @@
                 <input type="email"
                     name="email"
                     class="form-control"
-                    placeholder="you@example.com">
+                    placeholder="you@example.com"
+                    value="{{ form_data.email }}">
             </div>
 
             <div class="mb-3">

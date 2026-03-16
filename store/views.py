@@ -274,6 +274,7 @@ def login_view(request):
             return redirect("home")
         else:
             messages.error(request, "Invalid phone/email or password.")
+            return render(request, "store/login.html", {"form_data": {"identifier": identifier}})
     return render(request, "store/login.html")
 
 
@@ -310,6 +311,7 @@ def signup_view(request):
             customer_login(request, customer)
             messages.success(request, "Welcome to Zivo!")
             return redirect("home")
+        return render(request, "store/signup.html", {"form_data": {"name": name, "phone": phone, "email": email}})
     return render(request, "store/signup.html")
 
 
