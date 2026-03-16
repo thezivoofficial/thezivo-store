@@ -173,6 +173,11 @@ UNFOLD = {
                         "link": reverse_lazy("admin:store_coupon_changelist"),
                     },
                     {
+                        "title": "Announcements",
+                        "icon": "campaign",
+                        "link": reverse_lazy("admin:store_announcement_changelist"),
+                    },
+                    {
                         "title": "Site Settings",
                         "icon": "settings",
                         "link": reverse_lazy("admin:store_sitesettings_changelist"),
