@@ -338,7 +338,7 @@
     /* SHARE */
     /* Mobile: frosted circle overlaid on image top-right */
     .share-on-image {
-        position: absolute;
+        position: absolute !important;
         top: 12px;
         right: 12px;
         z-index: 10;
@@ -346,9 +346,10 @@
     /* Desktop: inline next to brand name */
     .share-on-brand {
         display: none;
+        position: relative;
     }
     @media (min-width: 768px) {
-        .share-on-image { display: none; }
+        .share-on-image { display: none !important; }
         .share-on-brand  { display: flex; }
     }
     .img-share-btn {
@@ -383,7 +384,6 @@
         transition: background 0.15s;
     }
     .brand-share-btn:hover { background: #ececec; color: #111; }
-    .share-wrap { position: relative; }
     .share-dropdown {
         display: none;
         position: absolute;
@@ -450,9 +450,9 @@
         .product-info-card { padding: 20px; }
         .product-name { font-size: 1.3rem; }
         .price-selling { font-size: 1.3rem; }
-        .action-row { flex-wrap: wrap; }
-        .btn-add-to-bag, .btn-notify { flex: 1 1 100%; }
-        .btn-wishlist { width: 52px; border-radius: 10px; }
+        .action-row { flex-wrap: nowrap; }
+        .btn-add-to-bag, .btn-notify { flex: 1 1 auto; }
+        .btn-wishlist { flex-shrink: 0; width: 52px; border-radius: 10px; }
     }
 
     /* SIZE CHART */
