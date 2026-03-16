@@ -328,6 +328,7 @@ EMAIL_USE_SSL       = False
 EMAIL_HOST_USER     = config('EMAIL_HOST_USER', default='')      # Brevo account email
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')  # Brevo SMTP key
 DEFAULT_FROM_EMAIL  = config('DEFAULT_FROM_EMAIL', default='support@thezivo.com')
+EMAIL_TIMEOUT       = 10  # seconds — prevent SMTP from hanging gunicorn
 
 # ── Security headers ────────────────────────────────────────────────────────
 SECURE_CONTENT_TYPE_NOSNIFF = True

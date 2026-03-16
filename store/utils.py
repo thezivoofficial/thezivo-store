@@ -5,7 +5,8 @@ DELIVERY_CHARGE = 59
 
 
 def send_order_email(order, template_name, subject):
-    """Send an HTML order email. Errors are logged but never crash the request."""
+    """Send an HTML order email in a background thread. Never blocks or crashes the request."""
+    import threading
     from django.template.loader import render_to_string
     from django.core.mail import send_mail
 
@@ -19,20 +20,27 @@ def send_order_email(order, template_name, subject):
         'items': items,
         'store_name': 'Zivo',
     })
+    order_id = order.id
+    recipient = customer.email
 
-    try:
-        send_mail(
-            subject,
-            '',
-            settings.DEFAULT_FROM_EMAIL,
-            [customer.email],
-            html_message=html,
-            fail_silently=False,
-        )
-        flag = 'confirmation_email_sent' if 'confirmation' in template_name else 'shipped_email_sent'
-        type(order).objects.filter(id=order.id).update(**{flag: True})
-    except BaseException as e:
-        print(f"[EMAIL ERROR] Failed to send {template_name} for order {order.id}: {e}")
+    def _send():
+        try:
+            send_mail(
+                subject,
+                '',
+                settings.DEFAULT_FROM_EMAIL,
+                [recipient],
+                html_message=html,
+                fail_silently=False,
+            )
+            flag = 'confirmation_email_sent' if 'confirmation' in template_name else 'shipped_email_sent'
+            from .models import Order
+            Order.objects.filter(id=order_id).update(**{flag: True})
+        except Exception as e:
+            print(f"[EMAIL ERROR] Failed to send {template_name} for order {order_id}: {e}")
+
+    t = threading.Thread(target=_send, daemon=False)
+    t.start()
 
 
 def calculate_delivery_and_final(subtotal):
