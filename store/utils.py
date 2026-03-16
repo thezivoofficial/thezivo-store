@@ -24,17 +24,16 @@ def send_order_email(order, template_name, subject):
 
     def _send():
         try:
-            import brevo_python
-            configuration = brevo_python.Configuration()
-            configuration.api_key['api-key'] = settings.BREVO_API_KEY
-            api = brevo_python.TransactionalEmailsApi(brevo_python.ApiClient(configuration))
-            send_smtp_email = brevo_python.SendSmtpEmail(
-                to=[{'email': recipient}],
-                sender={'email': settings.DEFAULT_FROM_EMAIL, 'name': 'Zivo'},
+            from brevo import Brevo, SendTransacEmailRequestToItem, SendTransacEmailRequestSender
+            client = Brevo(api_key=settings.BREVO_API_KEY)
+            client.transactional_emails.send_transac_email(
+                to=[SendTransacEmailRequestToItem(email=recipient)],
+                sender=SendTransacEmailRequestSender(
+                    email=settings.DEFAULT_FROM_EMAIL, name='Zivo'
+                ),
                 subject=subject,
                 html_content=html,
             )
-            api.send_transac_email(send_smtp_email)
             flag = 'confirmation_email_sent' if 'confirmation' in template_name else 'shipped_email_sent'
             from .models import Order
             Order.objects.filter(id=order_id).update(**{flag: True})
