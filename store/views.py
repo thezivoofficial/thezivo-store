@@ -282,7 +282,12 @@ def signup_view(request):
         phone    = request.POST.get("phone", "").strip()
         email    = request.POST.get("email", "").strip()
         password = request.POST.get("password", "")
-        if Customer.objects.filter(phone=phone).exists():
+        import re
+        if len(password) < 8:
+            messages.error(request, "Password must be at least 8 characters.")
+        elif not re.search(r'[A-Za-z]', password) or not re.search(r'\d', password):
+            messages.error(request, "Password must contain at least one letter and one number.")
+        elif Customer.objects.filter(phone=phone).exists():
             messages.error(request, "An account with this phone number already exists.")
         else:
             customer = Customer(name=name, phone=phone, email=email)

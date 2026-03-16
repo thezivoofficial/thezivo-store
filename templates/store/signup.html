@@ -46,15 +46,74 @@
 
             <div class="mb-3">
                 <label class="form-label">Password</label>
-                <input type="password"
-                    name="password"
-                    class="form-control"
-                    required>
+                <div class="position-relative">
+                    <input type="password"
+                        id="signup-password"
+                        name="password"
+                        class="form-control"
+                        minlength="8"
+                        required>
+                    <button type="button" onclick="togglePwd()" tabindex="-1"
+                        style="position:absolute;right:10px;top:50%;transform:translateY(-50%);
+                               background:none;border:none;cursor:pointer;color:#6b7280;font-size:1rem;padding:0;">
+                        <i id="pwd-eye" class="bi bi-eye"></i>
+                    </button>
+                </div>
+                <div id="pwd-strength-bar" style="height:4px;border-radius:2px;margin-top:6px;background:#e5e7eb;overflow:hidden;">
+                    <div id="pwd-strength-fill" style="height:100%;width:0;transition:width .3s,background .3s;"></div>
+                </div>
+                <div id="pwd-strength-msg" style="font-size:0.76rem;margin-top:4px;color:#6b7280;min-height:1em;"></div>
+                <ul style="font-size:0.76rem;color:#6b7280;margin:6px 0 0 16px;padding:0;">
+                    <li id="rule-len">At least 8 characters</li>
+                    <li id="rule-letter">At least one letter</li>
+                    <li id="rule-num">At least one number</li>
+                </ul>
             </div>
 
             <button type="submit" class="btn btn-dark w-100">
                 Sign Up
             </button>
+
+<script>
+function togglePwd() {
+    const inp = document.getElementById('signup-password');
+    const eye = document.getElementById('pwd-eye');
+    if (inp.type === 'password') {
+        inp.type = 'text';
+        eye.className = 'bi bi-eye-slash';
+    } else {
+        inp.type = 'password';
+        eye.className = 'bi bi-eye';
+    }
+}
+
+document.getElementById('signup-password').addEventListener('input', function() {
+    const val = this.value;
+    const hasLen    = val.length >= 8;
+    const hasLetter = /[A-Za-z]/.test(val);
+    const hasNum    = /\d/.test(val);
+
+    const setRule = (id, ok) => {
+        const el = document.getElementById(id);
+        el.style.color = ok ? '#10b981' : '#6b7280';
+        el.style.fontWeight = ok ? '600' : '';
+    };
+    setRule('rule-len',    hasLen);
+    setRule('rule-letter', hasLetter);
+    setRule('rule-num',    hasNum);
+
+    const score = (hasLen ? 1 : 0) + (hasLetter ? 1 : 0) + (hasNum ? 1 : 0)
+                + (val.length >= 12 ? 1 : 0)
+                + (/[^A-Za-z0-9]/.test(val) ? 1 : 0);
+
+    const fill = document.getElementById('pwd-strength-fill');
+    const msg  = document.getElementById('pwd-strength-msg');
+    if (!val) { fill.style.width = '0'; msg.textContent = ''; return; }
+    if (score <= 2)      { fill.style.width = '33%'; fill.style.background = '#ef4444'; msg.textContent = 'Weak'; msg.style.color = '#ef4444'; }
+    else if (score <= 3) { fill.style.width = '66%'; fill.style.background = '#f59e0b'; msg.textContent = 'Fair'; msg.style.color = '#f59e0b'; }
+    else                 { fill.style.width = '100%'; fill.style.background = '#10b981'; msg.textContent = 'Strong'; msg.style.color = '#10b981'; }
+});
+</script>
         </form>
 
         <div class="text-center mt-3">
