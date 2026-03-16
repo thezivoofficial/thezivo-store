@@ -1785,3 +1785,13 @@ def check_pincode(request):
     if len(pincode) == 6 and pincode.isdigit():
         return JsonResponse({'available': True, 'message': 'Delivery available in 5–7 business days'})
     return JsonResponse({'available': False, 'message': 'Enter a valid 6-digit pincode'})
+
+
+def debug_announcements(request):
+    """Temporary debug view — staff only."""
+    if not (request.user.is_authenticated and request.user.is_staff):
+        from django.http import HttpResponseForbidden
+        return HttpResponseForbidden()
+    from .models import Announcement
+    data = list(Announcement.objects.values('id', 'text', 'is_active', 'valid_from', 'valid_to'))
+    return JsonResponse({'count': len(data), 'announcements': data})
