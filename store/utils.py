@@ -5,10 +5,9 @@ DELIVERY_CHARGE = 59
 
 
 def send_order_email(order, template_name, subject):
-    """Send an HTML order email in a background thread. Never blocks or crashes the request."""
+    """Send an HTML order email via Brevo HTTP API in a background thread."""
     import threading
     from django.template.loader import render_to_string
-    from django.core.mail import send_mail
 
     customer = order.customer
     if not customer or not customer.email:
@@ -25,22 +24,24 @@ def send_order_email(order, template_name, subject):
 
     def _send():
         try:
-            send_mail(
-                subject,
-                '',
-                settings.DEFAULT_FROM_EMAIL,
-                [recipient],
-                html_message=html,
-                fail_silently=False,
+            import sib_api_v3_sdk
+            configuration = sib_api_v3_sdk.Configuration()
+            configuration.api_key['api-key'] = settings.BREVO_API_KEY
+            api = sib_api_v3_sdk.TransactionalEmailsApi(sib_api_v3_sdk.ApiClient(configuration))
+            send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(
+                to=[{'email': recipient}],
+                sender={'email': settings.DEFAULT_FROM_EMAIL, 'name': 'Zivo'},
+                subject=subject,
+                html_content=html,
             )
+            api.send_transac_email(send_smtp_email)
             flag = 'confirmation_email_sent' if 'confirmation' in template_name else 'shipped_email_sent'
             from .models import Order
             Order.objects.filter(id=order_id).update(**{flag: True})
         except Exception as e:
             print(f"[EMAIL ERROR] Failed to send {template_name} for order {order_id}: {e}")
 
-    t = threading.Thread(target=_send, daemon=False)
-    t.start()
+    threading.Thread(target=_send, daemon=False).start()
 
 
 def calculate_delivery_and_final(subtotal):
