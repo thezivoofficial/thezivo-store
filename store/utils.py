@@ -36,8 +36,8 @@ def send_order_email(order, template_name, subject):
             from .models import Order
             flag = 'confirmation_email_sent' if 'confirmation' in template_name else 'shipped_email_sent'
             Order.objects.filter(id=order_id).update(**{flag: True})
-        except BaseException:
-            pass
+        except BaseException as e:
+            print(f"[EMAIL ERROR] Failed to send {template_name} for order {order_id}: {e}")
 
     threading.Thread(target=_send, daemon=True).start()
 
