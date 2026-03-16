@@ -325,6 +325,20 @@ class WishlistItem(models.Model):
         return f"{self.customer} — {self.product}"
 
 
+class Announcement(models.Model):
+    """Free-text banner messages — shown in the site-wide ticker alongside coupon codes."""
+    text       = models.CharField(max_length=200, help_text="e.g. 'Free shipping this weekend!' or 'Buy 2 Get 1 Free on all T-Shirts'")
+    is_active  = models.BooleanField(default=True)
+    valid_from = models.DateField(null=True, blank=True)
+    valid_to   = models.DateField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['id']
+
+    def __str__(self):
+        return self.text[:60]
+
+
 class Coupon(models.Model):
     code             = models.CharField(max_length=20, unique=True, db_index=True)
     discount_amount  = models.PositiveIntegerField(help_text="Flat ₹ discount applied to order total")

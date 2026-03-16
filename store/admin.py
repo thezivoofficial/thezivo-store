@@ -11,7 +11,7 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import path, reverse
 from django.utils.html import format_html
 from unfold.admin import ModelAdmin, TabularInline
-from .models import Product, SKU, Order, OrderItem, StockNotification, ProductImage, Address, Customer, SiteSettings, Coupon, Review
+from .models import Product, SKU, Order, OrderItem, StockNotification, ProductImage, Address, Customer, SiteSettings, Coupon, Review, Announcement
 from .utils import send_whatsapp, send_order_email
 from django.conf import settings
 
@@ -682,6 +682,15 @@ class CouponAdmin(ModelAdmin):
     list_filter = ("is_active", "one_per_customer")
     search_fields = ("code",)
     list_editable = ("is_active",)
+
+
+# ── Announcement ──────────────────────────────────────────────────────────────
+
+@admin.register(Announcement)
+class AnnouncementAdmin(ModelAdmin):
+    list_display  = ("text", "is_active", "valid_from", "valid_to")
+    list_editable = ("is_active",)
+    list_filter   = ("is_active",)
 
 
 # ── Review ────────────────────────────────────────────────────────────────────

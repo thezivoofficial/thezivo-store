@@ -19,7 +19,7 @@
 </head>
 <body>
 
-{% if banner_coupons %}
+{% if banner_coupons or banner_announcements %}
 <div id="promo-banner" style="background:#111;color:#fff;padding:9px 36px 9px 0;font-size:0.82rem;letter-spacing:0.3px;position:relative;overflow:hidden;white-space:nowrap;">
   <div class="promo-ticker">
     {% for c in banner_coupons %}
@@ -28,10 +28,18 @@
       {% if c.min_order %} on orders above ₹{{ c.min_order }}{% endif %}
       &nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp;
     {% endfor %}
+    {% for a in banner_announcements %}
+      {{ a.text }}
+      &nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp;
+    {% endfor %}
     {% for c in banner_coupons %}
       Use code <strong style="background:#fff;color:#111;padding:1px 7px;border-radius:4px;margin:0 3px;letter-spacing:1px;">{{ c.code }}</strong>
       for <strong>₹{{ c.discount_amount }} off</strong>
       {% if c.min_order %} on orders above ₹{{ c.min_order }}{% endif %}
+      &nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp;
+    {% endfor %}
+    {% for a in banner_announcements %}
+      {{ a.text }}
       &nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp;
     {% endfor %}
   </div>

@@ -1,5 +1,5 @@
 from django.db import models as db_models
-from .models import SKU, CartItem, WishlistItem, Coupon
+from .models import SKU, CartItem, WishlistItem, Coupon, Announcement
 from .utils import calculate_delivery_and_final
 
 
@@ -57,7 +57,14 @@ def announcement_banner(request):
     ).filter(
         db_models.Q(valid_to__isnull=True) | db_models.Q(valid_to__gte=today)
     )
-    return {"banner_coupons": coupons}
+    announcements = Announcement.objects.filter(
+        is_active=True,
+    ).filter(
+        db_models.Q(valid_from__isnull=True) | db_models.Q(valid_from__lte=today)
+    ).filter(
+        db_models.Q(valid_to__isnull=True) | db_models.Q(valid_to__gte=today)
+    )
+    return {"banner_coupons": coupons, "banner_announcements": announcements}
 
 
 def wishlist_count(request):
