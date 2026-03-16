@@ -880,16 +880,16 @@
         font-size: 22px;
         font-weight: 900;
         letter-spacing: 4px;
-        color: #111;
+        color: #fff;
         line-height: 1;
-        font-family: Georgia, 'Times New Roman', serif;
+        font-family: 'Playfair Display', Georgia, serif;
         text-transform: uppercase;
     }
     .mob-brand-tagline {
         font-size: 7px;
-        font-weight: 700;
+        font-weight: 600;
         letter-spacing: 2.5px;
-        color: #888;
+        color: rgba(255,255,255,0.5);
         margin-top: 2px;
         text-transform: uppercase;
     }
@@ -1420,31 +1420,33 @@
         padding-bottom: 0;
     }
 
-    /* Control logo size properly */
-    .brand-logo {
-        max-height: 44px;   /* THIS is the sweet spot */
-        width: auto;
-        display: block;
-        opacity: 0;
-        animation: logoFadeIn 0.8s ease forwards;
-        transition: transform 0.25s ease, filter 0.25s ease;
-        transform: translateY(1px);
+    /* Desktop brand text */
+    .desk-brand {
+        display: flex;
+        flex-direction: column;
+        line-height: 1;
+        transition: transform 0.22s ease;
     }
+    .navbar-brand:hover .desk-brand { transform: translateY(-1px); }
 
-    @keyframes logoFadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(4px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+    .desk-brand-name {
+        font-family: 'Playfair Display', Georgia, serif;
+        font-size: 1.65rem;
+        font-weight: 700;
+        letter-spacing: 5px;
+        color: #fff;
+        text-transform: uppercase;
+        line-height: 1;
     }
-
-    .navbar-brand:hover .brand-logo {
-        transform: translateY(-2px);
-        filter: drop-shadow(0 4px 8px rgba(0,0,0,0.25));
+    .desk-brand-tagline {
+        font-family: 'Poppins', sans-serif;
+        font-size: 0.48rem;
+        font-weight: 600;
+        letter-spacing: 3.5px;
+        color: rgba(255,255,255,0.5);
+        text-transform: uppercase;
+        margin-top: 3px;
+        text-align: center;
     }
 
     .search-item {
