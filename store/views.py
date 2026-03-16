@@ -216,8 +216,8 @@ def build_cart_context(request):
     for sku_id, qty in cart.items():
 
         try:
-            sku = SKU.objects.get(id=sku_id)
-        except:
+            sku = SKU.objects.select_related("product").get(id=sku_id)
+        except SKU.DoesNotExist:
             continue
 
         item_total = sku.selling_price * qty
@@ -519,7 +519,14 @@ def view_cart(request):
     total = 0
 
     for sku_id, qty in cart.items():
-        sku = SKU.objects.select_related("product").get(id=sku_id)
+        try:
+            sku = SKU.objects.select_related("product").get(id=sku_id)
+        except SKU.DoesNotExist:
+            # SKU was deleted — remove it from the session cart
+            cart_session = request.session.get("cart", {})
+            cart_session.pop(str(sku_id), None)
+            request.session["cart"] = cart_session
+            continue
         subtotal = sku.selling_price * qty
         total += subtotal
         all_skus = SKU.objects.filter(product=sku.product).order_by("size")

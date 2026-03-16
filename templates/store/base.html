@@ -6,6 +6,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}TheZivo{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}Shop premium fashion for men and women at TheZivo — T-shirts, shirts, kurtis, jeans and more.{% endblock %}">
+
+    <!-- Open Graph -->
+    <meta property="og:site_name" content="TheZivo">
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+    <meta property="og:title" content="{% block og_title %}TheZivo | Define Your Style{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Shop premium fashion for men and women at TheZivo.{% endblock %}">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+    <meta property="og:image" content="{% block og_image %}{{ STATIC_URL }}store/img/og-default.jpg{% endblock %}">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% block twitter_title %}TheZivo | Define Your Style{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}Shop premium fashion for men and women at TheZivo.{% endblock %}">
+    <meta name="twitter:image" content="{% block twitter_image %}{{ STATIC_URL }}store/img/og-default.jpg{% endblock %}">
 
     <!-- External CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nouislider@15.7.1/dist/nouislider.min.css">

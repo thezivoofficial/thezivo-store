@@ -1,6 +1,14 @@
 {% extends "store/base.html" %}
 
 {% block title %}{{ product.name }} | TheZivo{% endblock %}
+{% block meta_description %}Buy {{ product.name }} online at TheZivo. Premium quality {{ product.category }} for {{ product.gender }}.{% endblock %}
+{% block og_type %}product{% endblock %}
+{% block og_title %}{{ product.name }} | TheZivo{% endblock %}
+{% block og_description %}Buy {{ product.name }} online at TheZivo. Premium quality {{ product.category }} for {{ product.gender }}.{% endblock %}
+{% block og_image %}{% with img=images.first %}{% if img %}{{ request.scheme }}://{{ request.get_host }}{{ img.image.url }}{% else %}{{ STATIC_URL }}store/img/og-default.jpg{% endif %}{% endwith %}{% endblock %}
+{% block twitter_title %}{{ product.name }} | TheZivo{% endblock %}
+{% block twitter_description %}Buy {{ product.name }} online at TheZivo.{% endblock %}
+{% block twitter_image %}{% with img=images.first %}{% if img %}{{ request.scheme }}://{{ request.get_host }}{{ img.image.url }}{% else %}{{ STATIC_URL }}store/img/og-default.jpg{% endif %}{% endwith %}{% endblock %}
 
 {% block content %}
 

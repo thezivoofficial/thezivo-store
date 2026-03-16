@@ -1,5 +1,28 @@
 from django.db import models
 from django.contrib.auth.hashers import make_password, check_password as _check_password
+from io import BytesIO
+from django.core.files.base import ContentFile
+from PIL import Image as PilImage
+
+
+def compress_image(image_field, max_width=1200, quality=85):
+    """Resize and compress an ImageField in-place. No-op if already small."""
+    try:
+        img = PilImage.open(image_field)
+        if img.mode in ("RGBA", "P"):
+            img = img.convert("RGB")
+        if img.width > max_width:
+            ratio = max_width / img.width
+            img = img.resize((max_width, int(img.height * ratio)), PilImage.LANCZOS)
+        buf = BytesIO()
+        img.save(buf, format="JPEG", quality=quality, optimize=True)
+        image_field.save(
+            image_field.name.rsplit("/", 1)[-1].rsplit(".", 1)[0] + ".jpg",
+            ContentFile(buf.getvalue()),
+            save=False,
+        )
+    except Exception:
+        pass  # never break a save due to compression failure
 
 
 class Customer(models.Model):
@@ -48,6 +71,11 @@ class Product(models.Model):
     active = models.BooleanField(default=True, db_index=True)
     brand = models.CharField(max_length=100)
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if self.image:
+            compress_image(self.image)
+
     def __str__(self):
         return self.name
 
@@ -80,6 +108,11 @@ class ProductImage(models.Model):
     )
     image = models.ImageField(upload_to="products/extra/")
     is_primary = models.BooleanField(default=False)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if self.image:
+            compress_image(self.image)
 
     def __str__(self):
         return f"Image - {self.product.name}"
