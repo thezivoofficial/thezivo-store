@@ -289,7 +289,13 @@ def signup_view(request):
         # Normalise: bare 10-digit Indian number → +91xxxxxxxxxx
         if re.fullmatch(r'[6-9]\d{9}', phone):
             phone = '+91' + phone
-        if not re.fullmatch(r'\+\d{7,15}', phone):
+        # +91 numbers: must be exactly +91 followed by 10 digits starting with 6-9
+        # Other international: +[country_code][7-12 digits]
+        valid_phone = (
+            re.fullmatch(r'\+91[6-9]\d{9}', phone)
+            or re.fullmatch(r'\+(?!91)[1-9]\d{6,12}', phone)
+        )
+        if not valid_phone:
             messages.error(request, "Enter a valid phone number (e.g. 9876543210 or +919876543210).")
         elif len(password) < 8:
             messages.error(request, "Password must be at least 8 characters.")
