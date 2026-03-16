@@ -286,7 +286,12 @@ def signup_view(request):
         email    = request.POST.get("email", "").strip()
         password = request.POST.get("password", "")
         import re
-        if len(password) < 8:
+        # Normalise: bare 10-digit Indian number → +91xxxxxxxxxx
+        if re.fullmatch(r'[6-9]\d{9}', phone):
+            phone = '+91' + phone
+        if not re.fullmatch(r'\+\d{7,15}', phone):
+            messages.error(request, "Enter a valid phone number (e.g. 9876543210 or +919876543210).")
+        elif len(password) < 8:
             messages.error(request, "Password must be at least 8 characters.")
         elif not re.search(r'[A-Za-z]', password) or not re.search(r'\d', password):
             messages.error(request, "Password must contain at least one letter and one number.")
