@@ -24,11 +24,11 @@ def send_order_email(order, template_name, subject):
 
     def _send():
         try:
-            import sib_api_v3_sdk
-            configuration = sib_api_v3_sdk.Configuration()
+            import brevo_python
+            configuration = brevo_python.Configuration()
             configuration.api_key['api-key'] = settings.BREVO_API_KEY
-            api = sib_api_v3_sdk.TransactionalEmailsApi(sib_api_v3_sdk.ApiClient(configuration))
-            send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(
+            api = brevo_python.TransactionalEmailsApi(brevo_python.ApiClient(configuration))
+            send_smtp_email = brevo_python.SendSmtpEmail(
                 to=[{'email': recipient}],
                 sender={'email': settings.DEFAULT_FROM_EMAIL, 'name': 'Zivo'},
                 subject=subject,
