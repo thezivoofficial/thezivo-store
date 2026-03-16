@@ -57,13 +57,18 @@ def announcement_banner(request):
     ).filter(
         db_models.Q(valid_to__isnull=True) | db_models.Q(valid_to__gte=today)
     )
-    announcements = Announcement.objects.filter(
-        is_active=True,
-    ).filter(
-        db_models.Q(valid_from__isnull=True) | db_models.Q(valid_from__lte=today)
-    ).filter(
-        db_models.Q(valid_to__isnull=True) | db_models.Q(valid_to__gte=today)
-    )
+    try:
+        announcements = Announcement.objects.filter(
+            is_active=True,
+        ).filter(
+            db_models.Q(valid_from__isnull=True) | db_models.Q(valid_from__lte=today)
+        ).filter(
+            db_models.Q(valid_to__isnull=True) | db_models.Q(valid_to__gte=today)
+        )
+        # Force evaluation so errors surface here, not in template
+        announcements = list(announcements)
+    except Exception:
+        announcements = []
     return {"banner_coupons": coupons, "banner_announcements": announcements}
 
 
