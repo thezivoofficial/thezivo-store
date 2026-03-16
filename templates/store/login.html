@@ -20,20 +20,30 @@
             {% csrf_token %}
 
             <div class="mb-3">
-                <label class="form-label">Phone Number</label>
-                <input type="tel"
-                       name="phone"
+                <label class="form-label">Phone Number or Email</label>
+                <input type="text"
+                       name="identifier"
                        class="form-control"
-                       placeholder="+919XXXXXXXXX"
+                       placeholder="Phone or email address"
+                       autocomplete="username"
                        required>
             </div>
 
             <div class="mb-3">
                 <label class="form-label">Password</label>
-                <input type="password"
-                       name="password"
-                       class="form-control"
-                       required>
+                <div class="position-relative">
+                    <input type="password"
+                           id="login-password"
+                           name="password"
+                           class="form-control"
+                           autocomplete="current-password"
+                           required>
+                    <button type="button" onclick="toggleLoginPwd()" tabindex="-1"
+                        style="position:absolute;right:10px;top:50%;transform:translateY(-50%);
+                               background:none;border:none;cursor:pointer;color:#6b7280;font-size:1rem;padding:0;">
+                        <i id="login-pwd-eye" class="bi bi-eye"></i>
+                    </button>
+                </div>
             </div>
 
             <button type="submit" class="btn btn-dark w-100">
@@ -44,10 +54,18 @@
         <div class="text-center mt-3">
             <small>
                 Don’t have an account?
-                <a href="{% url 'signup' %}">Sign up</a>
+                <a href="{% url ‘signup’ %}">Sign up</a>
             </small>
         </div>
 
     </div>
 </div>
+<script>
+function toggleLoginPwd() {
+    const inp = document.getElementById(‘login-password’);
+    const eye = document.getElementById(‘login-pwd-eye’);
+    if (inp.type === ‘password’) { inp.type = ‘text’; eye.className = ‘bi bi-eye-slash’; }
+    else { inp.type = ‘password’; eye.className = ‘bi bi-eye’; }
+}
+</script>
 {% endblock %}

@@ -263,14 +263,17 @@ def login_view(request):
     if request.customer:
         return redirect("home")
     if request.method == "POST":
-        phone    = request.POST.get("phone", "").strip()
-        password = request.POST.get("password", "")
-        customer = Customer.objects.filter(phone=phone, is_active=True).first()
+        identifier = request.POST.get("identifier", "").strip()
+        password   = request.POST.get("password", "")
+        customer = (
+            Customer.objects.filter(phone=identifier, is_active=True).first()
+            or Customer.objects.filter(email__iexact=identifier, is_active=True).first()
+        )
         if customer and customer.check_password(password):
             customer_login(request, customer)
             return redirect("home")
         else:
-            messages.error(request, "Invalid phone number or password.")
+            messages.error(request, "Invalid phone/email or password.")
     return render(request, "store/login.html")
 
 
