@@ -263,10 +263,13 @@ def login_view(request):
     if request.customer:
         return redirect("home")
     if request.method == "POST":
+        import re
         identifier = request.POST.get("identifier", "").strip()
         password   = request.POST.get("password", "")
+        # Normalise bare 10-digit Indian number → +91xxxxxxxxxx for lookup
+        phone_lookup = ('+91' + identifier) if re.fullmatch(r'[6-9]\d{9}', identifier) else identifier
         customer = (
-            Customer.objects.filter(phone=identifier, is_active=True).first()
+            Customer.objects.filter(phone=phone_lookup, is_active=True).first()
             or Customer.objects.filter(email__iexact=identifier, is_active=True).first()
         )
         if customer and customer.check_password(password):
