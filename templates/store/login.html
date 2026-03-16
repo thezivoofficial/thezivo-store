@@ -54,8 +54,8 @@
 
         <div class="text-center mt-3">
             <small>
-                Don’t have an account?
-                <a href="{% url ‘signup’ %}">Sign up</a>
+                Don't have an account?
+                <a href="{% url 'signup' %}">Sign up</a>
             </small>
         </div>
 
@@ -63,10 +63,10 @@
 </div>
 <script>
 function toggleLoginPwd() {
-    const inp = document.getElementById(‘login-password’);
-    const eye = document.getElementById(‘login-pwd-eye’);
-    if (inp.type === ‘password’) { inp.type = ‘text’; eye.className = ‘bi bi-eye-slash’; }
-    else { inp.type = ‘password’; eye.className = ‘bi bi-eye’; }
+    const inp = document.getElementById('login-password');
+    const eye = document.getElementById('login-pwd-eye');
+    if (inp.type === 'password') { inp.type = 'text'; eye.className = 'bi bi-eye-slash'; }
+    else { inp.type = 'password'; eye.className = 'bi bi-eye'; }
 }
 </script>
 {% endblock %}
