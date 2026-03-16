@@ -314,10 +314,14 @@ class OrderAdmin(ModelAdmin):
                 if new_status == "SHIPPED":
                     from django.utils import timezone
                     order.shipped_at = timezone.now()
+                    order.save()
+                    send_order_email(order, 'order_shipped.html', f'Your Order #{order.id} Has Been Shipped!')
                 elif new_status == "DELIVERED":
                     from django.utils import timezone
                     order.delivered_at = timezone.now()
-                order.save()
+                    order.save()
+                else:
+                    order.save()
                 messages.success(request, f"Order #{order_id} marked as {new_status}.")
             return redirect(reverse("admin:store_order_scan", args=[order_id]))
 
