@@ -855,12 +855,18 @@
         border: none;
         padding: 4px 6px;
         cursor: pointer;
-        color: #111;
+        color: rgba(255,255,255,0.88);
         line-height: 1;
         display: flex;
         align-items: center;
         flex-shrink: 0;
     }
+
+    /* ── Mobile icon links (wishlist, bag) ── */
+    .mob-icon-link {
+        color: rgba(255,255,255,0.88);
+    }
+    .mob-icon-link:hover { color: #fff; }
 
     /* ── Mobile nav row ── */
     .mob-nav-row {
@@ -874,7 +880,7 @@
         transform: translateX(-50%);
         text-align: center;
         pointer-events: auto;
-        color: #111;
+        color: #fff;
     }
     .mob-brand-name {
         font-size: 22px;
