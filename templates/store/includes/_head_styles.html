@@ -1598,7 +1598,17 @@
     ========================================================= */
 
     .hero-carousel {
+        margin-top: -1rem;       /* cancel base container my-3 top */
+        margin-left: -0.5rem;    /* cancel px-2 on mobile */
+        margin-right: -0.5rem;
         margin-bottom: 40px;
+    }
+
+    @media (min-width: 768px) {
+        .hero-carousel {
+            margin-left: -3rem;  /* cancel px-md-5 on desktop */
+            margin-right: -3rem;
+        }
     }
 
     .hero-slide {
