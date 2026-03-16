@@ -72,49 +72,54 @@
         </div>
 
         <!-- ── Desktop right: icons + auth (≥992px only) ── -->
-        <div class="d-none d-lg-flex align-items-center gap-4">
+        <div class="d-none d-lg-flex align-items-center gap-3">
 
+            <!-- Cart -->
             <a href="javascript:void(0)"
-               class="text-dark text-decoration-none position-relative"
+               class="nav-icon-btn position-relative"
                data-bs-toggle="offcanvas"
                data-bs-target="#sideCart"
-               role="button">
-                <i class="bi bi-bag fs-5"></i>
-                <span class="small ms-1">Cart</span>
+               role="button"
+               title="Cart">
+                <i class="bi bi-bag"></i>
+                <span class="nav-icon-label">Cart</span>
                 <span id="cart-count"
-                      class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                      class="nav-badge"
                       {% if cart_count == 0 %}style="display:none"{% endif %}>
                     {{ cart_count }}
                 </span>
             </a>
 
+            <!-- Wishlist -->
             <a href="{% url 'wishlist' %}"
-               class="text-dark text-decoration-none position-relative wishlist-nav">
-                <i class="bi bi-heart fs-5"></i>
-                <span class="small ms-1">Wishlist</span>
-                {% if wishlist_count > 0 %}
-                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger wishlist-badge">
+               class="nav-icon-btn position-relative wishlist-nav"
+               title="Wishlist">
+                <i class="bi bi-heart"></i>
+                <span class="nav-icon-label">Wishlist</span>
+                <span class="nav-badge wishlist-badge" {% if wishlist_count == 0 %}style="display:none"{% endif %}>
                     {{ wishlist_count }}
                 </span>
-                {% endif %}
             </a>
+
+            <div class="nav-divider"></div>
 
             {% if request.customer %}
                 <div class="dropdown">
-                    <a class="dropdown-toggle text-dark text-decoration-none"
-                       href="#" role="button" data-bs-toggle="dropdown">
-                        Hi, {{ request.customer.name }}
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="{% url 'profile' %}">My Profile</a></li>
-                        <li><a class="dropdown-item" href="{% url 'my_orders' %}">My Orders</a></li>
+                    <button class="nav-user-btn dropdown-toggle" data-bs-toggle="dropdown">
+                        <i class="bi bi-person-circle"></i>
+                        <span>{{ request.customer.name|truncatechars:12 }}</span>
+                        <i class="bi bi-chevron-down"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end nav-user-dropdown">
+                        <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="bi bi-person me-2"></i>My Profile</a></li>
+                        <li><a class="dropdown-item" href="{% url 'my_orders' %}"><i class="bi bi-box-seam me-2"></i>My Orders</a></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item text-danger" href="{% url 'logout' %}">Logout</a></li>
+                        <li><a class="dropdown-item text-danger" href="{% url 'logout' %}"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
                     </ul>
                 </div>
             {% else %}
-                <a href="{% url 'login' %}" class="text-dark text-decoration-none">Login</a>
-                <a href="{% url 'signup' %}" class="text-dark text-decoration-none ms-2">Sign up</a>
+                <a href="{% url 'login' %}" class="nav-auth-link">Login</a>
+                <a href="{% url 'signup' %}" class="nav-auth-btn">Sign up</a>
             {% endif %}
 
         </div>
