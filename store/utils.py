@@ -51,9 +51,19 @@ def calculate_delivery_and_final(subtotal):
 
 
 def send_whatsapp(phone, message):
-    if not phone or not phone.startswith("+"):
-        print("Invalid phone format, skipping WhatsApp:", phone)
+    if not phone:
         return
+
+    # Normalize Indian mobile numbers (stored as 10-digit strings in DB)
+    phone = phone.strip().replace(" ", "").replace("-", "")
+    if phone.startswith("0"):
+        phone = phone[1:]
+    if not phone.startswith("+"):
+        if len(phone) == 10 and phone.isdigit():
+            phone = "+91" + phone
+        else:
+            print("Cannot normalize phone, skipping WhatsApp:", phone)
+            return
 
     try:
         from twilio.rest import Client
