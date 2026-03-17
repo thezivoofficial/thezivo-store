@@ -368,7 +368,8 @@
     }
 })();
 
-// Position banner below navbar with gap, adjust body padding to cover both
+// Position banner below navbar; recalculate whenever viewport changes
+// (includes mobile browser chrome show/hide via visualViewport API)
 var BANNER_GAP = 0;
 function adjustBodyPadding() {
     var nav    = document.getElementById('mainNavbar');
@@ -383,4 +384,8 @@ function adjustBodyPadding() {
 }
 adjustBodyPadding();
 window.addEventListener('resize', adjustBodyPadding);
+// visualViewport fires when the mobile browser chrome shows/hides
+if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', adjustBodyPadding);
+}
 </script>

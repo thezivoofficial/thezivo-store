@@ -900,6 +900,18 @@
     /* ── Offcanvas mobile menu ── */
     #mobileMenu {
         width: 280px;
+        /* dvh = dynamic viewport height: shrinks/grows as browser chrome shows/hides.
+           Falls back to 100vh on browsers that don't support dvh yet. */
+        height: 100vh;
+        height: 100dvh;
+        /* Push header below the device status bar / notch */
+        padding-top: env(safe-area-inset-top, 0px);
+    }
+    /* Ensure scrollable body leaves room for device's bottom home indicator */
+    #mobileMenu .offcanvas-body {
+        padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
     }
     /* Account block — always visible at top of side menu */
     .mob-account-block {
@@ -2432,6 +2444,8 @@ No size-change dropdown — editing lives on the main cart page.
     border-top: 1px solid #e5e7eb;
     display: flex;
     align-items: stretch;
+    /* dvh keeps the bar anchored above the real bottom edge even as browser
+       chrome shows/hides. Falls back to env-based calc for older browsers. */
     height: calc(56px + env(safe-area-inset-bottom, 0px));
     padding-bottom: env(safe-area-inset-bottom, 0px);
     box-shadow: 0 -2px 12px rgba(0,0,0,0.07);
