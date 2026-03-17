@@ -194,41 +194,44 @@
         </div>
     </div>
 
-    {% if banner_coupons or banner_announcements %}
-    <div id="promo-banner" style="background:linear-gradient(90deg,#ff6b35,#ff3f6c,#ff6b35);background-size:200% 100%;animation:banner-bg 6s linear infinite;color:#fff;padding:7px 36px 7px 0;font-size:0.8rem;font-weight:500;letter-spacing:0.4px;position:relative;overflow:hidden;white-space:nowrap;width:100%;border-top:1px solid rgba(255,255,255,0.15);">
-      <div class="promo-ticker">
-        {% for c in banner_coupons %}
-          Use code <strong style="background:rgba(255,255,255,0.22);padding:1px 8px;border-radius:4px;margin:0 3px;letter-spacing:1px;border:1px solid rgba(255,255,255,0.35);">{{ c.code }}</strong>
-          for <strong>₹{{ c.discount_amount }} off</strong>
-          {% if c.min_order %} on orders above ₹{{ c.min_order }}{% endif %}
-          &nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp;
-        {% endfor %}
-        {% for a in banner_announcements %}
-          {{ a.text }}
-          &nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp;
-        {% endfor %}
-        {% for c in banner_coupons %}
-          Use code <strong style="background:rgba(255,255,255,0.22);padding:1px 8px;border-radius:4px;margin:0 3px;letter-spacing:1px;border:1px solid rgba(255,255,255,0.35);">{{ c.code }}</strong>
-          for <strong>₹{{ c.discount_amount }} off</strong>
-          {% if c.min_order %} on orders above ₹{{ c.min_order }}{% endif %}
-          &nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp;
-        {% endfor %}
-        {% for a in banner_announcements %}
-          {{ a.text }}
-          &nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp;
-        {% endfor %}
-      </div>
-      <button onclick="this.parentElement.remove();adjustBodyPadding();" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,0.7);font-size:1rem;cursor:pointer;line-height:1;z-index:2;">✕</button>
-    </div>
-    <style>
-    .promo-ticker { display:inline-block; animation:ticker-scroll 24s linear infinite; }
-    .promo-ticker:hover { animation-play-state:paused; }
-    @keyframes ticker-scroll { 0%{transform:translateX(100vw)} 100%{transform:translateX(-100%)} }
-    @keyframes banner-bg { 0%{background-position:0% 50%} 100%{background-position:200% 50%} }
-    </style>
-    {% endif %}
 
 </nav>
+
+{% if banner_coupons or banner_announcements %}
+<div id="promo-banner-wrap" style="position:fixed;left:0;width:100%;z-index:1034;">
+  <div id="promo-banner" style="background:linear-gradient(90deg,#ff6b35,#ff3f6c,#ff6b35);background-size:200% 100%;animation:banner-bg 6s linear infinite;color:#fff;padding:7px 36px 7px 12px;font-size:0.8rem;font-weight:500;letter-spacing:0.4px;position:relative;overflow:hidden;white-space:nowrap;width:100%;border-radius:0 0 6px 6px;box-shadow:0 4px 16px rgba(255,107,53,0.25);">
+    <div class="promo-ticker">
+      {% for c in banner_coupons %}
+        Use code <strong style="background:rgba(255,255,255,0.22);padding:1px 8px;border-radius:4px;margin:0 3px;letter-spacing:1px;border:1px solid rgba(255,255,255,0.35);">{{ c.code }}</strong>
+        for <strong>₹{{ c.discount_amount }} off</strong>
+        {% if c.min_order %} on orders above ₹{{ c.min_order }}{% endif %}
+        &nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp;
+      {% endfor %}
+      {% for a in banner_announcements %}
+        {{ a.text }}
+        &nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp;
+      {% endfor %}
+      {% for c in banner_coupons %}
+        Use code <strong style="background:rgba(255,255,255,0.22);padding:1px 8px;border-radius:4px;margin:0 3px;letter-spacing:1px;border:1px solid rgba(255,255,255,0.35);">{{ c.code }}</strong>
+        for <strong>₹{{ c.discount_amount }} off</strong>
+        {% if c.min_order %} on orders above ₹{{ c.min_order }}{% endif %}
+        &nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp;
+      {% endfor %}
+      {% for a in banner_announcements %}
+        {{ a.text }}
+        &nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp;
+      {% endfor %}
+    </div>
+    <button onclick="document.getElementById('promo-banner-wrap').remove();adjustBodyPadding();" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,0.7);font-size:1rem;cursor:pointer;line-height:1;z-index:2;">✕</button>
+  </div>
+</div>
+<style>
+.promo-ticker { display:inline-block; animation:ticker-scroll 24s linear infinite; }
+.promo-ticker:hover { animation-play-state:paused; }
+@keyframes ticker-scroll { 0%{transform:translateX(100vw)} 100%{transform:translateX(-100%)} }
+@keyframes banner-bg { 0%{background-position:0% 50%} 100%{background-position:200% 50%} }
+</style>
+{% endif %}
 
 <!-- ══════════════════ OFFCANVAS MOBILE MENU ══════════════════ -->
 <div class="offcanvas offcanvas-start" id="mobileMenu" tabindex="-1">
@@ -333,10 +336,18 @@
     }
 })();
 
-// Dynamically set body padding to match the full navbar height (banner + nav row)
+// Position banner below navbar with gap, adjust body padding to cover both
+var BANNER_GAP = 8;
 function adjustBodyPadding() {
-    var nav = document.getElementById('mainNavbar');
-    if (nav) document.body.style.paddingTop = nav.offsetHeight + 'px';
+    var nav    = document.getElementById('mainNavbar');
+    var banner = document.getElementById('promo-banner-wrap');
+    var navH   = nav ? nav.offsetHeight : 0;
+    if (banner) {
+        banner.style.top = (navH + BANNER_GAP) + 'px';
+        document.body.style.paddingTop = (navH + BANNER_GAP + banner.offsetHeight + 6) + 'px';
+    } else {
+        document.body.style.paddingTop = navH + 'px';
+    }
 }
 adjustBodyPadding();
 window.addEventListener('resize', adjustBodyPadding);
