@@ -127,16 +127,13 @@
         <!-- ── Mobile/Tablet full row (<992px only) ── -->
         <div class="d-flex d-lg-none align-items-center w-100 position-relative mob-nav-row">
 
-            <!-- LEFT: hamburger + search -->
+            <!-- LEFT: hamburger -->
             <div class="d-flex align-items-center gap-1">
                 <button class="mob-hamburger"
                         data-bs-toggle="offcanvas"
                         data-bs-target="#mobileMenu"
                         aria-label="Open menu">
                     <i class="bi bi-list fs-2"></i>
-                </button>
-                <button id="mobile-search-toggle" aria-label="Search">
-                    <i class="bi bi-search" style="font-size:18px;"></i>
                 </button>
             </div>
 
@@ -206,34 +203,38 @@
         <span>Home</span>
     </a>
 
+    {% with url_name=request.resolver_match.url_name %}
+
     <a href="{% url 'men' %}"
-       class="mob-bottom-tab {% if request.resolver_match.url_name in 'men,men_category' %}mob-bottom-active{% endif %}"
+       class="mob-bottom-tab {% if url_name == 'men' or url_name == 'men_category' %}mob-bottom-active{% endif %}"
        aria-label="Men">
-        <i class="bi bi-person{% if request.resolver_match.url_name in 'men,men_category' %}-fill{% endif %}"></i>
+        <i class="bi bi-person{% if url_name == 'men' or url_name == 'men_category' %}-fill{% endif %}"></i>
         <span>Men</span>
     </a>
 
     <a href="{% url 'women' %}"
-       class="mob-bottom-tab {% if request.resolver_match.url_name in 'women,women_category' %}mob-bottom-active{% endif %}"
+       class="mob-bottom-tab {% if url_name == 'women' or url_name == 'women_category' %}mob-bottom-active{% endif %}"
        aria-label="Women">
-        <i class="bi bi-bag{% if request.resolver_match.url_name in 'women,women_category' %}-fill{% endif %}"></i>
+        <i class="bi bi-bag{% if url_name == 'women' or url_name == 'women_category' %}-fill{% endif %}"></i>
         <span>Women</span>
     </a>
 
     <button class="mob-bottom-tab"
             id="mob-bottom-search"
             aria-label="Search"
-            onclick="(function(){var t=document.getElementById('mobile-search-toggle');if(t)t.click();window.scrollTo({top:0,behavior:'smooth'});})()">
+            onclick="(function(){var bar=document.getElementById('mobile-search-bar');if(!bar)return;var open=bar.classList.contains('mob-search-open');bar.classList.toggle('mob-search-open',!open);if(!open){window.scrollTo({top:0,behavior:'smooth'});var inp=bar.querySelector('input');if(inp)setTimeout(function(){inp.focus();},120);}})()">
         <i class="bi bi-search"></i>
         <span>Search</span>
     </button>
 
     <a href="{% if request.customer %}{% url 'profile' %}{% else %}{% url 'login' %}{% endif %}"
-       class="mob-bottom-tab {% if request.resolver_match.url_name in 'profile,my_orders,manage_addresses' %}mob-bottom-active{% endif %}"
+       class="mob-bottom-tab {% if url_name == 'profile' or url_name == 'my_orders' or url_name == 'manage_addresses' %}mob-bottom-active{% endif %}"
        aria-label="Account">
-        <i class="bi bi-person-circle{% if request.resolver_match.url_name in 'profile,my_orders,manage_addresses' %}{% else %}{% endif %}"></i>
+        <i class="bi bi-person-circle"></i>
         <span>{% if request.customer %}Account{% else %}Login{% endif %}</span>
     </a>
+
+    {% endwith %}
 
 </nav>
 
@@ -352,26 +353,12 @@
 
 <script>
 (function () {
-    var toggle   = document.getElementById('mobile-search-toggle');
     var closeBtn = document.getElementById('mobile-search-close');
     var bar      = document.getElementById('mobile-search-bar');
-
-    function openSearch() {
-        bar.classList.add('mob-search-open');
-        var inp = bar.querySelector('input');
-        if (inp) inp.focus();
-    }
-    function closeSearch() {
-        bar.classList.remove('mob-search-open');
-    }
-
-    if (toggle && bar) {
-        toggle.addEventListener('click', function () {
-            bar.classList.contains('mob-search-open') ? closeSearch() : openSearch();
+    if (closeBtn && bar) {
+        closeBtn.addEventListener('click', function () {
+            bar.classList.remove('mob-search-open');
         });
-    }
-    if (closeBtn) {
-        closeBtn.addEventListener('click', closeSearch);
     }
 })();
 
