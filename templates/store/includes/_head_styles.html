@@ -365,30 +365,19 @@
     .nav-dropdown-menu {
         display: none;
         position: absolute;
-        top: calc(100% + 12px);
+        top: 100%;          /* flush — no gap for cursor to fall through */
         left: 50%;
         transform: translateX(-50%);
         background: #141414;
         min-width: 160px;
-        padding: 8px 0;
+        padding: 16px 0 8px; /* top padding = visual gap; cursor stays within element */
         border-radius: 10px;
         border: 1px solid rgba(255,255,255,0.08);
         box-shadow: 0 16px 40px rgba(0,0,0,0.5);
         z-index: 1000;
         opacity: 0;
         pointer-events: none;
-        transition: opacity 0.18s ease, transform 0.18s ease;
-        transform: translateX(-50%) translateY(-6px);
-    }
-    .nav-dropdown-menu::before {
-        content: '';
-        position: absolute;
-        top: -6px;
-        left: 50%;
-        transform: translateX(-50%);
-        border-left: 6px solid transparent;
-        border-right: 6px solid transparent;
-        border-bottom: 6px solid rgba(255,255,255,0.08);
+        transition: opacity 0.18s ease;
     }
 
     .nav-dropdown:hover .nav-dropdown-menu {
