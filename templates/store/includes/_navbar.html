@@ -222,7 +222,7 @@
     <button class="mob-bottom-tab"
             id="mob-bottom-search"
             aria-label="Search"
-            onclick="(function(){var bar=document.getElementById('mobile-search-bar');if(!bar)return;var open=bar.classList.contains('mob-search-open');bar.classList.toggle('mob-search-open',!open);if(!open){window.scrollTo({top:0,behavior:'smooth'});var inp=bar.querySelector('input');if(inp)setTimeout(function(){inp.focus();},120);}})()">
+            onclick="(function(){var bar=document.getElementById('mobile-search-bar');if(!bar)return;var open=bar.classList.contains('mob-search-open');bar.classList.toggle('mob-search-open',!open);if(typeof adjustBodyPadding==='function')adjustBodyPadding();if(!open){window.scrollTo({top:0,behavior:'smooth'});var inp=bar.querySelector('input');if(inp)setTimeout(function(){inp.focus();},120);}})()">
         <i class="bi bi-search"></i>
         <span>Search</span>
     </button>
@@ -358,6 +358,7 @@
     if (closeBtn && bar) {
         closeBtn.addEventListener('click', function () {
             bar.classList.remove('mob-search-open');
+            if (typeof adjustBodyPadding === 'function') adjustBodyPadding();
         });
     }
 })();
