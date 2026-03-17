@@ -158,24 +158,38 @@
 <script>
 /* Restore scroll position after quick-status redirect */
 (function () {
-    // Prevent browser's own scroll restoration so ours takes priority
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
 
-    // Restore saved position on load
+    // Unfold admin may scroll on #main instead of window — try both
+    function restoreScroll(y) {
+        window.scrollTo(0, y);
+        var main = document.getElementById('main');
+        if (main) main.scrollTop = y;
+    }
+
+    function getScrollY() {
+        var main = document.getElementById('main');
+        if (main && main.scrollTop > 0) return main.scrollTop;
+        return window.scrollY || 0;
+    }
+
     var saved = sessionStorage.getItem('order_list_scroll');
     if (saved) {
         sessionStorage.removeItem('order_list_scroll');
-        // Use requestAnimationFrame so the page has finished laying out
-        requestAnimationFrame(function () {
-            window.scrollTo(0, parseInt(saved, 10));
+        var y = parseInt(saved, 10);
+        // Restore after layout is fully painted — rAF fires too early, load is reliable
+        window.addEventListener('load', function () {
+            restoreScroll(y);
+            // Second attempt covers slow CDN/font loads shifting the layout
+            setTimeout(function () { restoreScroll(y); }, 150);
         });
     }
 
-    // Save position before any quick-status navigation
+    // Save position before quick-status navigation
     document.addEventListener('click', function (e) {
         var link = e.target.closest('a[href*="quick-status"]');
         if (link) {
-            sessionStorage.setItem('order_list_scroll', window.scrollY);
+            sessionStorage.setItem('order_list_scroll', getScrollY());
         }
     });
 })();
