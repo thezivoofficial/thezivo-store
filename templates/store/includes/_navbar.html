@@ -1,40 +1,6 @@
 {% load static %}
 <nav class="navbar navbar-dark fixed-top-navbar" id="mainNavbar">
 
-    {% if banner_coupons or banner_announcements %}
-    <div id="promo-banner" style="background:linear-gradient(90deg,#ff6b35,#ff3f6c,#ff6b35);background-size:200% 100%;animation:banner-bg 6s linear infinite;color:#fff;padding:8px 36px 8px 0;font-size:0.8rem;font-weight:500;letter-spacing:0.4px;position:relative;overflow:hidden;white-space:nowrap;width:100%;">
-      <div class="promo-ticker">
-        {% for c in banner_coupons %}
-          Use code <strong style="background:rgba(255,255,255,0.22);padding:1px 8px;border-radius:4px;margin:0 3px;letter-spacing:1px;border:1px solid rgba(255,255,255,0.35);">{{ c.code }}</strong>
-          for <strong>₹{{ c.discount_amount }} off</strong>
-          {% if c.min_order %} on orders above ₹{{ c.min_order }}{% endif %}
-          &nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp;
-        {% endfor %}
-        {% for a in banner_announcements %}
-          {{ a.text }}
-          &nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp;
-        {% endfor %}
-        {% for c in banner_coupons %}
-          Use code <strong style="background:rgba(255,255,255,0.22);padding:1px 8px;border-radius:4px;margin:0 3px;letter-spacing:1px;border:1px solid rgba(255,255,255,0.35);">{{ c.code }}</strong>
-          for <strong>₹{{ c.discount_amount }} off</strong>
-          {% if c.min_order %} on orders above ₹{{ c.min_order }}{% endif %}
-          &nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp;
-        {% endfor %}
-        {% for a in banner_announcements %}
-          {{ a.text }}
-          &nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp;
-        {% endfor %}
-      </div>
-      <button onclick="this.parentElement.remove();adjustBodyPadding();" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,0.7);font-size:1rem;cursor:pointer;line-height:1;z-index:2;">✕</button>
-    </div>
-    <style>
-    .promo-ticker { display:inline-block; animation:ticker-scroll 24s linear infinite; }
-    .promo-ticker:hover { animation-play-state:paused; }
-    @keyframes ticker-scroll { 0%{transform:translateX(100vw)} 100%{transform:translateX(-100%)} }
-    @keyframes banner-bg { 0%{background-position:0% 50%} 100%{background-position:200% 50%} }
-    </style>
-    {% endif %}
-
     <div class="container-fluid px-3 px-lg-5 d-flex align-items-center">
 
         <!-- Logo — desktop only -->
@@ -227,6 +193,40 @@
             </button>
         </div>
     </div>
+
+    {% if banner_coupons or banner_announcements %}
+    <div id="promo-banner" style="background:linear-gradient(90deg,#ff6b35,#ff3f6c,#ff6b35);background-size:200% 100%;animation:banner-bg 6s linear infinite;color:#fff;padding:8px 36px 8px 0;font-size:0.8rem;font-weight:500;letter-spacing:0.4px;position:relative;overflow:hidden;white-space:nowrap;width:100%;">
+      <div class="promo-ticker">
+        {% for c in banner_coupons %}
+          Use code <strong style="background:rgba(255,255,255,0.22);padding:1px 8px;border-radius:4px;margin:0 3px;letter-spacing:1px;border:1px solid rgba(255,255,255,0.35);">{{ c.code }}</strong>
+          for <strong>₹{{ c.discount_amount }} off</strong>
+          {% if c.min_order %} on orders above ₹{{ c.min_order }}{% endif %}
+          &nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp;
+        {% endfor %}
+        {% for a in banner_announcements %}
+          {{ a.text }}
+          &nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp;
+        {% endfor %}
+        {% for c in banner_coupons %}
+          Use code <strong style="background:rgba(255,255,255,0.22);padding:1px 8px;border-radius:4px;margin:0 3px;letter-spacing:1px;border:1px solid rgba(255,255,255,0.35);">{{ c.code }}</strong>
+          for <strong>₹{{ c.discount_amount }} off</strong>
+          {% if c.min_order %} on orders above ₹{{ c.min_order }}{% endif %}
+          &nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp;
+        {% endfor %}
+        {% for a in banner_announcements %}
+          {{ a.text }}
+          &nbsp;&nbsp;&nbsp;✦&nbsp;&nbsp;&nbsp;
+        {% endfor %}
+      </div>
+      <button onclick="this.parentElement.remove();adjustBodyPadding();" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,0.7);font-size:1rem;cursor:pointer;line-height:1;z-index:2;">✕</button>
+    </div>
+    <style>
+    .promo-ticker { display:inline-block; animation:ticker-scroll 24s linear infinite; }
+    .promo-ticker:hover { animation-play-state:paused; }
+    @keyframes ticker-scroll { 0%{transform:translateX(100vw)} 100%{transform:translateX(-100%)} }
+    @keyframes banner-bg { 0%{background-position:0% 50%} 100%{background-position:200% 50%} }
+    </style>
+    {% endif %}
 
 </nav>
 
