@@ -70,3 +70,57 @@ tr:has(td .zivo-red) {
 .dark tr:has(td .zivo-red) {
   background-color: rgba(239,68,68,.06) !important;
 }
+
+/* ── Orders list — mobile responsive ─────────────────────────────────── */
+
+/* Make quick-action buttons easily tappable on all screens */
+.column-quick_status_btn a {
+  display: inline-block;
+  padding: 6px 14px !important;
+  font-size: 12px !important;
+  border-radius: 8px !important;
+  min-height: 32px;
+  line-height: 20px;
+}
+
+@media (max-width: 768px) {
+  /* Hide low-priority columns — keep: id, name, status, total, action, date */
+  /* th uses column-{name}, td uses field-{name} in Django admin */
+  #result_list .column-phone,
+  #result_list .field-phone,
+  #result_list .column-city,
+  #result_list .field-city,
+  #result_list .column-items_count,
+  #result_list .field-items_count,
+  #result_list .column-display_payment,
+  #result_list .field-display_payment {
+    display: none !important;
+  }
+
+  /* Bigger tap targets for quick-action buttons */
+  .field-quick_status_btn a,
+  .column-quick_status_btn a {
+    padding: 8px 16px !important;
+    font-size: 13px !important;
+    min-height: 38px;
+  }
+
+  /* Compact the ID and total columns */
+  #result_list .column-id,
+  #result_list .field-id {
+    min-width: 40px;
+  }
+  #result_list .column-total_amount,
+  #result_list .field-total_amount {
+    min-width: 64px;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 480px) {
+  /* On very small screens also hide the date — visible in order detail */
+  #result_list .column-created_at,
+  #result_list .field-created_at {
+    display: none !important;
+  }
+}

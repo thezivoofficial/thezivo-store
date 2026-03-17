@@ -288,6 +288,9 @@ class OrderAdmin(ModelAdmin):
     change_form_outer_before_template = "admin/order_print_button.html"
     actions = ["export_csv", "action_confirm", "action_ship", "action_deliver", "action_cancel", "action_bulk_print"]
 
+    class Media:
+        css = {"all": ("store/admin.css",)}
+
     def get_urls(self):
         custom = [
             path(
