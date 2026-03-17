@@ -100,11 +100,14 @@ class CategoryAdmin(ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(ModelAdmin):
-    list_display = ("name", "brand", "gender", "category", "sku_count", "stock_status", "active")
-    list_filter = ("active", "gender", "category", "brand")
-    search_fields = ("name", "brand")
-    list_editable = ("active",)
-    inlines = [ProductImageInline, SKUInline]
+    list_display        = ("thumbnail", "name", "brand", "gender", "category", "sku_count", "stock_status", "active")
+    list_filter         = ("active", "gender", "category", "brand")
+    search_fields       = ("name", "brand")
+    list_editable       = ("active",)
+    list_per_page       = 25
+    list_select_related = True
+    inlines             = [ProductImageInline, SKUInline]
+    compressed_fields   = True
 
     fieldsets = (
         ("Basic Info", {
@@ -124,6 +127,15 @@ class ProductAdmin(ModelAdmin):
     class Media:
         css = {"all": ("store/admin.css",)}
         js = ("store/admin_sku.js",)
+
+    def thumbnail(self, obj):
+        if obj.image:
+            return format_html(
+                '<img src="{}" style="height:48px;width:48px;object-fit:cover;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.15);">',
+                obj.image.url,
+            )
+        return format_html('<span style="color:#9ca3af;font-size:11px;">—</span>')
+    thumbnail.short_description = ""
 
     def sku_count(self, obj):
         count = obj.sku_set.count()
@@ -163,10 +175,12 @@ class SKUAdmin(ModelAdmin):
         "sku_code", "product", "size", "color",
         "mrp", "selling_price", "stock_badge", "sold_quantity",
     )
-    list_display_links = ("sku_code", "product")
-    search_fields = ("sku_code", "product__name", "color")
-    list_filter = ("size", "product__gender", "product__category")
-    list_editable = ("mrp", "selling_price")
+    list_display_links  = ("sku_code", "product")
+    search_fields       = ("sku_code", "product__name", "color")
+    list_filter         = ("size", "product__gender", "product__category")
+    list_editable       = ("mrp", "selling_price")
+    list_per_page       = 30
+    compressed_fields   = True
     change_list_template = "admin/sku_analytics.html"
 
     def get_urls(self):
@@ -257,17 +271,14 @@ class SKUAdmin(ModelAdmin):
 class OrderAdmin(ModelAdmin):
     list_display = (
         "id", "name", "phone", "city",
-        "display_status", "display_payment",
-        "total_amount", "display_emails", "created_at",
+        "display_status", "items_count", "display_payment",
+        "total_amount", "quick_status_btn", "created_at",
     )
-    list_display_links = (
-        "id", "name", "phone", "city",
-        "display_status", "display_payment",
-        "total_amount", "created_at",
-    )
-    list_filter = ("status", "payment_method", "payment_status")
-    search_fields = ("name", "phone", "razorpay_payment_id", "id")
-    date_hierarchy = "created_at"
+    list_display_links = ("id", "name", "phone", "city", "total_amount", "created_at")
+    list_filter        = ("status", "payment_method", "payment_status")
+    search_fields      = ("name", "phone", "razorpay_payment_id", "id")
+    date_hierarchy     = "created_at"
+    list_per_page      = 25
     readonly_fields = (
         "created_at", "shipped_at", "delivered_at",
         "razorpay_order_id", "razorpay_payment_id", "razorpay_signature",
@@ -285,6 +296,11 @@ class OrderAdmin(ModelAdmin):
                 name="store_order_print",
             ),
             path(
+                "<int:order_id>/quick-status/<str:new_status>/",
+                self.admin_site.admin_view(self.quick_status_view),
+                name="store_order_quick_status",
+            ),
+            path(
                 "bulk-print/",
                 self.admin_site.admin_view(self.bulk_print_view),
                 name="store_order_bulk_print",
@@ -297,6 +313,48 @@ class OrderAdmin(ModelAdmin):
             ),
         ]
         return custom + super().get_urls()
+
+    def quick_status_view(self, request, order_id, new_status):
+        """One-click status advance from the order list."""
+        order = get_object_or_404(Order, id=order_id)
+        allowed = {"PLACED": "CONFIRMED", "CONFIRMED": "SHIPPED", "SHIPPED": "DELIVERED"}
+        if allowed.get(order.status) == new_status:
+            order.status = new_status
+            if new_status == "SHIPPED":
+                from django.utils import timezone
+                order.shipped_at = timezone.now()
+                order.save()
+                send_order_email(order, 'order_shipped.html', f'Your Order #{order.id} Has Been Shipped!')
+            elif new_status == "DELIVERED":
+                from django.utils import timezone
+                order.delivered_at = timezone.now()
+                order.save()
+            else:
+                order.save()
+            messages.success(request, f"Order #{order_id} marked as {new_status}.")
+        return redirect(request.META.get("HTTP_REFERER") or "..")
+
+    def items_count(self, obj):
+        n = obj.items.count()
+        return format_html('<span class="zivo-badge zivo-blue">{} item{}</span>', n, "s" if n != 1 else "")
+    items_count.short_description = "Items"
+
+    def quick_status_btn(self, obj):
+        next_map = {
+            "PLACED":    ("CONFIRMED", "✅ Confirm",  "#f59e0b"),
+            "CONFIRMED": ("SHIPPED",   "🚚 Ship",     "#8b5cf6"),
+            "SHIPPED":   ("DELIVERED", "✔ Deliver",  "#10b981"),
+        }
+        if obj.status not in next_map:
+            return "—"
+        next_status, label, color = next_map[obj.status]
+        url = reverse("admin:store_order_quick_status", args=[obj.pk, next_status])
+        return format_html(
+            '<a href="{}" style="background:{};color:#fff;padding:4px 11px;border-radius:6px;'
+            'font-size:11px;font-weight:600;text-decoration:none;white-space:nowrap;">{}</a>',
+            url, color, label,
+        )
+    quick_status_btn.short_description = "Quick Action"
 
     def changeform_view(self, request, object_id=None, form_url="", extra_context=None):
         extra_context = extra_context or {}
