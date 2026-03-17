@@ -780,6 +780,29 @@
 
 
 {% if online_payment %}
+<!-- Payment cancelled overlay -->
+<div id="payment-cancelled-overlay"
+     style="display:none;position:fixed;inset:0;z-index:1050;
+            background:rgba(0,0,0,.55);align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;padding:32px 28px;max-width:360px;
+              width:calc(100% - 32px);text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.18);">
+    <div style="font-size:36px;margin-bottom:12px;">💳</div>
+    <h4 style="font-size:17px;font-weight:700;color:#111;margin-bottom:8px;">Payment Cancelled</h4>
+    <p style="font-size:13px;color:#6b7280;margin-bottom:20px;line-height:1.6;">
+      Your order is saved. You can retry the payment or go back to choose COD.
+    </p>
+    <button id="retry-payment-btn"
+            style="width:100%;background:#111;color:#fff;border:none;border-radius:10px;
+                   padding:13px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:10px;">
+      Retry Payment
+    </button>
+    <a href="{% url 'checkout' %}"
+       style="display:block;font-size:13px;color:#8b5cf6;text-decoration:none;">
+      ← Back to Checkout
+    </a>
+  </div>
+</div>
+
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
@@ -797,9 +820,14 @@ document.addEventListener("DOMContentLoaded", function () {
             key: data.key,
             amount: data.amount,
             currency: "INR",
-            name: "TheZivo",
+            name: "Zivo",
             description: "Order Payment",
             order_id: data.razorpay_order_id,
+            prefill: {
+                name: "{{ order.name|escapejs }}",
+                contact: "{{ order.phone|escapejs }}",
+                email: "{{ order.customer.email|default:''|escapejs }}"
+            },
             handler: function(response) {
                 fetch("{% url 'verify_payment' %}", {
                     method: "POST",
@@ -818,13 +846,23 @@ document.addEventListener("DOMContentLoaded", function () {
                     if (data.status === "success") {
                         window.location.href = "/order-success/{{ order.id }}/";
                     } else {
-                        alert("Payment failed");
+                        alert("Payment verification failed. Please contact support.");
                     }
                 });
+            },
+            modal: {
+                ondismiss: function() {
+                    document.getElementById('payment-cancelled-overlay').style.display = 'flex';
+                }
             }
         };
         var rzp = new Razorpay(options);
         rzp.open();
+
+        document.getElementById('retry-payment-btn').addEventListener('click', function() {
+            document.getElementById('payment-cancelled-overlay').style.display = 'none';
+            rzp.open();
+        });
     });
 });
 </script>

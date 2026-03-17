@@ -1051,7 +1051,75 @@ def verify_payment(request):
         "order_id": order.id
     })
 
-        
+
+@csrf_exempt
+def razorpay_webhook(request):
+    """
+    Razorpay webhook — fallback for payment.captured.
+    If the client-side verify_payment call fails (network drop, tab close),
+    Razorpay calls this endpoint server-to-server to confirm the payment.
+    """
+    if request.method != "POST":
+        return HttpResponse(status=405)
+
+    # Verify webhook signature when secret is configured
+    webhook_secret = getattr(settings, 'RAZORPAY_WEBHOOK_SECRET', '')
+    if webhook_secret:
+        sig = request.headers.get('X-Razorpay-Signature', '')
+        client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+        try:
+            client.utility.verify_webhook_signature(
+                request.body.decode('utf-8'), sig, webhook_secret
+            )
+        except razorpay.errors.SignatureVerificationError:
+            return HttpResponse(status=400)
+
+    import json
+    try:
+        payload = json.loads(request.body)
+    except Exception:
+        return HttpResponse(status=400)
+
+    # Only process payment.captured events
+    if payload.get('event') != 'payment.captured':
+        return HttpResponse(status=200)
+
+    payment = payload.get('payload', {}).get('payment', {}).get('entity', {})
+    razorpay_order_id = payment.get('order_id')
+    razorpay_payment_id = payment.get('id')
+
+    if not razorpay_order_id:
+        return HttpResponse(status=200)
+
+    try:
+        order = Order.objects.get(razorpay_order_id=razorpay_order_id)
+    except Order.DoesNotExist:
+        return HttpResponse(status=200)  # Return 200 to stop Razorpay retries
+
+    # Skip if already processed by verify_payment
+    if order.payment_status == 'PAID':
+        return HttpResponse(status=200)
+
+    with transaction.atomic():
+        order = Order.objects.select_for_update().get(razorpay_order_id=razorpay_order_id)
+        if order.payment_status != 'PAID':
+            order.razorpay_payment_id = razorpay_payment_id
+            order.payment_status = 'PAID'
+            order.status = 'PLACED'
+            order.save()
+
+            for item in OrderItem.objects.filter(order=order):
+                item.sku.stock -= item.quantity
+                item.sku.save()
+
+            if order.coupon_id:
+                Coupon.objects.filter(pk=order.coupon_id).update(used_count=F('used_count') + 1)
+
+            from .utils import send_order_email
+            send_order_email(order, 'order_confirmation.html', f'Order Confirmed – #{order.id}')
+
+    return HttpResponse(status=200)
+
 
 def order_success(request, order_id):
     order = get_object_or_404(Order, id=order_id)
