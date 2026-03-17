@@ -196,6 +196,47 @@
 
 </nav>
 
+<!-- ══════════════════ MOBILE BOTTOM NAVIGATION ══════════════════ -->
+<nav class="mob-bottom-nav d-lg-none" aria-label="Bottom navigation">
+
+    <a href="/"
+       class="mob-bottom-tab {% if request.path == '/' %}mob-bottom-active{% endif %}"
+       aria-label="Home">
+        <i class="bi bi-house{% if request.path == '/' %}-fill{% endif %}"></i>
+        <span>Home</span>
+    </a>
+
+    <a href="{% url 'men' %}"
+       class="mob-bottom-tab {% if request.resolver_match.url_name in 'men,men_category' %}mob-bottom-active{% endif %}"
+       aria-label="Men">
+        <i class="bi bi-person{% if request.resolver_match.url_name in 'men,men_category' %}-fill{% endif %}"></i>
+        <span>Men</span>
+    </a>
+
+    <a href="{% url 'women' %}"
+       class="mob-bottom-tab {% if request.resolver_match.url_name in 'women,women_category' %}mob-bottom-active{% endif %}"
+       aria-label="Women">
+        <i class="bi bi-bag{% if request.resolver_match.url_name in 'women,women_category' %}-fill{% endif %}"></i>
+        <span>Women</span>
+    </a>
+
+    <button class="mob-bottom-tab"
+            id="mob-bottom-search"
+            aria-label="Search"
+            onclick="(function(){var t=document.getElementById('mobile-search-toggle');if(t)t.click();window.scrollTo({top:0,behavior:'smooth'});})()">
+        <i class="bi bi-search"></i>
+        <span>Search</span>
+    </button>
+
+    <a href="{% if request.customer %}{% url 'profile' %}{% else %}{% url 'login' %}{% endif %}"
+       class="mob-bottom-tab {% if request.resolver_match.url_name in 'profile,my_orders,manage_addresses' %}mob-bottom-active{% endif %}"
+       aria-label="Account">
+        <i class="bi bi-person-circle{% if request.resolver_match.url_name in 'profile,my_orders,manage_addresses' %}{% else %}{% endif %}"></i>
+        <span>{% if request.customer %}Account{% else %}Login{% endif %}</span>
+    </a>
+
+</nav>
+
 {% if banner_coupons or banner_announcements %}
 <div id="promo-banner-wrap" style="position:fixed;left:0;width:100%;z-index:1034;">
   <div id="promo-banner" style="background:linear-gradient(90deg,#ff6b35,#ff3f6c,#ff6b35);background-size:200% 100%;animation:banner-bg 6s linear infinite;color:#fff;padding:7px 36px 7px 12px;font-size:0.8rem;font-weight:500;letter-spacing:0.4px;position:relative;overflow:hidden;white-space:nowrap;width:100%;border-radius:0 0 6px 6px;box-shadow:0 4px 16px rgba(255,107,53,0.25);">

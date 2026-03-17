@@ -916,6 +916,26 @@
     </div>
 </div>
 
+<!-- STICKY ADD-TO-BAG BAR (mobile only, appears when action buttons scroll out of view) -->
+<div id="sticky-atb" class="sticky-atb d-lg-none" aria-hidden="true">
+    <div class="sticky-atb-info">
+        <span class="sticky-atb-name">{{ product.name }}</span>
+        <span class="sticky-atb-price">₹<span id="sticky-price">{{ default_sku.selling_price }}</span></span>
+    </div>
+    {% if in_stock %}
+    <button class="sticky-atb-btn"
+            onclick="document.querySelector('.btn-add-to-bag').click()">
+        ADD TO BAG
+    </button>
+    {% else %}
+    <button class="sticky-atb-btn"
+            style="background:#9ca3af;"
+            onclick="document.querySelector('.btn-notify').click()">
+        NOTIFY ME
+    </button>
+    {% endif %}
+</div>
+
 <!-- ZOOM OVERLAY -->
 <div id="zoomOverlay" style="
     display:none; position:fixed; inset:0; z-index:9999;
@@ -1324,6 +1344,36 @@ document.addEventListener("click", function(e) {
         }
     });
 });
+
+// ── Sticky Add-to-Bag bar (mobile only) ─────────────────────────────────────
+(function() {
+    var actionRow = document.querySelector('.action-row');
+    var stickyBar = document.getElementById('sticky-atb');
+    if (!actionRow || !stickyBar) return;
+
+    var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+            if (entry.isIntersecting) {
+                stickyBar.classList.remove('visible');
+                stickyBar.setAttribute('aria-hidden', 'true');
+            } else {
+                stickyBar.classList.add('visible');
+                stickyBar.setAttribute('aria-hidden', 'false');
+            }
+        });
+    }, { threshold: 0.2 });
+
+    observer.observe(actionRow);
+
+    // Sync sticky price when SKU radio changes
+    document.querySelectorAll('.sku-radio').forEach(function(radio) {
+        radio.addEventListener('change', function() {
+            var price = this.dataset.selling;
+            var sticky = document.getElementById('sticky-price');
+            if (sticky && price) sticky.textContent = price;
+        });
+    });
+})();
 </script>
 
 {% endblock %}

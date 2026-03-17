@@ -2358,5 +2358,99 @@ No size-change dropdown — editing lives on the main cart page.
 .product-row-scroll::-webkit-scrollbar-thumb { background: #e0e0e0; border-radius: 2px; }
 .product-row-scroll .product-card { min-width: 160px; max-width: 200px; flex-shrink: 0; }
 
+/* ── Mobile Bottom Navigation Bar ───────────────────────────────────────── */
+.mob-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1041;
+    background: #fff;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    align-items: stretch;
+    height: calc(56px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-shadow: 0 -2px 12px rgba(0,0,0,0.07);
+    transform: translate3d(0,0,0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
+.mob-bottom-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #9ca3af;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    text-decoration: none;
+    font-family: inherit;
+    transition: color 0.15s;
+    padding: 6px 4px;
+    -webkit-tap-highlight-color: transparent;
+}
+.mob-bottom-tab i { font-size: 20px; line-height: 1; }
+.mob-bottom-tab:hover,
+.mob-bottom-tab:active { color: #111; }
+.mob-bottom-tab.mob-bottom-active { color: #ff3f6c; }
+
+/* Push sort/filter bar above bottom nav on pages that have both */
+@media (max-width: 991px) {
+    body { padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px)); }
+    .mobile-cat-footer { bottom: calc(56px + env(safe-area-inset-bottom, 0px)); }
+}
+
+/* ── Sticky Add-to-Bag bar (product detail, mobile only) ────────────────── */
+.sticky-atb {
+    position: fixed;
+    bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+    left: 0;
+    right: 0;
+    z-index: 1040;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #fff;
+    border-top: 1px solid #e5e7eb;
+    padding: 10px 16px;
+    box-shadow: 0 -3px 16px rgba(0,0,0,0.08);
+    transform: translateY(calc(100% + 2px));
+    transition: transform 0.25s ease;
+}
+.sticky-atb.visible { transform: translateY(0); }
+.sticky-atb-info { flex: 1; min-width: 0; }
+.sticky-atb-name {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #111;
+}
+.sticky-atb-price { font-size: 13px; font-weight: 700; color: #ff3f6c; }
+.sticky-atb-btn {
+    background: #111;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    white-space: nowrap;
+    font-family: inherit;
+    -webkit-tap-highlight-color: transparent;
+}
+.sticky-atb-btn:active { background: #333; }
+
 
     </style>
