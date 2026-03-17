@@ -366,6 +366,16 @@
             if (typeof adjustBodyPadding === 'function') adjustBodyPadding();
         });
     }
+
+    // Reset scroll to top every time the side menu opens so the account
+    // block is always the first thing visible (Bootstrap doesn't do this).
+    var menu = document.getElementById('mobileMenu');
+    if (menu) {
+        menu.addEventListener('show.bs.offcanvas', function () {
+            var body = menu.querySelector('.offcanvas-body');
+            if (body) body.scrollTop = 0;
+        });
+    }
 })();
 
 // Position banner below navbar; recalculate whenever viewport changes
