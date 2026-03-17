@@ -337,14 +337,14 @@
 })();
 
 // Position banner below navbar with gap, adjust body padding to cover both
-var BANNER_GAP = 8;
+var BANNER_GAP = 0;
 function adjustBodyPadding() {
     var nav    = document.getElementById('mainNavbar');
     var banner = document.getElementById('promo-banner-wrap');
     var navH   = nav ? nav.offsetHeight : 0;
     if (banner) {
         banner.style.top = (navH + BANNER_GAP) + 'px';
-        document.body.style.paddingTop = (navH + BANNER_GAP + banner.offsetHeight + 6) + 'px';
+        document.body.style.paddingTop = (navH + BANNER_GAP + banner.offsetHeight + 1) + 'px';
     } else {
         document.body.style.paddingTop = navH + 'px';
     }
