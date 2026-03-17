@@ -84,6 +84,9 @@ UNFOLD = {
             "950": "59 7 100",
         },
     },
+    "SCRIPTS": [
+        lambda _: "/static/store/admin_bfcache.js",
+    ],
     "SIDEBAR": {
         "show_search": True,
         "show_all_applications": False,
