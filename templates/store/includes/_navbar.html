@@ -195,7 +195,7 @@
     </div>
 
     {% if banner_coupons or banner_announcements %}
-    <div id="promo-banner" style="background:linear-gradient(90deg,#ff6b35,#ff3f6c,#ff6b35);background-size:200% 100%;animation:banner-bg 6s linear infinite;color:#fff;padding:8px 36px 8px 0;font-size:0.8rem;font-weight:500;letter-spacing:0.4px;position:relative;overflow:hidden;white-space:nowrap;width:100%;">
+    <div id="promo-banner" style="background:linear-gradient(90deg,#ff6b35,#ff3f6c,#ff6b35);background-size:200% 100%;animation:banner-bg 6s linear infinite;color:#fff;padding:7px 36px 7px 0;font-size:0.8rem;font-weight:500;letter-spacing:0.4px;position:relative;overflow:hidden;white-space:nowrap;width:100%;border-top:1px solid rgba(255,255,255,0.15);">
       <div class="promo-ticker">
         {% for c in banner_coupons %}
           Use code <strong style="background:rgba(255,255,255,0.22);padding:1px 8px;border-radius:4px;margin:0 3px;letter-spacing:1px;border:1px solid rgba(255,255,255,0.35);">{{ c.code }}</strong>
