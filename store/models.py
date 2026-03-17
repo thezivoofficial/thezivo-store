@@ -47,6 +47,27 @@ class Customer(models.Model):
         verbose_name = "Customer"
 
 
+class Category(models.Model):
+    name       = models.CharField(max_length=100)
+    slug       = models.SlugField(max_length=50, unique=True, help_text="URL key used in links, e.g. 'tshirts'")
+    gender     = models.CharField(
+        max_length=10,
+        choices=[("men", "Men"), ("women", "Women"), ("unisex", "Unisex")],
+        blank=True, default="",
+        help_text="Which nav dropdown this appears under. Leave blank to hide from nav.",
+    )
+    sort_order = models.PositiveSmallIntegerField(default=0, help_text="Lower number appears first in nav")
+    is_active  = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["gender", "sort_order", "name"]
+        verbose_name = "Category"
+        verbose_name_plural = "Categories"
+
+    def __str__(self):
+        return self.name
+
+
 class Product(models.Model):
     GENDER_CHOICES = (
         ("men", "Men"),
@@ -54,19 +75,15 @@ class Product(models.Model):
         ("unisex", "Unisex"),
     )
 
-    CATEGORY_CHOICES = (
-        ("shirts", "Shirts"),
-        ("tshirts", "T-Shirts"),
-        ("jeans", "Jeans"),
-        ("ethnic", "Ethnic Wear"),
-        ("kurtis", "Kurtis"),
-        ("dresses", "Dresses"),
-        ("tops", "Tops"),
+    name     = models.CharField(max_length=200)
+    gender   = models.CharField(max_length=10, choices=GENDER_CHOICES, db_index=True)
+    category = models.ForeignKey(
+        "Category",
+        on_delete=models.PROTECT,
+        related_name="products",
+        db_index=True,
+        null=True, blank=True,
     )
-
-    name = models.CharField(max_length=200)
-    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, db_index=True)
-    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, db_index=True)
     image = models.ImageField(upload_to="products/")
     active = models.BooleanField(default=True, db_index=True)
     brand = models.CharField(max_length=100)

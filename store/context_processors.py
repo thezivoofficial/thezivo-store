@@ -1,5 +1,5 @@
 from django.db import models as db_models
-from .models import SKU, CartItem, WishlistItem, Coupon, Announcement
+from .models import SKU, CartItem, WishlistItem, Coupon, Announcement, Category
 from .utils import calculate_delivery_and_final
 
 
@@ -70,6 +70,12 @@ def announcement_banner(request):
     except Exception:
         announcements = []
     return {"banner_coupons": coupons, "banner_announcements": announcements}
+
+
+def nav_categories(request):
+    men    = list(Category.objects.filter(gender="men",    is_active=True).order_by("sort_order", "name"))
+    women  = list(Category.objects.filter(gender="women",  is_active=True).order_by("sort_order", "name"))
+    return {"nav_men_categories": men, "nav_women_categories": women}
 
 
 def wishlist_count(request):

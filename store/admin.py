@@ -11,7 +11,7 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import path, reverse
 from django.utils.html import format_html
 from unfold.admin import ModelAdmin, TabularInline
-from .models import Product, SKU, Order, OrderItem, StockNotification, ProductImage, Address, Customer, SiteSettings, Coupon, Review, Announcement
+from .models import Product, SKU, Order, OrderItem, StockNotification, ProductImage, Address, Customer, SiteSettings, Coupon, Review, Announcement, Category
 from .utils import send_whatsapp, send_order_email
 from django.conf import settings
 
@@ -89,6 +89,15 @@ class AddressAdmin(ModelAdmin):
 
 # ── Product ───────────────────────────────────────────────────────────────────
 
+@admin.register(Category)
+class CategoryAdmin(ModelAdmin):
+    list_display  = ("name", "slug", "gender", "sort_order", "is_active")
+    list_editable = ("sort_order", "is_active")
+    list_filter   = ("gender", "is_active")
+    search_fields = ("name", "slug")
+    prepopulated_fields = {"slug": ("name",)}
+
+
 @admin.register(Product)
 class ProductAdmin(ModelAdmin):
     list_display = ("name", "brand", "gender", "category", "sku_count", "stock_status", "active")
@@ -96,6 +105,21 @@ class ProductAdmin(ModelAdmin):
     search_fields = ("name", "brand")
     list_editable = ("active",)
     inlines = [ProductImageInline, SKUInline]
+
+    fieldsets = (
+        ("Basic Info", {
+            "fields": ("name", "brand"),
+        }),
+        ("Categorisation", {
+            "fields": ("gender", "category"),
+        }),
+        ("Main Image", {
+            "fields": ("image",),
+        }),
+        ("Visibility", {
+            "fields": ("active",),
+        }),
+    )
 
     class Media:
         css = {"all": ("store/admin.css",)}

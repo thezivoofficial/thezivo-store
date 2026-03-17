@@ -29,10 +29,9 @@
                         MEN
                     </a>
                     <div class="nav-dropdown-menu">
-                        <a href="{% url 'men_category' 'shirts' %}">Shirts</a>
-                        <a href="{% url 'men_category' 'tshirts' %}">T-Shirts</a>
-                        <a href="{% url 'men_category' 'jeans' %}">Jeans</a>
-                        <a href="{% url 'men_category' 'ethnic' %}">Ethnic Wear</a>
+                        {% for cat in nav_men_categories %}
+                        <a href="{% url 'men_category' cat.slug %}">{{ cat.name }}</a>
+                        {% endfor %}
                     </div>
                 </div>
 
@@ -43,9 +42,9 @@
                         WOMEN
                     </a>
                     <div class="nav-dropdown-menu">
-                        <a href="{% url 'women_category' 'kurtis' %}">Kurtis</a>
-                        <a href="{% url 'women_category' 'dresses' %}">Dresses</a>
-                        <a href="{% url 'women_category' 'tops' %}">Tops</a>
+                        {% for cat in nav_women_categories %}
+                        <a href="{% url 'women_category' cat.slug %}">{{ cat.name }}</a>
+                        {% endfor %}
                     </div>
                 </div>
 
@@ -255,10 +254,9 @@
             MEN <i class="bi bi-chevron-down"></i>
         </button>
         <div id="menLinks" class="collapse">
-            <a href="{% url 'men_category' 'shirts' %}">Shirts</a>
-            <a href="{% url 'men_category' 'tshirts' %}">T-Shirts</a>
-            <a href="{% url 'men_category' 'jeans' %}">Jeans</a>
-            <a href="{% url 'men_category' 'ethnic' %}">Ethnic Wear</a>
+            {% for cat in nav_men_categories %}
+            <a href="{% url 'men_category' cat.slug %}">{{ cat.name }}</a>
+            {% endfor %}
         </div>
 
         <!-- WOMEN accordion -->
@@ -269,9 +267,9 @@
             WOMEN <i class="bi bi-chevron-down"></i>
         </button>
         <div id="womenLinks" class="collapse">
-            <a href="{% url 'women_category' 'kurtis' %}">Kurtis</a>
-            <a href="{% url 'women_category' 'dresses' %}">Dresses</a>
-            <a href="{% url 'women_category' 'tops' %}">Tops</a>
+            {% for cat in nav_women_categories %}
+            <a href="{% url 'women_category' cat.slug %}">{{ cat.name }}</a>
+            {% endfor %}
         </div>
 
         <hr class="my-0">

@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404
-from .models import Product, SKU, Order, OrderItem, StockNotification, ProductImage, Address, SiteSettings, CartItem, WishlistItem, Coupon, Review
+from .models import Product, SKU, Order, OrderItem, StockNotification, ProductImage, Address, SiteSettings, CartItem, WishlistItem, Coupon, Review, Category
 from django.shortcuts import redirect
 from django.http import JsonResponse, HttpResponse
 from django.db.models import Min, F, ExpressionWrapper, IntegerField, Sum, Q
@@ -1088,7 +1088,7 @@ def category_products(request, gender, category=None):
 
 
     if category:
-        products = products.filter(category=category)
+        products = products.filter(category__slug=category)
 
     # filters from GET
     selected_brands     = request.GET.getlist("brand")
@@ -1109,7 +1109,7 @@ def category_products(request, gender, category=None):
         products = products.filter(sku__color__in=selected_colors).distinct()
 
     if selected_categories:
-        products = products.filter(category__in=selected_categories)
+        products = products.filter(category__slug__in=selected_categories)
 
     if selected_discount:
         try:
@@ -1127,12 +1127,13 @@ def category_products(request, gender, category=None):
     # ── Single query for brands + categories (2 Product queries → 1) ──
     product_filter_rows = (
         Product.objects.filter(gender=gender, active=True)
-        .values("brand", "category")
+        .values("brand", "category__slug", "category__name")
     )
     brands = sorted(set(r["brand"] for r in product_filter_rows if r["brand"]))
-    CATEGORY_DISPLAY = dict(Product.CATEGORY_CHOICES)
-    categories_raw = list(dict.fromkeys(r["category"] for r in product_filter_rows if r["category"]))
-    categories = [(c, CATEGORY_DISPLAY.get(c, c.title())) for c in categories_raw]
+    categories = list(dict.fromkeys(
+        (r["category__slug"], r["category__name"])
+        for r in product_filter_rows if r["category__slug"]
+    ))
 
     # ── Single query for sizes + colors + price range (3 SKU queries → 1) ──
     SIZE_ORDER = ["XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL"]
@@ -1153,7 +1154,8 @@ def category_products(request, gender, category=None):
 
     title = gender.capitalize()
     if category:
-        title = f"{title} - {category.replace('-', ' ').title()}"
+        cat_obj = Category.objects.filter(slug=category).first()
+        title = f"{title} - {cat_obj.name if cat_obj else category.replace('-', ' ').title()}"
         
     sort = request.GET.get("sort")
     if sort == "low":
@@ -1235,7 +1237,7 @@ def search_products(request):
         products = products.filter(
             Q(name__icontains=query) |
             Q(brand__icontains=query) |
-            Q(category__icontains=query)
+            Q(category__name__icontains=query)
         )
 
     # same annotations used in category listing
@@ -1284,14 +1286,14 @@ def search_suggest(request):
         .filter(
             Q(name__icontains=query) |
             Q(brand__icontains=query) |
-            Q(category__icontains=query)
+            Q(category__name__icontains=query)
         )
         .annotate(min_price=Min("sku__selling_price"))
         .values(
             "id",
             "name",
             "brand",
-            "category",
+            "category__name",
             "image",
             "min_price"
         )[:8]
@@ -1304,7 +1306,7 @@ def search_suggest(request):
             "id": p["id"],
             "name": p["name"],
             "brand": p["brand"],
-            "category": p["category"],
+            "category": p["category__name"] or "",
             "price": p["min_price"],
             "image": p["image"],
             "url": f"/product/{p['id']}/"
