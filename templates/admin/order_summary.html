@@ -154,4 +154,30 @@
 </script>
 
 {{ block.super }}
+
+<script>
+/* Restore scroll position after quick-status redirect */
+(function () {
+    // Prevent browser's own scroll restoration so ours takes priority
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+
+    // Restore saved position on load
+    var saved = sessionStorage.getItem('order_list_scroll');
+    if (saved) {
+        sessionStorage.removeItem('order_list_scroll');
+        // Use requestAnimationFrame so the page has finished laying out
+        requestAnimationFrame(function () {
+            window.scrollTo(0, parseInt(saved, 10));
+        });
+    }
+
+    // Save position before any quick-status navigation
+    document.addEventListener('click', function (e) {
+        var link = e.target.closest('a[href*="quick-status"]');
+        if (link) {
+            sessionStorage.setItem('order_list_scroll', window.scrollY);
+        }
+    });
+})();
+</script>
 {% endblock %}
