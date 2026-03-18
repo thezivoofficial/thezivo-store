@@ -496,8 +496,8 @@ class OrderAdmin(ModelAdmin):
         }
         color, icon = color_map.get(obj.status, ("#6b7280", ""))
         return format_html(
-            '<span style="background:{};color:#fff;padding:3px 10px;'
-            'border-radius:12px;font-size:11px;font-weight:600;">{} {}</span>',
+            '<span style="background:{};color:#fff;padding:2px 8px;'
+            'border-radius:12px;font-size:10px;font-weight:700;white-space:nowrap;">{} {}</span>',
             color, icon, obj.status,
         )
     display_status.short_description = "Status"

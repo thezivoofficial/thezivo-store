@@ -124,3 +124,63 @@ tr:has(td .zivo-red) {
     display: none !important;
   }
 }
+
+/* ── Admin action bar — replace the "Select action / Go" default look ── */
+.actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 8px 0 !important;
+  flex-wrap: wrap;
+}
+/* The action select dropdown */
+select[name="action"] {
+  height: 34px !important;
+  padding: 0 12px !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 8px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  background: #fff !important;
+  color: #374151 !important;
+  cursor: pointer !important;
+  min-width: 180px;
+  outline: none !important;
+}
+select[name="action"]:focus {
+  border-color: #8b5cf6 !important;
+  box-shadow: 0 0 0 3px rgba(139,92,246,0.12) !important;
+}
+.dark select[name="action"] {
+  background: #1f2937 !important;
+  border-color: #374151 !important;
+  color: #f9fafb !important;
+}
+/* The Go/Run button */
+button[name="index"],
+button[name="action"] {
+  height: 34px !important;
+  padding: 0 18px !important;
+  background: #8b5cf6 !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 8px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  letter-spacing: 0.2px !important;
+  transition: background .15s !important;
+}
+button[name="index"]:hover,
+button[name="action"]:hover {
+  background: #7c3aed !important;
+}
+/* Selection counter */
+.action-counter {
+  font-size: 12px !important;
+  color: #6b7280 !important;
+  font-weight: 500 !important;
+}
+.dark .action-counter {
+  color: #9ca3af !important;
+}
