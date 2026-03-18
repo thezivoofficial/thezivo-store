@@ -8,246 +8,280 @@
 
   body {
     font-family: 'Helvetica Neue', Arial, sans-serif;
-    background: #f5f5f5;
+    background: #f0f0f0;
     padding: 20px;
   }
 
-  /* ── Print controls ─────────────────────────────────────────────── */
-  .print-controls {
-    max-width: 900px;
-    margin: 0 auto 20px;
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 16px 20px;
+  /* ── Toolbar ────────────────────────────────────────────────────── */
+  .toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(15,15,20,0.96);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    height: 52px;
+    padding: 0 24px;
     display: flex;
     align-items: center;
-    gap: 16px;
-    flex-wrap: wrap;
+    gap: 18px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    margin: -20px -20px 20px;
   }
-  .btn {
-    padding: 9px 20px;
-    border: none;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    text-decoration: none;
-    display: inline-block;
-    white-space: nowrap;
+  .tb-brand {
+    font-size: 12px; font-weight: 800; letter-spacing: 1px;
+    color: #a78bfa; text-transform: uppercase; flex-shrink: 0;
   }
-  .btn-print { background: #8b5cf6; color: #fff; }
-  .btn-back  { background: #e5e7eb; color: #374151; }
+  .tb-pipe { width: 1px; height: 18px; background: rgba(255,255,255,0.1); flex-shrink: 0; }
+  .tb-print {
+    height: 32px; padding: 0 18px;
+    background: #8b5cf6; color: #fff; border: none; border-radius: 7px;
+    font-size: 12px; font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+    transition: background .15s;
+  }
+  .tb-print:hover { background: #7c3aed; }
+  .tb-back {
+    height: 32px; padding: 0 14px;
+    background: transparent; color: rgba(255,255,255,0.4);
+    border: 1px solid rgba(255,255,255,0.1); border-radius: 7px;
+    font-size: 12px; font-weight: 600; cursor: pointer; flex-shrink: 0;
+    transition: border-color .15s, color .15s;
+  }
+  .tb-back:hover { border-color: rgba(255,255,255,0.25); color: rgba(255,255,255,0.7); }
 
-  .control-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  .tb-select-wrap {
+    display: flex; align-items: center; gap: 8px;
   }
-  .control-group label {
-    font-size: 12px;
-    font-weight: 600;
-    color: #6b7280;
-    white-space: nowrap;
+  .tb-select-wrap label {
+    font-size: 11px; color: rgba(255,255,255,0.3); white-space: nowrap;
   }
-  .control-group select {
-    padding: 6px 10px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 13px;
-    color: #374151;
-    background: #fff;
-    cursor: pointer;
+  .tb-select {
+    height: 30px; padding: 0 10px;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 6px; color: #f9fafb;
+    font-size: 12px; cursor: pointer; outline: none;
   }
-  .label-count {
-    font-size: 12px;
-    color: #9ca3af;
+  .tb-select:focus { border-color: #8b5cf6; }
+  .tb-select option { background: #1f2937; color: #f9fafb; }
+
+  .tb-count {
     margin-left: auto;
+    font-size: 11px; color: rgba(255,255,255,0.25);
+    white-space: nowrap;
   }
+  .tb-count strong { color: rgba(255,255,255,0.5); font-weight: 600; }
 
-  /* ── Label grid (JS sets inline style on .labels-grid) ─────────── */
+  /* ── Preview grid ───────────────────────────────────────────────── */
   .labels-grid {
-    max-width: 900px;
-    margin: 0 auto;
-    display: grid;
-    gap: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: flex-start;
   }
 
   /* ── Single label card ──────────────────────────────────────────── */
   .label-card {
     background: #fff;
-    border: 1.5px dashed #d1d5db;
-    border-radius: 6px;
-    padding: 8px 10px;
+    border: 1px dashed #c4c4c4;
+    border-radius: 4px;
+    padding: 0;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    gap: 4px;
-    page-break-inside: avoid;
-    break-inside: avoid;
     overflow: hidden;
+    position: relative;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  }
+
+  .label-inner {
+    padding: 6px 9px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    height: 100%;
+    justify-content: center;
   }
 
   .label-store {
-    font-size: 8px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 2px;
+    font-size: 7px; font-weight: 900;
+    text-transform: uppercase; letter-spacing: 2.5px;
     color: #8b5cf6;
   }
-
   .label-product {
-    font-size: 11px;
-    font-weight: 700;
-    color: #111827;
-    line-height: 1.3;
-    white-space: nowrap;
+    font-weight: 800; color: #111;
+    line-height: 1.25;
     overflow: hidden;
-    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
   }
-
   .label-meta {
-    display: flex;
-    gap: 4px;
-    flex-wrap: wrap;
+    display: flex; gap: 3px; flex-wrap: wrap;
   }
   .label-chip {
-    font-size: 9px;
-    font-weight: 700;
-    padding: 1px 6px;
-    border-radius: 20px;
-    background: #f3f4f6;
-    color: #374151;
-    white-space: nowrap;
+    font-weight: 700; padding: 1px 5px;
+    border-radius: 20px; white-space: nowrap;
+    background: #f3f4f6; color: #374151;
   }
   .label-chip.size  { background: #ede9fe; color: #5b21b6; }
   .label-chip.color { background: #ecfdf5; color: #065f46; }
 
+  .label-divider {
+    border: none; border-top: 1px dashed #e5e7eb; margin: 2px 0;
+  }
+
   .label-sku {
-    font-size: 13px;
-    font-weight: 800;
-    color: #111827;
+    font-weight: 900; color: #111;
     letter-spacing: 0.5px;
     font-family: 'Courier New', monospace;
   }
-
   .label-mrp {
-    font-size: 10px;
-    font-weight: 700;
-    color: #374151;
+    font-weight: 700; color: #374151;
   }
 
-  /* ── Print styles ───────────────────────────────────────────────── */
+  /* ── Print ──────────────────────────────────────────────────────── */
   @media print {
-    body { background: #fff; padding: 0; }
-    .print-controls { display: none !important; }
-    .labels-grid { max-width: 100%; }
+    body { background: #fff; padding: 0; margin: 0; }
+    .toolbar { display: none !important; }
+
+    .labels-grid { display: block; }
+
     .label-card {
-      border: 1px dashed #aaa;
+      border: none;
+      box-shadow: none;
+      border-radius: 0;
+      page-break-after: always;
+      break-after: page;
+      /* size set dynamically by JS via @page */
+      width: 100% !important;
+      height: 100% !important;
+    }
+    .label-card:last-child { page-break-after: avoid; break-after: avoid; }
+
+    .label-inner { padding: 3mm 4mm; }
+
+    .label-chip {
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
+    .label-store { color: #8b5cf6 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   }
 </style>
 </head>
 <body>
 
-<div class="print-controls">
-  <button class="btn btn-print" onclick="window.print()">🖨️ Print</button>
-  <a class="btn btn-back" href="javascript:history.back()">← Back</a>
+<!-- ── Toolbar ── -->
+<div class="toolbar">
+  <span class="tb-brand">Zivo</span>
+  <div class="tb-pipe"></div>
 
-  <div class="control-group">
+  <button class="tb-print" onclick="window.print()">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+    Print Labels
+  </button>
+  <a class="tb-back" href="javascript:history.back()">← Back</a>
+
+  <div class="tb-pipe"></div>
+
+  <div class="tb-select-wrap">
     <label>Label Size</label>
-    <select id="size-select" onchange="applyLayout()">
-      <option value="1x3">1 × 3 inch</option>
-      <option value="2x3" selected>2 × 3 inch</option>
-      <option value="2x4">2 × 4 inch</option>
-      <option value="3x4">3 × 4 inch</option>
+    <select id="size-select" class="tb-select" onchange="applySize()">
+      <option value="38x25">38 × 25 mm  — Small price tag</option>
+      <option value="50x25">50 × 25 mm  — Narrow barcode</option>
+      <option value="50x30">50 × 30 mm  — Standard barcode</option>
+      <option value="50x76" selected>50 × 76 mm  — Clothing tag (default)</option>
+      <option value="100x50">100 × 50 mm — Product label</option>
+      <option value="100x75">100 × 75 mm — Large product label</option>
     </select>
   </div>
 
-  <div class="control-group">
-    <label>Columns</label>
-    <select id="cols-select" onchange="applyLayout()">
-      <option value="2">2 per row</option>
-      <option value="3" selected>3 per row</option>
-      <option value="4">4 per row</option>
-      <option value="5">5 per row</option>
-    </select>
-  </div>
-
-  <span class="label-count">{{ skus|length }} label{{ skus|length|pluralize }}</span>
+  <span class="tb-count"><strong>{{ skus|length }}</strong> label{{ skus|length|pluralize }}</span>
 </div>
 
+<!-- ── Labels ── -->
 <div class="labels-grid" id="labels-grid">
   {% for sku in skus %}
-  <div class="label-card">
-    <div class="label-store">ZIVO</div>
-    <div class="label-product">{{ sku.product.name }}</div>
-    <div class="label-meta">
-      {% if sku.size %}<span class="label-chip size">{{ sku.size }}</span>{% endif %}
-      {% if sku.color %}<span class="label-chip color">{{ sku.color }}</span>{% endif %}
-      <span class="label-chip">{{ sku.product.get_gender_display|default:sku.product.gender }}</span>
+  <div class="label-card" id="card-{{ forloop.counter }}">
+    <div class="label-inner">
+      <div class="label-store">ZIVO</div>
+      <div class="label-product">{{ sku.product.name }}</div>
+      <div class="label-meta">
+        {% if sku.size %}<span class="label-chip size">{{ sku.size }}</span>{% endif %}
+        {% if sku.color %}<span class="label-chip color">{{ sku.color }}</span>{% endif %}
+        <span class="label-chip">{{ sku.product.get_gender_display|default:sku.product.gender }}</span>
+      </div>
+      <hr class="label-divider">
+      <div class="label-sku">{{ sku.sku_code }}</div>
+      {% if sku.mrp %}<div class="label-mrp">MRP ₹{{ sku.mrp }}</div>{% endif %}
     </div>
-    <div class="label-sku">{{ sku.sku_code }}</div>
-    {% if sku.mrp %}<div class="label-mrp">MRP ₹{{ sku.mrp }}</div>{% endif %}
   </div>
   {% empty %}
-  <p style="color:#6b7280;grid-column:1/-1;text-align:center;padding:40px 0;">No SKUs found.</p>
+  <p style="color:#6b7280;padding:40px 0;">No SKUs found.</p>
   {% endfor %}
 </div>
 
 <script>
-  // label sizes in inches → pixels at 96dpi
+  // Thermal label sizes: { w: mm, h: mm }
   const SIZES = {
-    '1x3': { w: 3,   h: 1   },
-    '2x3': { w: 3,   h: 2   },
-    '2x4': { w: 4,   h: 2   },
-    '3x4': { w: 4,   h: 3   },
+    '38x25':  { w: 38,  h: 25  },
+    '50x25':  { w: 50,  h: 25  },
+    '50x30':  { w: 50,  h: 30  },
+    '50x76':  { w: 50,  h: 76  },
+    '100x50': { w: 100, h: 50  },
+    '100x75': { w: 100, h: 75  },
   };
-  const DPI = 96;
 
-  function applyLayout() {
-    const sizeKey = document.getElementById('size-select').value;
-    const cols    = parseInt(document.getElementById('cols-select').value);
-    const { w, h } = SIZES[sizeKey];
-    const wPx = w * DPI;
-    const hPx = h * DPI;
+  // Font scales relative to 50×76mm baseline
+  const BASE_AREA = 50 * 76;
 
-    const grid = document.getElementById('labels-grid');
-    grid.style.gridTemplateColumns = `repeat(${cols}, ${wPx}px)`;
+  function applySize() {
+    const key = document.getElementById('size-select').value;
+    const { w, h } = SIZES[key];
+
+    // 1mm = 3.7795px at 96dpi
+    const MM = 3.7795;
+    const wPx = Math.round(w * MM);
+    const hPx = Math.round(h * MM);
+
+    // Scale factor based on area vs baseline
+    const scale = Math.sqrt((w * h) / BASE_AREA);
 
     document.querySelectorAll('.label-card').forEach(card => {
       card.style.width  = wPx + 'px';
       card.style.height = hPx + 'px';
     });
 
-    // Scale font sizes relative to label height
-    const scale = hPx / 192; // 2in = 192px baseline
     document.querySelectorAll('.label-product').forEach(el => {
-      el.style.fontSize = Math.max(8, Math.round(11 * scale)) + 'px';
+      el.style.fontSize = Math.max(6, Math.round(11 * scale)) + 'px';
     });
     document.querySelectorAll('.label-sku').forEach(el => {
-      el.style.fontSize = Math.max(9, Math.round(13 * scale)) + 'px';
+      el.style.fontSize = Math.max(7, Math.round(13 * scale)) + 'px';
     });
     document.querySelectorAll('.label-chip').forEach(el => {
-      el.style.fontSize = Math.max(7, Math.round(9 * scale)) + 'px';
+      el.style.fontSize = Math.max(5, Math.round(9 * scale)) + 'px';
+      el.style.padding  = scale < 0.7 ? '0 3px' : '1px 5px';
+    });
+    document.querySelectorAll('.label-mrp').forEach(el => {
+      el.style.fontSize = Math.max(6, Math.round(10 * scale)) + 'px';
+    });
+    document.querySelectorAll('.label-store').forEach(el => {
+      el.style.fontSize = Math.max(5, Math.round(7 * scale)) + 'px';
     });
 
-    // Inject @page size for print
-    let styleTag = document.getElementById('print-page-style');
-    if (!styleTag) {
-      styleTag = document.createElement('style');
-      styleTag.id = 'print-page-style';
-      document.head.appendChild(styleTag);
+    // Update @page to exact label dimensions for thermal printer
+    let tag = document.getElementById('print-page-style');
+    if (!tag) {
+      tag = document.createElement('style');
+      tag.id = 'print-page-style';
+      document.head.appendChild(tag);
     }
-    // Use landscape for wide labels (width > height)
-    const orientation = w > h ? 'landscape' : 'portrait';
-    styleTag.textContent = `@media print { @page { size: A4 ${orientation}; margin: 8mm; } }`;
+    tag.textContent = `@media print { @page { size: ${w}mm ${h}mm; margin: 0; } }`;
   }
 
-  // Apply default layout on load
-  applyLayout();
+  applySize();
 </script>
 </body>
 </html>
