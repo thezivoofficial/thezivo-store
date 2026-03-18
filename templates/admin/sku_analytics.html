@@ -4,11 +4,16 @@
 {% block content %}
 
 {% if bulk_stock_url %}
-<div style="margin-bottom:16px;">
+<div style="margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap;">
   <a href="{{ bulk_stock_url }}"
      style="display:inline-block;padding:9px 20px;background:#8b5cf6;color:#fff;
             border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;">
     📦 Bulk Stock Update
+  </a>
+  <a href="{% url 'admin:store_sku_print_labels' %}"
+     style="display:inline-block;padding:9px 20px;background:#111;color:#fff;
+            border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;">
+    🏷️ Print All Labels
   </a>
 </div>
 {% endif %}

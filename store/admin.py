@@ -183,6 +183,8 @@ class SKUAdmin(ModelAdmin):
     compressed_fields   = True
     change_list_template = "admin/sku_analytics.html"
 
+    actions = ["print_sku_labels"]
+
     def get_urls(self):
         custom = [
             path(
@@ -190,8 +192,31 @@ class SKUAdmin(ModelAdmin):
                 self.admin_site.admin_view(self.bulk_stock_view),
                 name="store_sku_bulk_stock",
             ),
+            path(
+                "print-labels/",
+                self.admin_site.admin_view(self.print_labels_view),
+                name="store_sku_print_labels",
+            ),
         ]
         return custom + super().get_urls()
+
+    def print_sku_labels(self, request, queryset):
+        ids = ",".join(str(pk) for pk in queryset.values_list("pk", flat=True))
+        return redirect(f"{reverse('admin:store_sku_print_labels')}?ids={ids}")
+    print_sku_labels.short_description = "🏷️ Print SKU labels"
+
+    def print_labels_view(self, request):
+        ids_param = request.GET.get("ids", "")
+        if ids_param:
+            ids = [int(i) for i in ids_param.split(",") if i.isdigit()]
+            skus = SKU.objects.filter(pk__in=ids).select_related("product").order_by("product__name", "size", "color")
+        else:
+            skus = SKU.objects.select_related("product").order_by("product__name", "size", "color")
+        return render(request, "admin/sku_labels.html", {
+            "skus": skus,
+            "title": "SKU Labels",
+            "opts": self.model._meta,
+        })
 
     def bulk_stock_view(self, request):
         skus = SKU.objects.select_related("product").order_by("product__name", "size", "color")

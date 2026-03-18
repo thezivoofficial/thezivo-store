@@ -37,6 +37,24 @@
       border: none; box-shadow: none;
       page-break-after: always;
     }
+    .page-hidden { display: none !important; }
+  }
+  .page-hidden { display: none !important; }
+  .toggle-btn {
+    padding: 6px 14px;
+    border: 1.5px solid #4b5563;
+    border-radius: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    background: #374151;
+    color: #9ca3af;
+    transition: all .15s;
+  }
+  .toggle-btn.active {
+    background: #8b5cf6;
+    border-color: #8b5cf6;
+    color: #fff;
   }
 
   /* ── Toolbar ── */
@@ -220,14 +238,14 @@
 
 <!-- ── Toolbar ── -->
 <div class="toolbar">
-  {% if orders_data %}
-  <button class="btn-print" onclick="window.print()">
+  <button id="print-btn" class="btn-print" onclick="window.print()">
     🖨️ Print All — {{ orders_data|length }} order{{ orders_data|length|pluralize }}
-    ({{ orders_data|length|add:orders_data|length }} pages)
   </button>
-  {% endif %}
   <button class="btn-back" onclick="window.history.back()">← Back</button>
-  <span class="toolbar-info">Invoice + shipping label per order · 4×6 format</span>
+  <span style="font-size:10px;color:#6b7280;">Print:</span>
+  <button id="tog-invoice"  class="toggle-btn active" onclick="togglePage('invoice')">📄 Invoice</button>
+  <button id="tog-shipping" class="toggle-btn active" onclick="togglePage('shipping')">🚚 Shipping Label</button>
+  <span id="print-info" class="toolbar-info">4×6 format</span>
 
   <form class="range-form" method="get" action="">
     <label>Order ID</label>
@@ -248,7 +266,7 @@
 {% with order=entry.order items=entry.items subtotal=entry.subtotal delivery=entry.delivery total=entry.total qr_b64=entry.qr_b64 %}
 
 <!-- ════ INVOICE — Order #{{ order.id }} ════ -->
-<div class="label-page">
+<div class="label-page invoice-page">
 
   <div class="inv-header">
     <div>
@@ -338,7 +356,7 @@
 </div>
 
 <!-- ════ SHIPPING LABEL — Order #{{ order.id }} ════ -->
-<div class="label-page">
+<div class="label-page shipping-page">
   <div class="sl-outer">
 
     <div class="sl-head">
@@ -396,5 +414,39 @@
 {% endwith %}
 {% endfor %}
 
+<script>
+  var state = { invoice: true, shipping: true };
+  var totalOrders = {{ orders_data|length }};
+
+  function togglePage(type) {
+    state[type] = !state[type];
+    document.getElementById('tog-' + type).classList.toggle('active', state[type]);
+    var cls = type === 'invoice' ? 'invoice-page' : 'shipping-page';
+    document.querySelectorAll('.' + cls).forEach(function(el) {
+      el.classList.toggle('page-hidden', !state[type]);
+    });
+    updatePrintBtn();
+  }
+
+  function updatePrintBtn() {
+    var parts = [];
+    if (state.invoice)  parts.push('Invoice');
+    if (state.shipping) parts.push('Label');
+    var btn  = document.getElementById('print-btn');
+    var info = document.getElementById('print-info');
+    var pages = parts.length * totalOrders;
+    if (parts.length === 0) {
+      btn.disabled = true;
+      btn.textContent = '🖨️ Nothing to print';
+      info.textContent = '';
+    } else {
+      btn.disabled = false;
+      btn.textContent = '🖨️ Print ' + parts.join(' + ') + ' — ' + totalOrders + ' order' + (totalOrders !== 1 ? 's' : '');
+      info.textContent = pages + ' page' + (pages !== 1 ? 's' : '') + ' · 4×6 format';
+    }
+  }
+
+  updatePrintBtn();
+</script>
 </body>
 </html>
