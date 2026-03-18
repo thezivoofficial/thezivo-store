@@ -1862,3 +1862,16 @@ def check_pincode(request):
     if len(pincode) == 6 and pincode.isdigit():
         return JsonResponse({'available': True, 'message': 'Delivery available in 5–7 business days'})
     return JsonResponse({'available': False, 'message': 'Enter a valid 6-digit pincode'})
+
+
+def contact_us(request):
+    store = SiteSettings.get()
+    return render(request, 'store/contact_us.html', {'store': store})
+
+
+def shipping_policy(request):
+    return render(request, 'store/shipping_policy.html')
+
+
+def cancellations_refunds(request):
+    return render(request, 'store/cancellations_refunds.html')

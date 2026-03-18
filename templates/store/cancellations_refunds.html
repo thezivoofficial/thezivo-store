@@ -1,0 +1,170 @@
+{% extends "store/base.html" %}
+{% block title %}Cancellations & Refunds | Zivo{% endblock %}
+{% block meta_description %}Zivo cancellation and refund policy — how to cancel your order and what to expect for returns and refunds.{% endblock %}
+
+{% block content %}
+<style>
+    .policy-page {
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 48px 16px 80px;
+        font-family: 'DM Sans', sans-serif;
+        color: #374151;
+    }
+    .policy-page h1 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2rem;
+        font-weight: 600;
+        color: #111;
+        margin-bottom: 6px;
+    }
+    .policy-page .updated {
+        color: #9ca3af;
+        font-size: 0.85rem;
+        margin-bottom: 40px;
+    }
+    .policy-section {
+        margin-bottom: 32px;
+    }
+    .policy-section h2 {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #111;
+        margin-bottom: 10px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    .policy-section p, .policy-section li {
+        font-size: 0.93rem;
+        line-height: 1.8;
+        color: #4b5563;
+    }
+    .policy-section ul {
+        padding-left: 20px;
+        margin: 8px 0;
+    }
+    .highlight-box {
+        background: #fff7ed;
+        border-left: 4px solid #f59e0b;
+        border-radius: 0 10px 10px 0;
+        padding: 14px 18px;
+        margin: 12px 0;
+        font-size: 0.9rem;
+        color: #92400e;
+        line-height: 1.7;
+    }
+    .info-box {
+        background: #f9f7ff;
+        border-left: 4px solid #8b5cf6;
+        border-radius: 0 10px 10px 0;
+        padding: 14px 18px;
+        margin: 12px 0;
+        font-size: 0.9rem;
+        color: #4b5563;
+        line-height: 1.7;
+    }
+    .step-list {
+        counter-reset: steps;
+        list-style: none;
+        padding: 0;
+    }
+    .step-list li {
+        counter-increment: steps;
+        display: flex;
+        gap: 12px;
+        margin-bottom: 10px;
+        align-items: flex-start;
+    }
+    .step-list li::before {
+        content: counter(steps);
+        background: #8b5cf6;
+        color: #fff;
+        min-width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 700;
+        margin-top: 2px;
+        flex-shrink: 0;
+    }
+</style>
+
+<div class="policy-page">
+    <h1>Cancellations &amp; Refunds</h1>
+    <p class="updated">Last updated: March 2026</p>
+
+    <div class="policy-section">
+        <h2>Order Cancellation</h2>
+        <ul>
+            <li>You can cancel your order <strong>before it is shipped</strong>. Once shipped, cancellation is not possible.</li>
+            <li>To cancel, go to <a href="{% url 'my_orders' %}" style="color:#8b5cf6;text-decoration:none;">My Orders</a>
+                and use the Cancel Order option, or contact us at
+                <a href="mailto:support@thezivo.com" style="color:#8b5cf6;text-decoration:none;">support@thezivo.com</a>.</li>
+        </ul>
+        <div class="highlight-box">
+            ⚠️ Orders that have already been shipped cannot be cancelled. Please refuse delivery if you no longer want the order.
+        </div>
+    </div>
+
+    <div class="policy-section">
+        <h2>Refund Policy</h2>
+        <p>We offer refunds in the following situations:</p>
+        <ul>
+            <li>Order cancelled before shipment — <strong>full refund</strong></li>
+            <li>Item received is damaged, defective, or significantly different from what was ordered</li>
+            <li>Item not delivered within the promised timeframe</li>
+        </ul>
+        <div class="info-box">
+            We do <strong>not</strong> accept returns for reasons such as change of mind, wrong size ordered,
+            or colour appearing different from the screen. Please check the size chart before ordering.
+        </div>
+    </div>
+
+    <div class="policy-section">
+        <h2>Return Process</h2>
+        <p>To raise a return or refund request:</p>
+        <ol class="step-list">
+            <li>Contact us within <strong>7 days</strong> of delivery at
+                <a href="mailto:support@thezivo.com" style="color:#8b5cf6;text-decoration:none;">support@thezivo.com</a>
+                with your order ID and photos of the defective/incorrect item.</li>
+            <li>Our team will review and approve the request within <strong>2 business days</strong>.</li>
+            <li>Once approved, ship the item back to our address. Return shipping is covered by us for defective items.</li>
+            <li>Refund is processed after we receive and inspect the returned item.</li>
+        </ol>
+    </div>
+
+    <div class="policy-section">
+        <h2>Refund Timelines</h2>
+        <ul>
+            <li><strong>Online payments (UPI / Card / Net Banking):</strong> Refund within 5–7 business days to the original payment method.</li>
+            <li><strong>Cash on Delivery orders:</strong> Refund via bank transfer within 7–10 business days. We will request your bank details.</li>
+        </ul>
+    </div>
+
+    <div class="policy-section">
+        <h2>Non-Returnable Items</h2>
+        <ul>
+            <li>Items that have been worn, washed, or altered</li>
+            <li>Items without original tags/packaging</li>
+            <li>Innerwear, lingerie, and swimwear (for hygiene reasons)</li>
+            <li>Sale or clearance items marked as final sale</li>
+        </ul>
+    </div>
+
+    <div class="policy-section">
+        <h2>Exchange Policy</h2>
+        <p>We currently do not offer direct exchanges. Please place a new order for the correct size/item
+        and raise a return request for the original order.</p>
+    </div>
+
+    <div class="policy-section">
+        <h2>Contact Us</h2>
+        <p>For any cancellation or refund queries, reach us at
+        <a href="mailto:support@thezivo.com" style="color:#8b5cf6;text-decoration:none;">support@thezivo.com</a>
+        or visit our <a href="{% url 'contact_us' %}" style="color:#8b5cf6;text-decoration:none;">Contact Us</a> page.</p>
+    </div>
+</div>
+{% endblock %}

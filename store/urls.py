@@ -46,4 +46,7 @@ urlpatterns = [
     path("product/<int:product_id>/review/", views.submit_review, name="submit_review"),
     path("check-pincode/", views.check_pincode, name="check_pincode"),
     path("razorpay-webhook/", views.razorpay_webhook, name="razorpay_webhook"),
+    path("contact/", views.contact_us, name="contact_us"),
+    path("shipping-policy/", views.shipping_policy, name="shipping_policy"),
+    path("cancellations-refunds/", views.cancellations_refunds, name="cancellations_refunds"),
 ]

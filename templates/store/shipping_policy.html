@@ -1,0 +1,132 @@
+{% extends "store/base.html" %}
+{% block title %}Shipping Policy | Zivo{% endblock %}
+{% block meta_description %}Zivo shipping policy — delivery timelines, charges, and coverage across India.{% endblock %}
+
+{% block content %}
+<style>
+    .policy-page {
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 48px 16px 80px;
+        font-family: 'DM Sans', sans-serif;
+        color: #374151;
+    }
+    .policy-page h1 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2rem;
+        font-weight: 600;
+        color: #111;
+        margin-bottom: 6px;
+    }
+    .policy-page .updated {
+        color: #9ca3af;
+        font-size: 0.85rem;
+        margin-bottom: 40px;
+    }
+    .policy-section {
+        margin-bottom: 32px;
+    }
+    .policy-section h2 {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #111;
+        margin-bottom: 10px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    .policy-section p, .policy-section li {
+        font-size: 0.93rem;
+        line-height: 1.8;
+        color: #4b5563;
+    }
+    .policy-section ul {
+        padding-left: 20px;
+        margin: 8px 0;
+    }
+    .highlight-box {
+        background: #f0fdf4;
+        border-left: 4px solid #10b981;
+        border-radius: 0 10px 10px 0;
+        padding: 14px 18px;
+        margin: 12px 0;
+        font-size: 0.9rem;
+        color: #065f46;
+        font-weight: 500;
+    }
+    .info-box {
+        background: #f9f7ff;
+        border-left: 4px solid #8b5cf6;
+        border-radius: 0 10px 10px 0;
+        padding: 14px 18px;
+        margin: 12px 0;
+        font-size: 0.9rem;
+        color: #4b5563;
+        line-height: 1.7;
+    }
+</style>
+
+<div class="policy-page">
+    <h1>Shipping Policy</h1>
+    <p class="updated">Last updated: March 2026</p>
+
+    <div class="policy-section">
+        <h2>Delivery Charges</h2>
+        <div class="highlight-box">
+            🎉 Free delivery on all orders above ₹799
+        </div>
+        <p>A flat delivery charge of <strong>₹59</strong> applies to orders below ₹799.
+        Delivery charges are non-refundable.</p>
+    </div>
+
+    <div class="policy-section">
+        <h2>Delivery Timeframe</h2>
+        <ul>
+            <li>Orders are processed within <strong>1–2 business days</strong> of placement.</li>
+            <li>Estimated delivery: <strong>5–7 business days</strong> across India.</li>
+            <li>Metro cities (Delhi, Mumbai, Bangalore, Chennai, Hyderabad, Kolkata) may receive orders faster.</li>
+            <li>Remote or rural areas may take up to <strong>10 business days</strong>.</li>
+        </ul>
+        <div class="info-box">
+            Business days are Monday to Saturday, excluding public holidays.
+        </div>
+    </div>
+
+    <div class="policy-section">
+        <h2>Order Processing</h2>
+        <ul>
+            <li>Orders placed before 2:00 PM IST are processed the same day.</li>
+            <li>Orders placed after 2:00 PM IST or on weekends/holidays are processed the next business day.</li>
+            <li>You will receive a shipping confirmation with tracking details once your order is dispatched.</li>
+        </ul>
+    </div>
+
+    <div class="policy-section">
+        <h2>Tracking Your Order</h2>
+        <p>Once your order is shipped, you can track it by visiting
+        <a href="{% url 'my_orders' %}" style="color:#8b5cf6;text-decoration:none;">My Orders</a>.
+        You will also receive a notification when your order is dispatched.</p>
+    </div>
+
+    <div class="policy-section">
+        <h2>Delivery Coverage</h2>
+        <p>We deliver across India. If delivery is unavailable to your pincode, you will be notified
+        before your order is confirmed and a full refund will be issued.</p>
+    </div>
+
+    <div class="policy-section">
+        <h2>Delivery Attempt & Failed Delivery</h2>
+        <ul>
+            <li>Our courier partner will make up to 3 delivery attempts.</li>
+            <li>After 3 failed attempts, the package will be returned to us.</li>
+            <li>For returned packages, a re-shipping fee may apply for re-dispatch.</li>
+        </ul>
+    </div>
+
+    <div class="policy-section">
+        <h2>Contact Us</h2>
+        <p>For shipping-related queries, write to us at
+        <a href="mailto:support@thezivo.com" style="color:#8b5cf6;text-decoration:none;">support@thezivo.com</a>
+        or visit our <a href="{% url 'contact_us' %}" style="color:#8b5cf6;text-decoration:none;">Contact Us</a> page.</p>
+    </div>
+</div>
+{% endblock %}
