@@ -195,6 +195,7 @@
       <option value="50x76" selected>50 × 76 mm  — Clothing tag (default)</option>
       <option value="100x50">100 × 50 mm — Product label</option>
       <option value="100x75">100 × 75 mm — Large product label</option>
+      <option value="100x150">100 × 150 mm — Shipping label (4×6)</option>
     </select>
   </div>
 
@@ -226,12 +227,13 @@
 <script>
   // Thermal label sizes: { w: mm, h: mm }
   const SIZES = {
-    '38x25':  { w: 38,  h: 25  },
-    '50x25':  { w: 50,  h: 25  },
-    '50x30':  { w: 50,  h: 30  },
-    '50x76':  { w: 50,  h: 76  },
-    '100x50': { w: 100, h: 50  },
-    '100x75': { w: 100, h: 75  },
+    '38x25':   { w: 38,  h: 25  },
+    '50x25':   { w: 50,  h: 25  },
+    '50x30':   { w: 50,  h: 30  },
+    '50x76':   { w: 50,  h: 76  },
+    '100x50':  { w: 100, h: 50  },
+    '100x75':  { w: 100, h: 75  },
+    '100x150': { w: 100, h: 150 },
   };
 
   // Font scales relative to 50×76mm baseline
