@@ -40,65 +40,151 @@
     .page-hidden { display: none !important; }
   }
   .page-hidden { display: none !important; }
-  .toggle-btn {
-    padding: 6px 14px;
-    border: 1.5px solid #4b5563;
-    border-radius: 5px;
-    font-size: 11px;
-    font-weight: 600;
-    cursor: pointer;
-    background: #374151;
-    color: #9ca3af;
-    transition: all .15s;
-  }
-  .toggle-btn.active {
-    background: #8b5cf6;
-    border-color: #8b5cf6;
-    color: #fff;
-  }
 
   /* ── Toolbar ── */
   .toolbar {
     position: sticky;
     top: 0;
     z-index: 100;
-    background: #1f2937;
-    color: #fff;
-    padding: 10px 20px;
+    background: rgba(15, 15, 20, 0.96);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding: 0 28px;
+    height: 56px;
     display: flex;
     align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
+    gap: 20px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
-  .toolbar button {
-    padding: 7px 16px;
+
+  /* Brand mark */
+  .tb-brand {
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: #a78bfa;
+    text-transform: uppercase;
+    margin-right: 4px;
+    flex-shrink: 0;
+  }
+
+  /* Divider pipe */
+  .tb-pipe {
+    width: 1px;
+    height: 20px;
+    background: rgba(255,255,255,0.1);
+    flex-shrink: 0;
+  }
+
+  /* Pill toggle group */
+  .tb-toggle-group {
+    display: flex;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    padding: 3px;
+    gap: 2px;
+  }
+  .tb-toggle {
+    padding: 5px 14px;
     border: none;
-    border-radius: 5px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    background: transparent;
+    color: rgba(255,255,255,0.35);
+    transition: background .18s, color .18s;
+    white-space: nowrap;
+  }
+  .tb-toggle.on {
+    background: rgba(139,92,246,0.9);
+    color: #fff;
+    box-shadow: 0 1px 6px rgba(139,92,246,0.4);
+  }
+  .tb-toggle.on:hover { background: rgba(124,58,237,0.95); }
+  .tb-toggle:not(.on):hover { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.6); }
+
+  /* Print button */
+  .tb-print {
+    height: 34px;
+    padding: 0 20px;
+    background: #8b5cf6;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.2px;
+    transition: background .15s, opacity .15s;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .tb-print:hover:not(:disabled) { background: #7c3aed; }
+  .tb-print:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  /* Back button */
+  .tb-back {
+    height: 34px;
+    padding: 0 16px;
+    background: transparent;
+    color: rgba(255,255,255,0.4);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
     font-size: 12px;
     font-weight: 600;
     cursor: pointer;
+    transition: border-color .15s, color .15s;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
-  .btn-print { background: #8b5cf6; color: #fff; }
-  .btn-back  { background: #374151; color: #d1d5db; }
-  .toolbar-info { font-size: 11px; color: #9ca3af; }
+  .tb-back:hover { border-color: rgba(255,255,255,0.25); color: rgba(255,255,255,0.7); }
 
+  /* Page count badge */
+  .tb-meta {
+    font-size: 11px;
+    color: rgba(255,255,255,0.25);
+    white-space: nowrap;
+  }
+  .tb-meta strong { color: rgba(255,255,255,0.55); font-weight: 600; }
+
+  /* Range loader — pushed to far right */
   .range-form {
     display: flex;
     align-items: center;
     gap: 8px;
     margin-left: auto;
-    background: #374151;
-    padding: 6px 12px;
-    border-radius: 7px;
   }
-  .range-form label { font-size: 11px; color: #9ca3af; white-space: nowrap; }
+  .range-form label { font-size: 11px; color: rgba(255,255,255,0.3); white-space: nowrap; }
   .range-form input[type="number"] {
-    width: 72px; padding: 4px 7px;
-    border: 1px solid #4b5563; border-radius: 4px;
-    background: #111827; color: #f9fafb; font-size: 12px;
+    width: 70px; padding: 5px 8px;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 6px;
+    background: rgba(255,255,255,0.05);
+    color: #f9fafb;
+    font-size: 12px;
+    outline: none;
   }
-  .range-form input[type="number"]:focus { outline: none; border-color: #8b5cf6; }
-  .btn-load { background: #10b981; color: #fff; padding: 6px 14px !important; }
+  .range-form input[type="number"]:focus { border-color: #8b5cf6; }
+  .btn-load {
+    height: 30px;
+    padding: 0 14px;
+    background: rgba(16,185,129,0.15);
+    color: #34d399;
+    border: 1px solid rgba(16,185,129,0.25);
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .btn-load:hover { background: rgba(16,185,129,0.25); }
 
   /* ══════════════════ INVOICE STYLES ══════════════════ */
   .inv-header {
@@ -238,21 +324,31 @@
 
 <!-- ── Toolbar ── -->
 <div class="toolbar">
-  <button id="print-btn" class="btn-print" onclick="window.print()">
-    🖨️ Print All — {{ orders_data|length }} order{{ orders_data|length|pluralize }}
+  <span class="tb-brand">Zivo</span>
+  <div class="tb-pipe"></div>
+
+  <button id="print-btn" class="tb-print" onclick="window.print()">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+    <span id="print-btn-text">Print All</span>
   </button>
-  <button class="btn-back" onclick="window.history.back()">← Back</button>
-  <span style="font-size:10px;color:#6b7280;">Print:</span>
-  <button id="tog-invoice"  class="toggle-btn active" onclick="togglePage('invoice')">📄 Invoice</button>
-  <button id="tog-shipping" class="toggle-btn active" onclick="togglePage('shipping')">🚚 Shipping Label</button>
-  <span id="print-info" class="toolbar-info">4×6 format</span>
+
+  <button class="tb-back" onclick="window.history.back()">← Back</button>
+
+  <div class="tb-pipe"></div>
+
+  <div class="tb-toggle-group">
+    <button id="tog-invoice"  class="tb-toggle on" onclick="togglePage('invoice')">Invoice</button>
+    <button id="tog-shipping" class="tb-toggle on" onclick="togglePage('shipping')">Shipping Label</button>
+  </div>
+
+  <span id="print-info" class="tb-meta"></span>
 
   <form class="range-form" method="get" action="">
-    <label>Order ID</label>
+    <label>Order</label>
     <input type="number" name="from_id" placeholder="From" value="{{ from_id }}" min="1">
-    <label>to</label>
+    <label>—</label>
     <input type="number" name="to_id"   placeholder="To"   value="{{ to_id }}"   min="1">
-    <button type="submit" class="btn-load">🔍 Load</button>
+    <button type="submit" class="btn-load">Load</button>
   </form>
 </div>
 
@@ -420,7 +516,7 @@
 
   function togglePage(type) {
     state[type] = !state[type];
-    document.getElementById('tog-' + type).classList.toggle('active', state[type]);
+    document.getElementById('tog-' + type).classList.toggle('on', state[type]);
     var cls = type === 'invoice' ? 'invoice-page' : 'shipping-page';
     document.querySelectorAll('.' + cls).forEach(function(el) {
       el.classList.toggle('page-hidden', !state[type]);
@@ -433,16 +529,17 @@
     if (state.invoice)  parts.push('Invoice');
     if (state.shipping) parts.push('Label');
     var btn  = document.getElementById('print-btn');
+    var btnText = document.getElementById('print-btn-text');
     var info = document.getElementById('print-info');
     var pages = parts.length * totalOrders;
     if (parts.length === 0) {
       btn.disabled = true;
-      btn.textContent = '🖨️ Nothing to print';
-      info.textContent = '';
+      btnText.textContent = 'Nothing selected';
+      info.innerHTML = '';
     } else {
       btn.disabled = false;
-      btn.textContent = '🖨️ Print ' + parts.join(' + ') + ' — ' + totalOrders + ' order' + (totalOrders !== 1 ? 's' : '');
-      info.textContent = pages + ' page' + (pages !== 1 ? 's' : '') + ' · 4×6 format';
+      btnText.textContent = 'Print ' + (totalOrders > 0 ? totalOrders + ' order' + (totalOrders !== 1 ? 's' : '') : 'All');
+      info.innerHTML = '<strong>' + pages + '</strong> page' + (pages !== 1 ? 's' : '') + ' &middot; ' + parts.join(' + ');
     }
   }
 
