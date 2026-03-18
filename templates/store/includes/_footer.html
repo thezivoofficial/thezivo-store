@@ -1,0 +1,154 @@
+{% load static %}
+<footer class="site-footer">
+    <div class="footer-inner">
+
+        <!-- Brand column -->
+        <div class="footer-brand-col">
+            <div class="footer-logo">ZIVO</div>
+            <div class="footer-tagline">DEFINE YOUR STYLE</div>
+            <p class="footer-desc">Premium fashion for men and women — T-shirts, shirts, kurtis, jeans and more.</p>
+            <div class="footer-secure">
+                <i class="bi bi-shield-check"></i> Payments secured by Razorpay
+            </div>
+        </div>
+
+        <!-- Shop column -->
+        <div class="footer-col">
+            <div class="footer-col-title">Shop</div>
+            <a href="{% url 'home' %}">Home</a>
+            <a href="{% url 'men' %}">Men</a>
+            <a href="{% url 'women' %}">Women</a>
+            <a href="{% url 'wishlist' %}">Wishlist</a>
+        </div>
+
+        <!-- Customer column -->
+        <div class="footer-col">
+            <div class="footer-col-title">Customer</div>
+            <a href="{% url 'my_orders' %}">My Orders</a>
+            <a href="{% url 'manage_addresses' %}">My Addresses</a>
+            <a href="{% url 'contact_us' %}">Contact Us</a>
+            <a href="{% url 'shipping_policy' %}">Shipping Policy</a>
+            <a href="{% url 'cancellations_refunds' %}">Cancellations &amp; Refunds</a>
+        </div>
+
+        <!-- Legal column -->
+        <div class="footer-col">
+            <div class="footer-col-title">Legal</div>
+            <a href="https://trendza.in/terms-condition" target="_blank" rel="noopener">Terms &amp; Conditions</a>
+            <a href="https://trendza.in/privacy" target="_blank" rel="noopener">Privacy Policy</a>
+        </div>
+
+    </div>
+
+    <div class="footer-bottom">
+        <span>© 2026 Zivo. All rights reserved.</span>
+        <span class="footer-bottom-pay">
+            <i class="bi bi-lock-fill"></i> Secure Payments
+        </span>
+    </div>
+</footer>
+
+<style>
+.site-footer {
+    background: #111;
+    color: rgba(255,255,255,0.75);
+    font-family: 'DM Sans', sans-serif;
+    margin-top: 48px;
+    /* On mobile, sit above the fixed bottom nav */
+    padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+}
+@media (min-width: 992px) {
+    .site-footer { padding-bottom: 0; }
+}
+.footer-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 48px 24px 32px;
+    display: grid;
+    grid-template-columns: 1.8fr 1fr 1.4fr 1fr;
+    gap: 32px;
+}
+@media (max-width: 991px) {
+    .footer-inner {
+        grid-template-columns: 1fr 1fr;
+        gap: 28px 24px;
+    }
+    .footer-brand-col { grid-column: 1 / -1; }
+}
+@media (max-width: 480px) {
+    .footer-inner {
+        grid-template-columns: 1fr 1fr;
+        padding: 36px 20px 24px;
+        gap: 24px 16px;
+    }
+}
+.footer-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 3px;
+    line-height: 1;
+    margin-bottom: 2px;
+}
+.footer-tagline {
+    font-size: 9px;
+    letter-spacing: 4px;
+    color: rgba(255,255,255,0.4);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+}
+.footer-desc {
+    font-size: 0.83rem;
+    line-height: 1.7;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 14px;
+    max-width: 280px;
+}
+.footer-secure {
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.4);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.footer-col-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: rgba(255,255,255,0.35);
+    margin-bottom: 14px;
+}
+.footer-col {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.footer-col a {
+    font-size: 0.88rem;
+    color: rgba(255,255,255,0.65);
+    text-decoration: none;
+    transition: color .15s;
+    line-height: 1;
+}
+.footer-col a:hover { color: #fff; }
+.footer-bottom {
+    border-top: 1px solid rgba(255,255,255,0.08);
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.3);
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.footer-bottom-pay {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+</style>
