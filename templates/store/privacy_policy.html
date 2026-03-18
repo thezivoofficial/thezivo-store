@@ -1,0 +1,102 @@
+{% extends "store/base.html" %}
+{% block title %}Privacy Policy | Zivo{% endblock %}
+{% block meta_description %}Zivo privacy policy — how we collect, use, and protect your personal information.{% endblock %}
+
+{% block content %}
+<style>
+    .policy-page { max-width: 760px; margin: 0 auto; padding: 48px 16px 80px; font-family: 'DM Sans', sans-serif; color: #374151; }
+    .policy-page h1 { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 600; color: #111; margin-bottom: 6px; }
+    .policy-page .updated { color: #9ca3af; font-size: 0.85rem; margin-bottom: 40px; }
+    .policy-section { margin-bottom: 30px; }
+    .policy-section h2 { font-size: 1.05rem; font-weight: 700; color: #111; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #f0f0f0; }
+    .policy-section p, .policy-section li { font-size: 0.93rem; line-height: 1.8; color: #4b5563; }
+    .policy-section ul { padding-left: 20px; margin: 8px 0; }
+</style>
+
+<div class="policy-page">
+    <h1>Privacy Policy</h1>
+    <p class="updated">Last updated: March 2026</p>
+
+    <div class="policy-section">
+        <h2>1. Introduction</h2>
+        <p>At Zivo (<strong>thezivo.com</strong>), we are committed to protecting your privacy. This policy explains what personal information we collect, how we use it, and your rights regarding it.</p>
+    </div>
+
+    <div class="policy-section">
+        <h2>2. Information We Collect</h2>
+        <ul>
+            <li><strong>Account information:</strong> Name, email address, phone number when you register.</li>
+            <li><strong>Order information:</strong> Delivery address, order details, and payment status.</li>
+            <li><strong>Payment information:</strong> Payments are processed by Razorpay. We do not store card numbers or banking credentials — only the transaction reference ID.</li>
+            <li><strong>Usage data:</strong> Pages visited, products viewed, and session activity — collected via server logs and session cookies.</li>
+        </ul>
+    </div>
+
+    <div class="policy-section">
+        <h2>3. How We Use Your Information</h2>
+        <ul>
+            <li>To process and fulfil your orders.</li>
+            <li>To send order confirmation and shipping notifications via email.</li>
+            <li>To send back-in-stock alerts if you requested them.</li>
+            <li>To improve our website and customer experience.</li>
+            <li>To respond to your queries and support requests.</li>
+            <li>To comply with legal obligations.</li>
+        </ul>
+    </div>
+
+    <div class="policy-section">
+        <h2>4. Sharing of Information</h2>
+        <p>We do not sell or rent your personal information to third parties. We share your information only with:</p>
+        <ul>
+            <li><strong>Razorpay</strong> — to process payments securely.</li>
+            <li><strong>Courier/logistics partners</strong> — your name, address, and phone number to deliver your order.</li>
+            <li><strong>Brevo (Sendinblue)</strong> — to send transactional emails.</li>
+            <li><strong>Twilio</strong> — to send WhatsApp notifications (if you opted in).</li>
+            <li>Law enforcement or regulatory authorities if required by law.</li>
+        </ul>
+    </div>
+
+    <div class="policy-section">
+        <h2>5. Cookies</h2>
+        <p>We use cookies to maintain your session (login state, cart, wishlist). These are essential for the website to function. We do not use third-party advertising cookies.</p>
+        <p>You can disable cookies in your browser settings, but this may affect your ability to use the website.</p>
+    </div>
+
+    <div class="policy-section">
+        <h2>6. Data Retention</h2>
+        <p>We retain your personal information for as long as your account is active or as needed to fulfil orders and comply with legal obligations. You may request deletion of your account and data by contacting us.</p>
+    </div>
+
+    <div class="policy-section">
+        <h2>7. Your Rights</h2>
+        <p>You have the right to:</p>
+        <ul>
+            <li>Access the personal information we hold about you.</li>
+            <li>Request correction of inaccurate information.</li>
+            <li>Request deletion of your account and personal data.</li>
+            <li>Opt out of marketing communications at any time.</li>
+        </ul>
+        <p>To exercise any of these rights, contact us at <a href="mailto:support@thezivo.com" style="color:#8b5cf6;text-decoration:none;">support@thezivo.com</a>.</p>
+    </div>
+
+    <div class="policy-section">
+        <h2>8. Security</h2>
+        <p>We use industry-standard security measures to protect your data. All transactions are encrypted via HTTPS. Payment processing is handled by PCI-DSS compliant Razorpay.</p>
+    </div>
+
+    <div class="policy-section">
+        <h2>9. Children's Privacy</h2>
+        <p>Our services are not directed at children under the age of 13. We do not knowingly collect personal information from children.</p>
+    </div>
+
+    <div class="policy-section">
+        <h2>10. Changes to This Policy</h2>
+        <p>We may update this Privacy Policy from time to time. Changes will be posted on this page with an updated date. Continued use of the website after changes constitutes acceptance.</p>
+    </div>
+
+    <div class="policy-section">
+        <h2>11. Contact Us</h2>
+        <p>For privacy-related queries, contact us at <a href="mailto:support@thezivo.com" style="color:#8b5cf6;text-decoration:none;">support@thezivo.com</a> or visit our <a href="{% url 'contact_us' %}" style="color:#8b5cf6;text-decoration:none;">Contact Us</a> page.</p>
+    </div>
+</div>
+{% endblock %}

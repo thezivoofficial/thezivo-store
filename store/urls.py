@@ -49,4 +49,6 @@ urlpatterns = [
     path("contact/", views.contact_us, name="contact_us"),
     path("shipping-policy/", views.shipping_policy, name="shipping_policy"),
     path("cancellations-refunds/", views.cancellations_refunds, name="cancellations_refunds"),
+    path("terms-conditions/", views.terms_conditions, name="terms_conditions"),
+    path("privacy-policy/", views.privacy_policy, name="privacy_policy"),
 ]

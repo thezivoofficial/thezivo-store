@@ -1875,3 +1875,11 @@ def shipping_policy(request):
 
 def cancellations_refunds(request):
     return render(request, 'store/cancellations_refunds.html')
+
+
+def terms_conditions(request):
+    return render(request, 'store/terms_conditions.html')
+
+
+def privacy_policy(request):
+    return render(request, 'store/privacy_policy.html')

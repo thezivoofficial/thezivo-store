@@ -1,0 +1,94 @@
+{% extends "store/base.html" %}
+{% block title %}Terms & Conditions | Zivo{% endblock %}
+{% block meta_description %}Terms and conditions for shopping at Zivo — please read before placing your order.{% endblock %}
+
+{% block content %}
+<style>
+    .policy-page { max-width: 760px; margin: 0 auto; padding: 48px 16px 80px; font-family: 'DM Sans', sans-serif; color: #374151; }
+    .policy-page h1 { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 600; color: #111; margin-bottom: 6px; }
+    .policy-page .updated { color: #9ca3af; font-size: 0.85rem; margin-bottom: 40px; }
+    .policy-section { margin-bottom: 30px; }
+    .policy-section h2 { font-size: 1.05rem; font-weight: 700; color: #111; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #f0f0f0; }
+    .policy-section p, .policy-section li { font-size: 0.93rem; line-height: 1.8; color: #4b5563; }
+    .policy-section ul { padding-left: 20px; margin: 8px 0; }
+</style>
+
+<div class="policy-page">
+    <h1>Terms &amp; Conditions</h1>
+    <p class="updated">Last updated: March 2026</p>
+
+    <div class="policy-section">
+        <h2>1. Acceptance of Terms</h2>
+        <p>By accessing or using the Zivo website (<strong>thezivo.com</strong>), you agree to be bound by these Terms &amp; Conditions. If you do not agree, please do not use our website or services.</p>
+    </div>
+
+    <div class="policy-section">
+        <h2>2. About Us</h2>
+        <p>Zivo is an online fashion store offering clothing and accessories for men and women. We are operated under Trenza, based in India. For queries, contact us at <a href="mailto:support@thezivo.com" style="color:#8b5cf6;text-decoration:none;">support@thezivo.com</a>.</p>
+    </div>
+
+    <div class="policy-section">
+        <h2>3. Products &amp; Pricing</h2>
+        <ul>
+            <li>All prices are listed in Indian Rupees (₹) and are inclusive of applicable taxes.</li>
+            <li>We reserve the right to modify prices at any time without prior notice.</li>
+            <li>Product images are for reference only. Actual colours may vary slightly due to screen settings.</li>
+            <li>We make every effort to display stock availability accurately, but we do not guarantee availability at the time of order.</li>
+        </ul>
+    </div>
+
+    <div class="policy-section">
+        <h2>4. Orders &amp; Payment</h2>
+        <ul>
+            <li>An order is confirmed only after successful payment (Online) or after it is accepted by us (COD).</li>
+            <li>We accept UPI, debit/credit cards, net banking, and Cash on Delivery (COD) for eligible pincodes.</li>
+            <li>Online payments are processed securely by Razorpay. We do not store your card or payment details.</li>
+            <li>We reserve the right to cancel any order at our discretion, with a full refund issued.</li>
+        </ul>
+    </div>
+
+    <div class="policy-section">
+        <h2>5. Shipping</h2>
+        <p>Please refer to our <a href="{% url 'shipping_policy' %}" style="color:#8b5cf6;text-decoration:none;">Shipping Policy</a> for full details on delivery timelines, charges, and coverage.</p>
+    </div>
+
+    <div class="policy-section">
+        <h2>6. Cancellations &amp; Refunds</h2>
+        <p>Please refer to our <a href="{% url 'cancellations_refunds' %}" style="color:#8b5cf6;text-decoration:none;">Cancellations &amp; Refunds Policy</a> for full details.</p>
+    </div>
+
+    <div class="policy-section">
+        <h2>7. User Accounts</h2>
+        <ul>
+            <li>You are responsible for maintaining the confidentiality of your account credentials.</li>
+            <li>You agree to provide accurate and up-to-date information when registering or placing orders.</li>
+            <li>We reserve the right to suspend or terminate accounts found to be misused.</li>
+        </ul>
+    </div>
+
+    <div class="policy-section">
+        <h2>8. Intellectual Property</h2>
+        <p>All content on this website — including text, images, logos, and design — is the property of Zivo and may not be reproduced, distributed, or used without written permission.</p>
+    </div>
+
+    <div class="policy-section">
+        <h2>9. Limitation of Liability</h2>
+        <p>Zivo shall not be liable for any indirect, incidental, or consequential damages arising from the use of our website or products. Our total liability in any matter is limited to the amount paid for the relevant order.</p>
+    </div>
+
+    <div class="policy-section">
+        <h2>10. Governing Law</h2>
+        <p>These terms are governed by the laws of India. Any disputes shall be subject to the exclusive jurisdiction of the courts in India.</p>
+    </div>
+
+    <div class="policy-section">
+        <h2>11. Changes to These Terms</h2>
+        <p>We reserve the right to update these Terms &amp; Conditions at any time. Continued use of the website after changes constitutes acceptance of the revised terms.</p>
+    </div>
+
+    <div class="policy-section">
+        <h2>12. Contact</h2>
+        <p>For any questions about these terms, contact us at <a href="mailto:support@thezivo.com" style="color:#8b5cf6;text-decoration:none;">support@thezivo.com</a> or visit our <a href="{% url 'contact_us' %}" style="color:#8b5cf6;text-decoration:none;">Contact Us</a> page.</p>
+    </div>
+</div>
+{% endblock %}
