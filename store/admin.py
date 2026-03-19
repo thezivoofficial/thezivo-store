@@ -977,34 +977,55 @@ class ReturnRequestAdmin(ModelAdmin):
         )
     display_status.short_description = "Status"
 
+    def save_model(self, request, obj, form, change):
+        """Send email whenever status changes via manual save in detail view."""
+        if change and "status" in form.changed_data:
+            super().save_model(request, obj, form, change)
+            from .views import _send_return_email
+            if obj.status == "APPROVED":
+                _send_return_email(obj, "return_update.html", f"Return Request #{obj.id} Approved — Zivo")
+            elif obj.status == "REJECTED":
+                _send_return_email(obj, "return_update.html", f"Return Request #{obj.id} Update — Zivo")
+            elif obj.status == "REFUND_PROCESSED":
+                _send_return_email(obj, "return_update.html", f"Refund Processed for Return #{obj.id} — Zivo")
+        else:
+            super().save_model(request, obj, form, change)
+
     @admin.action(description="Approve selected return requests")
     def action_approve(self, request, queryset):
-        updated = queryset.filter(status="REQUESTED").update(status="APPROVED")
-        for rr in queryset.filter(status="APPROVED"):
-            from .views import _send_return_email
+        from .views import _send_return_email
+        updated = 0
+        for rr in queryset.exclude(status="APPROVED"):
+            rr.status = "APPROVED"
+            rr.save()
             _send_return_email(rr, "return_update.html", f"Return Request #{rr.id} Approved — Zivo")
+            updated += 1
         self.message_user(request, f"{updated} return request(s) approved.")
 
     @admin.action(description="Reject selected return requests")
     def action_reject(self, request, queryset):
-        updated = queryset.filter(status="REQUESTED").update(status="REJECTED")
-        for rr in queryset.filter(status="REJECTED"):
-            from .views import _send_return_email
+        from .views import _send_return_email
+        updated = 0
+        for rr in queryset.exclude(status="REJECTED"):
+            rr.status = "REJECTED"
+            rr.save()
             _send_return_email(rr, "return_update.html", f"Return Request #{rr.id} Update — Zivo")
+            updated += 1
         self.message_user(request, f"{updated} return request(s) rejected.")
 
     @admin.action(description="Mark refund processed (online orders via Razorpay)")
     def action_process_refund(self, request, queryset):
         import razorpay
+        from .views import _send_return_email
         client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
-        for rr in queryset.filter(status="APPROVED"):
+        for rr in queryset.exclude(status="REFUND_PROCESSED"):
             order = rr.order
             refund_amount = rr.refund_amount or order.total_amount
             if order.payment_method == "ONLINE" and order.razorpay_payment_id:
                 try:
                     resp = client.payment.refund(order.razorpay_payment_id, {
                         "amount": int(refund_amount * 100),  # paise
-                        "speed": "optimum",  # instant refund, falls back to normal
+                        "speed": "optimum",
                         "notes": {"return_request_id": str(rr.id)},
                     })
                     rr.razorpay_refund_id = resp.get("id", "")
@@ -1014,6 +1035,5 @@ class ReturnRequestAdmin(ModelAdmin):
             rr.status = "REFUND_PROCESSED"
             rr.refund_amount = refund_amount
             rr.save()
-            from .views import _send_return_email
             _send_return_email(rr, "return_update.html", f"Refund Processed for Return #{rr.id} — Zivo")
         self.message_user(request, "Refund(s) processed.")
