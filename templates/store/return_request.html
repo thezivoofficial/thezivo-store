@@ -18,65 +18,95 @@
     .back-link:hover { color: #111; }
     .return-card {
         background: #fff; border-radius: 16px;
-        padding: 32px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        padding: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
         margin-bottom: 20px;
     }
     .return-card h2 {
-        font-size: 1.25rem; font-weight: 700; color: #111; margin: 0 0 6px;
+        font-size: 1.2rem; font-weight: 700; color: #111; margin: 0 0 4px;
     }
-    .return-card .sub { font-size: 0.83rem; color: #888; margin-bottom: 24px; }
+    .return-card .sub { font-size: 0.83rem; color: #888; margin-bottom: 20px; }
     .section-label {
-        font-size: 0.78rem; font-weight: 600; color: #6b7280;
-        text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 14px;
+        font-size: 0.75rem; font-weight: 600; color: #6b7280;
+        text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px;
     }
+
+    /* Item row — stacks nicely on mobile */
     .item-row {
-        display: flex; align-items: center; gap: 14px;
-        padding: 14px 0; border-bottom: 1px solid #f0f0f0;
+        display: grid;
+        grid-template-columns: 56px 1fr auto;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 0;
+        border-bottom: 1px solid #f0f0f0;
     }
     .item-row:last-child { border-bottom: none; }
     .item-img {
-        width: 58px; height: 58px; object-fit: cover;
-        border-radius: 8px; background: #f3f4f6; flex-shrink: 0;
+        width: 56px; height: 56px; object-fit: cover;
+        border-radius: 8px; background: #f3f4f6;
     }
-    .item-info { flex: 1; }
-    .item-name { font-size: 0.9rem; font-weight: 600; color: #111; }
-    .item-meta { font-size: 0.78rem; color: #888; margin-top: 2px; }
-    .item-qty-select {
-        display: flex; align-items: center; gap: 8px;
+    .item-info { min-width: 0; }
+    .item-name {
+        font-size: 0.88rem; font-weight: 600; color: #111;
+        white-space: normal; word-break: break-word;
+        line-height: 1.3;
     }
-    .item-qty-select label { font-size: 0.8rem; color: #555; white-space: nowrap; }
-    .item-qty-select input[type=number] {
-        width: 64px; border: 1px solid #e5e7eb; border-radius: 8px;
-        padding: 6px 10px; font-size: 0.85rem; color: #111;
+    .item-meta {
+        font-size: 0.75rem; color: #888; margin-top: 4px;
+        display: flex; flex-wrap: wrap; gap: 4px 8px;
+        line-height: 1.4;
+    }
+    .item-meta span { white-space: nowrap; }
+    .item-qty-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .item-qty-wrap label { font-size: 0.72rem; color: #888; white-space: nowrap; }
+    .item-qty-wrap input[type=number] {
+        width: 52px; border: 1px solid #e5e7eb; border-radius: 8px;
+        padding: 6px 4px; font-size: 0.85rem; color: #111;
         background: #f9fafb; text-align: center;
     }
+
     .form-group { margin-bottom: 20px; }
     .form-group label {
         display: block; font-size: 0.83rem; font-weight: 600;
         color: #374151; margin-bottom: 8px;
     }
-    .form-group select,
-    .form-group textarea {
+    .form-input {
         width: 100%; border: 1px solid #e5e7eb; border-radius: 10px;
         padding: 12px 14px; font-size: 0.9rem; color: #111;
         background: #fafafa; font-family: inherit;
         transition: border-color 0.15s; box-sizing: border-box;
     }
-    .form-group select:focus,
-    .form-group textarea:focus {
-        outline: none; border-color: #7c3aed;
-        background: #fff;
+    .form-input:focus { outline: none; border-color: #7c3aed; background: #fff; }
+    .form-group select { width: 100%; border: 1px solid #e5e7eb; border-radius: 10px;
+        padding: 12px 14px; font-size: 0.9rem; color: #111;
+        background: #fafafa; font-family: inherit;
+        transition: border-color 0.15s; box-sizing: border-box; }
+    .form-group select:focus { outline: none; border-color: #7c3aed; background: #fff; }
+    .form-group textarea {
+        width: 100%; border: 1px solid #e5e7eb; border-radius: 10px;
+        padding: 12px 14px; font-size: 0.9rem; color: #111;
+        background: #fafafa; font-family: inherit; resize: vertical; min-height: 90px;
+        transition: border-color 0.15s; box-sizing: border-box;
     }
-    .form-group textarea { resize: vertical; min-height: 90px; }
+    .form-group textarea:focus { outline: none; border-color: #7c3aed; background: #fff; }
+
+    .field-hint { font-size: 0.76rem; color: #6b7280; margin-top: 5px; }
+    .field-status { font-size: 0.8rem; margin-top: 6px; display: none; }
+
     .btn-submit {
         width: 100%; padding: 14px; background: #7c3aed; color: #fff;
         border: none; border-radius: 12px; font-size: 1rem; font-weight: 600;
         cursor: pointer; transition: background 0.15s;
     }
-    .btn-submit:hover { background: #6d28d9; }
+    .btn-submit:hover:not(:disabled) { background: #6d28d9; }
+    .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
     .alert-error {
         background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px;
         padding: 12px 16px; color: #c62828; font-size: 0.85rem; margin-bottom: 20px;
+    }
+
+    @media (max-width: 420px) {
+        .return-card { padding: 18px 16px; }
+        .return-page { padding: 28px 0 60px; }
     }
 </style>
 
@@ -99,6 +129,7 @@
     <form method="post" enctype="multipart/form-data">
       {% csrf_token %}
 
+      <!-- Items -->
       <div class="return-card">
         <h2>Request Return</h2>
         <div class="sub">Order #{{ order.id }} &nbsp;·&nbsp; Select items and reason below</div>
@@ -116,18 +147,20 @@
           <div class="item-info">
             <div class="item-name">{{ item.sku.product.name }}</div>
             <div class="item-meta">
-              Size: {{ item.sku.size }} &nbsp;|&nbsp; Color: {{ item.sku.color }}
-              &nbsp;|&nbsp; ₹{{ item.price }} × {{ item.quantity }}
+              <span>Size: {{ item.sku.size }}</span>
+              <span>Color: {{ item.sku.color }}</span>
+              <span>₹{{ item.price }} × {{ item.quantity }}</span>
             </div>
           </div>
-          <div class="item-qty-select">
-            <label>Qty:</label>
+          <div class="item-qty-wrap">
+            <label>Qty</label>
             <input type="number" name="qty_{{ item.id }}" value="0" min="0" max="{{ item.quantity }}">
           </div>
         </div>
         {% endfor %}
       </div>
 
+      <!-- Reason & Video -->
       <div class="return-card">
         <div class="form-group">
           <label>Reason for Return</label>
@@ -144,19 +177,14 @@
         </div>
         <div class="form-group">
           <label>Unboxing Video <span style="color:#c62828;">*</span></label>
-          <input type="file" id="videoFile" accept="video/*"
-                 style="width:100%;border:1px solid #e5e7eb;border-radius:10px;padding:10px 14px;font-size:0.88rem;background:#fafafa;box-sizing:border-box;">
-          <div style="font-size:0.76rem;color:#6b7280;margin-top:6px;">
-            Upload a video showing the package being opened. This is required to process your return. (MP4, MOV, etc.)
-          </div>
-          <!-- Upload progress -->
+          <input type="file" id="videoFile" accept="video/*" class="form-input" style="padding:10px 14px;">
+          <div class="field-hint">Upload a video showing the package being opened. Required to process your return. (MP4, MOV, etc.)</div>
           <div id="uploadStatus" style="display:none;margin-top:10px;">
             <div style="height:6px;background:#e5e7eb;border-radius:4px;overflow:hidden;">
               <div id="uploadBar" style="height:100%;width:0%;background:#7c3aed;transition:width 0.2s;"></div>
             </div>
             <div id="uploadText" style="font-size:0.78rem;color:#7c3aed;margin-top:6px;">Uploading…</div>
           </div>
-          <!-- Hidden field to store the Cloudinary URL after upload -->
           <input type="hidden" name="unboxing_video_url" id="videoUrl">
         </div>
 
@@ -181,35 +209,39 @@
         </div>
 
         <!-- UPI fields -->
-        <div id="upi-fields" class="form-group" style="display:none;">
-          <label>UPI ID <span style="color:#c62828;">*</span></label>
-          <input type="text" name="upi_id" id="upiIdInput" placeholder="yourname@upi"
-                 style="width:100%;border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;font-size:0.9rem;background:#fafafa;box-sizing:border-box;">
-          <div style="font-size:0.76rem;color:#6b7280;margin-top:5px;">e.g. 9876543210@ybl or name@paytm</div>
-          <div id="upiStatus" style="font-size:0.8rem;margin-top:6px;display:none;"></div>
+        <div id="upi-fields" style="display:none;">
+          <div class="form-group">
+            <label>UPI ID <span style="color:#c62828;">*</span></label>
+            <input type="text" name="upi_id" id="upiIdInput" placeholder="yourname@upi" class="form-input">
+            <div class="field-hint">e.g. 9876543210@ybl or name@paytm</div>
+            <div id="upiStatus" class="field-status"></div>
+          </div>
+          <div class="form-group">
+            <label>Re-enter UPI ID to Confirm <span style="color:#c62828;">*</span></label>
+            <input type="text" name="upi_id_confirm" id="upiConfirmInput" placeholder="yourname@upi" class="form-input">
+            <div class="field-hint">Please re-type your UPI ID to avoid typos — refunds sent to wrong IDs cannot be recovered.</div>
+            <div id="upiConfirmStatus" class="field-status"></div>
+          </div>
         </div>
 
         <!-- Bank account fields -->
         <div id="bank-fields" style="display:none;">
           <div class="form-group">
             <label>Account Holder Name <span style="color:#c62828;">*</span></label>
-            <input type="text" name="bank_account_name" placeholder="As per bank records"
-                   style="width:100%;border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;font-size:0.9rem;background:#fafafa;box-sizing:border-box;">
+            <input type="text" name="bank_account_name" placeholder="As per bank records" class="form-input">
           </div>
           <div class="form-group">
             <label>Account Number <span style="color:#c62828;">*</span></label>
-            <input type="text" name="bank_account_number" placeholder="Enter account number"
-                   style="width:100%;border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;font-size:0.9rem;background:#fafafa;box-sizing:border-box;">
+            <input type="text" name="bank_account_number" placeholder="Enter account number" class="form-input">
           </div>
           <div class="form-group">
             <label>IFSC Code <span style="color:#c62828;">*</span></label>
-            <input type="text" name="bank_ifsc" placeholder="e.g. SBIN0001234"
-                   style="width:100%;border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;font-size:0.9rem;background:#fafafa;box-sizing:border-box;text-transform:uppercase;">
+            <input type="text" name="bank_ifsc" placeholder="e.g. SBIN0001234" class="form-input" style="text-transform:uppercase;">
           </div>
         </div>
         {% endif %}
 
-        <button type="submit" id="submitBtn" class="btn-submit" disabled style="opacity:0.5;cursor:not-allowed;">
+        <button type="submit" id="submitBtn" class="btn-submit" disabled>
           Select a video to continue
         </button>
       </div>
@@ -221,18 +253,17 @@
 const CLOUD_NAME    = "{{ cloudinary_cloud_name }}";
 const UPLOAD_PRESET = "{{ cloudinary_upload_preset }}";
 
-const videoFile   = document.getElementById('videoFile');
+const videoFile    = document.getElementById('videoFile');
 const uploadStatus = document.getElementById('uploadStatus');
-const uploadBar   = document.getElementById('uploadBar');
-const uploadText  = document.getElementById('uploadText');
-const videoUrl    = document.getElementById('videoUrl');
-const submitBtn   = document.getElementById('submitBtn');
+const uploadBar    = document.getElementById('uploadBar');
+const uploadText   = document.getElementById('uploadText');
+const videoUrl     = document.getElementById('videoUrl');
+const submitBtn    = document.getElementById('submitBtn');
 
 videoFile.addEventListener('change', function() {
   const file = this.files[0];
   if (!file) return;
 
-  // Start upload immediately on file select
   const formData = new FormData();
   formData.append('file', file);
   formData.append('upload_preset', UPLOAD_PRESET);
@@ -240,8 +271,6 @@ videoFile.addEventListener('change', function() {
 
   uploadStatus.style.display = 'block';
   submitBtn.disabled = true;
-  submitBtn.style.opacity = '0.5';
-  submitBtn.style.cursor = 'not-allowed';
   submitBtn.textContent = 'Uploading video…';
 
   const xhr = new XMLHttpRequest();
@@ -263,8 +292,6 @@ videoFile.addEventListener('change', function() {
       uploadText.textContent = '✓ Video uploaded successfully';
       uploadText.style.color = '#16a34a';
       submitBtn.disabled = false;
-      submitBtn.style.opacity = '1';
-      submitBtn.style.cursor = 'pointer';
       submitBtn.textContent = 'Submit Return Request';
     } else {
       uploadText.textContent = '✕ Upload failed. Please try again.';
@@ -287,74 +314,126 @@ videoFile.addEventListener('change', function() {
 
 // Toggle UPI / Bank fields
 function toggleRefundFields() {
-  const upi = document.getElementById('refund_upi');
+  const upi  = document.getElementById('refund_upi');
   const bank = document.getElementById('refund_bank');
-  const upiFields = document.getElementById('upi-fields');
+  const upiFields  = document.getElementById('upi-fields');
   const bankFields = document.getElementById('bank-fields');
-  const upiLabel = document.getElementById('upi-label');
-  const bankLabel = document.getElementById('bank-label');
+  const upiLabel   = document.getElementById('upi-label');
+  const bankLabel  = document.getElementById('bank-label');
   if (!upi) return;
-
-  if (upi && upi.checked) {
-    upiFields.style.display = 'block';
+  if (upi.checked) {
+    upiFields.style.display  = 'block';
     bankFields.style.display = 'none';
-    upiLabel.style.borderColor = '#7c3aed';
+    upiLabel.style.borderColor  = '#7c3aed';
     bankLabel.style.borderColor = '#e5e7eb';
   } else if (bank && bank.checked) {
-    upiFields.style.display = 'none';
+    upiFields.style.display  = 'none';
     bankFields.style.display = 'block';
     bankLabel.style.borderColor = '#7c3aed';
-    upiLabel.style.borderColor = '#e5e7eb';
+    upiLabel.style.borderColor  = '#e5e7eb';
   }
 }
 
 // UPI validation
-let upiValid = false;
-const upiInput = document.getElementById('upiIdInput');
-const upiStatus = document.getElementById('upiStatus');
+let upiFormatValid   = false;
+let upiConfirmMatch  = false;
 
-function showUpiStatus(msg, color) {
-  upiStatus.textContent = msg;
-  upiStatus.style.color = color;
-  upiStatus.style.display = 'block';
-  upiInput.style.borderColor = color === '#16a34a' ? '#16a34a' : (color === '#c62828' ? '#f87171' : '#e5e7eb');
+const upiInput         = document.getElementById('upiIdInput');
+const upiStatus        = document.getElementById('upiStatus');
+const upiConfirmInput  = document.getElementById('upiConfirmInput');
+const upiConfirmStatus = document.getElementById('upiConfirmStatus');
+
+function setStatus(el, msg, color) {
+  if (!el) return;
+  el.textContent = msg;
+  el.style.color = color;
+  el.style.display = msg ? 'block' : 'none';
+}
+
+function setBorder(el, color) {
+  if (el) el.style.borderColor = color;
+}
+
+function validateUpiFormat(val) {
+  if (!val) return false;
+  const parts = val.toLowerCase().split('@');
+  if (parts.length !== 2) return false;
+  const KNOWN_HANDLES = new Set([
+    'ybl','ibl','axl',
+    'okaxis','oksbi','okhdfcbank','okicici',
+    'paytm','pthdfc','ptaxis','ptyes','ptkotak',
+    'apl','upi','bhim',
+    'sbi','icici','hdfcbank','axisbank','kotak','pnb','boi','bob',
+    'unionbank','indus','aubank','idfc','idfcbank','rbl','jsb',
+    'federal','fbl','kvb','tmb','dcb','dlb','scb','lvb',
+    'cnrb','uboi','ubi','vijb','mahb','barodampay','dbs',
+    'idbi','cbi','jkb','sbm','nsdl','hsbc','citi',
+    'abfspay','jupiteraxis','fi','slice','niyox','timecosmos',
+    'juspay','naviaxis','postbank','freecharge','mobikwik',
+    'airtel','airtelpaymentsbank','fino','equitas','esaf',
+    'suryoday','utbi','ujjivan',
+  ]);
+  const [local, handle] = parts;
+  if (!local || !/^[a-zA-Z0-9.\-_]+$/.test(local)) return false;
+  return KNOWN_HANDLES.has(handle);
 }
 
 if (upiInput) {
   upiInput.addEventListener('blur', function() {
     const val = this.value.trim();
-    if (!val) { upiStatus.style.display = 'none'; upiValid = false; return; }
-    showUpiStatus('Verifying…', '#7c3aed');
-    upiValid = false;
-    const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    fetch('/validate-upi/', {
-      method: 'POST',
-      headers: {'X-CSRFToken': csrf, 'Content-Type': 'application/x-www-form-urlencoded'},
-      body: 'upi_id=' + encodeURIComponent(val)
-    }).then(r => r.json()).then(d => {
-      if (d.valid) {
-        upiValid = true;
-        showUpiStatus('✓ Verified: ' + (d.name || val), '#16a34a');
-      } else {
-        upiValid = false;
-        showUpiStatus('✕ ' + (d.error || 'Invalid UPI ID'), '#c62828');
-      }
-    }).catch(() => {
-      // Network error — allow form submission
-      upiValid = true;
-      showUpiStatus('Could not verify — please double-check your UPI ID', '#92400e');
-    });
+    if (!val) { setStatus(upiStatus, '', ''); setBorder(upiInput, '#e5e7eb'); upiFormatValid = false; return; }
+    if (validateUpiFormat(val)) {
+      upiFormatValid = true;
+      setStatus(upiStatus, '✓ Looks valid', '#16a34a');
+      setBorder(upiInput, '#16a34a');
+    } else {
+      upiFormatValid = false;
+      const handle = val.includes('@') ? val.split('@')[1] : '';
+      const msg = handle && handle.length > 0
+        ? `Unrecognised UPI handle '@${handle}'. Please check and try again.`
+        : 'Invalid UPI ID. Use format: name@upi or number@bank';
+      setStatus(upiStatus, '✕ ' + msg, '#c62828');
+      setBorder(upiInput, '#f87171');
+    }
+    // Re-check confirm field if already filled
+    if (upiConfirmInput && upiConfirmInput.value.trim()) checkConfirm();
   });
 
-  // Re-validate if user edits after blur
   upiInput.addEventListener('input', function() {
-    upiValid = false;
-    upiStatus.style.display = 'none';
-    upiInput.style.borderColor = '#e5e7eb';
+    upiFormatValid = false;
+    setStatus(upiStatus, '', '');
+    setBorder(upiInput, '#e5e7eb');
+    upiConfirmMatch = false;
+    setStatus(upiConfirmStatus, '', '');
+    setBorder(upiConfirmInput, '#e5e7eb');
   });
 }
 
-// Validate items before submit
+function checkConfirm() {
+  const val     = upiInput ? upiInput.value.trim() : '';
+  const confirm = upiConfirmInput ? upiConfirmInput.value.trim() : '';
+  if (!confirm) { setStatus(upiConfirmStatus, '', ''); upiConfirmMatch = false; return; }
+  if (val.toLowerCase() === confirm.toLowerCase()) {
+    upiConfirmMatch = true;
+    setStatus(upiConfirmStatus, '✓ UPI IDs match', '#16a34a');
+    setBorder(upiConfirmInput, '#16a34a');
+  } else {
+    upiConfirmMatch = false;
+    setStatus(upiConfirmStatus, '✕ UPI IDs do not match', '#c62828');
+    setBorder(upiConfirmInput, '#f87171');
+  }
+}
+
+if (upiConfirmInput) {
+  upiConfirmInput.addEventListener('blur', checkConfirm);
+  upiConfirmInput.addEventListener('input', function() {
+    upiConfirmMatch = false;
+    setStatus(upiConfirmStatus, '', '');
+    setBorder(upiConfirmInput, '#e5e7eb');
+  });
+}
+
+// Form submit validation
 document.querySelector('form').addEventListener('submit', function(e) {
   const inputs = document.querySelectorAll('input[name^="qty_"]');
   const anySelected = Array.from(inputs).some(i => parseInt(i.value) > 0);
@@ -368,19 +447,29 @@ document.querySelector('form').addEventListener('submit', function(e) {
     alert('Please wait for the video to finish uploading.');
     return;
   }
-  // Validate refund method for COD
   const refundUpi = document.getElementById('refund_upi');
-  if (refundUpi !== null) { // COD order
+  if (refundUpi !== null) {
     const refundBank = document.getElementById('refund_bank');
     if (!refundUpi.checked && !refundBank.checked) {
       e.preventDefault();
       alert('Please select a refund method.');
       return;
     }
-    if (refundUpi.checked && !upiValid) {
-      e.preventDefault();
-      if (upiInput) upiInput.focus();
-      showUpiStatus('Please enter and verify a valid UPI ID before submitting.', '#c62828');
+    if (refundUpi.checked) {
+      if (!upiFormatValid) {
+        e.preventDefault();
+        if (upiInput) upiInput.focus();
+        setStatus(upiStatus, 'Please enter a valid UPI ID.', '#c62828');
+        setBorder(upiInput, '#f87171');
+        return;
+      }
+      if (!upiConfirmMatch) {
+        e.preventDefault();
+        if (upiConfirmInput) upiConfirmInput.focus();
+        setStatus(upiConfirmStatus, 'Please re-enter your UPI ID to confirm.', '#c62828');
+        setBorder(upiConfirmInput, '#f87171');
+        return;
+      }
     }
   }
 });
