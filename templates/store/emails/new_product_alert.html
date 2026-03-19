@@ -28,9 +28,9 @@
           <tr valign="top">
 
             <!-- IMAGE -->
-            {% if product.image %}
+            {% if product.image_url %}
             <td width="140" style="padding-right:20px;">
-              <img src="{{ product.image.url }}" alt="{{ product.name }}"
+              <img src="{{ product.image_url }}" alt="{{ product.name }}"
                    width="140" height="175"
                    style="width:140px;height:175px;object-fit:cover;border-radius:10px;display:block;border:1px solid #ececec;">
             </td>
@@ -39,21 +39,19 @@
             <!-- INFO -->
             <td style="vertical-align:top;">
               <div style="font-size:0.65rem;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#aaa;margin-bottom:6px;">
-                {{ product.category }} &nbsp;·&nbsp; {{ product.get_gender_display }}
+                {{ product.category }} &nbsp;·&nbsp; {{ product.gender }}
               </div>
               <div style="font-size:1.05rem;font-weight:700;color:#111;line-height:1.35;margin-bottom:10px;">
                 {{ product.name }}
               </div>
-              {% with product.sku_set.first as sku %}
-              {% if sku %}
+              {% if product.selling_price %}
               <div style="margin-bottom:16px;">
-                <span style="font-size:1.1rem;font-weight:800;color:#111;">₹{{ sku.selling_price }}</span>
-                {% if sku.mrp > sku.selling_price %}
-                <span style="font-size:0.8rem;color:#bbb;text-decoration:line-through;margin-left:8px;">₹{{ sku.mrp }}</span>
+                <span style="font-size:1.1rem;font-weight:800;color:#111;">₹{{ product.selling_price }}</span>
+                {% if product.mrp and product.mrp > product.selling_price %}
+                <span style="font-size:0.8rem;color:#bbb;text-decoration:line-through;margin-left:8px;">₹{{ product.mrp }}</span>
                 {% endif %}
               </div>
               {% endif %}
-              {% endwith %}
               <a href="{{ product_url }}"
                  style="display:inline-block;background:#111;color:#fff;font-size:0.78rem;font-weight:700;
                         padding:10px 22px;border-radius:6px;text-decoration:none;letter-spacing:0.5px;text-transform:uppercase;">

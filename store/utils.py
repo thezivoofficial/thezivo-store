@@ -179,28 +179,44 @@ def calculate_delivery_and_final(subtotal):
 
 
 def send_new_product_alert(product):
-    """Email all active newsletter subscribers about a newly added product."""
+    """Email all active newsletter subscribers about a newly added product.
+    Runs entirely after DB commit so the save button returns instantly."""
     import threading
+    from django.db import transaction
     from django.template.loader import render_to_string
-    from .models import NewsletterSubscriber
 
-    subscribers = list(
-        NewsletterSubscriber.objects.filter(is_active=True).values_list("email", "token")
-    )
-    if not subscribers:
-        return
+    # Capture primitives now — don't hold a DB connection in the thread
+    product_id   = product.id
+    product_name = product.name
+    image_url    = product.image.url if product.image else None
+    category     = str(product.category)
+    gender       = product.get_gender_display()
+    sku          = product.sku_set.first()
+    subject      = f"New Arrival: {product_name} | Zivo"
+    product_url  = f"{settings.SITE_URL}/product/{product_id}/"
 
-    subject = f"New Arrival: {product.name} | Zivo"
-    product_url = f"{settings.SITE_URL}/product/{product.id}/"
+    # Build a lightweight dict so the template doesn't need the ORM object
+    product_ctx = {
+        "id": product_id, "name": product_name, "image_url": image_url,
+        "category": category, "gender": gender,
+        "selling_price": sku.selling_price if sku else None,
+        "mrp": sku.mrp if sku else None,
+    }
 
     def _send():
         try:
+            from .models import NewsletterSubscriber
             from brevo import Brevo, SendTransacEmailRequestToItem, SendTransacEmailRequestSender
+            subscribers = list(
+                NewsletterSubscriber.objects.filter(is_active=True).values_list("email", "token")
+            )
+            if not subscribers:
+                return
             client = Brevo(api_key=settings.BREVO_API_KEY)
             sender = SendTransacEmailRequestSender(email=settings.DEFAULT_FROM_EMAIL, name="Zivo")
             for email, token in subscribers:
                 html = render_to_string("store/emails/new_product_alert.html", {
-                    "product": product,
+                    "product": product_ctx,
                     "store_name": "Zivo",
                     "site_url": settings.SITE_URL,
                     "product_url": product_url,
@@ -216,9 +232,10 @@ def send_new_product_alert(product):
                 except Exception as e:
                     print(f"[EMAIL ERROR] Failed to send to {email}: {e}")
         except Exception as e:
-            print(f"[EMAIL ERROR] New product alert failed for product {product.id}: {e}")
+            print(f"[EMAIL ERROR] New product alert failed for product {product_id}: {e}")
 
-    threading.Thread(target=_send, daemon=False).start()
+    # Start thread only after the transaction commits (save button returns instantly)
+    transaction.on_commit(lambda: threading.Thread(target=_send, daemon=False).start())
 
 
 def send_whatsapp(phone, message):
