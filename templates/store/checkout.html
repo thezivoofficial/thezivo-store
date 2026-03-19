@@ -727,6 +727,13 @@
                             <span>₹{{ total }}</span>
                         </div>
 
+                        {% for ol in offer_lines %}
+                        <div class="totals-row" style="color:#2e7d32; font-size:0.82rem;">
+                            <span>🎁 {{ ol.label }}</span>
+                            <span>-₹{{ ol.discount }}</span>
+                        </div>
+                        {% endfor %}
+
                         {% if coupon_discount > 0 %}
                         <div class="totals-row" id="discount-line" style="color:#2e7d32;">
                             <span>Discount</span>

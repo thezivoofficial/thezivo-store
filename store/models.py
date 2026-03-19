@@ -247,7 +247,8 @@ class Order(models.Model):
     razorpay_signature = models.CharField(max_length=200, blank=True, null=True)
 
     coupon          = models.ForeignKey('Coupon', null=True, blank=True, on_delete=models.SET_NULL)
-    discount_amount = models.PositiveIntegerField(default=0)
+    discount_amount = models.PositiveIntegerField(default=0)   # coupon discount
+    offer_discount  = models.PositiveIntegerField(default=0)   # auto-offer discount
 
     confirmation_email_sent = models.BooleanField(default=False)
     shipped_email_sent      = models.BooleanField(default=False)
@@ -432,6 +433,90 @@ class Coupon(models.Model):
 
     def __str__(self):
         return f"{self.code} (₹{self.discount_amount} off)"
+
+
+class Offer(models.Model):
+    """Auto-applied promotions — no promo code needed. Applied at cart/checkout automatically."""
+
+    PERCENTAGE  = 'PERCENTAGE'
+    BOGO        = 'BOGO'
+    BUY_X_GET_Y = 'BUY_X_GET_Y'
+    MIN_QTY     = 'MIN_QTY'
+
+    OFFER_TYPES = [
+        (PERCENTAGE,  'Percentage Discount — X% off matching items'),
+        (BOGO,        'Buy 1 Get 1 Free — cheapest matching item is free'),
+        (BUY_X_GET_Y, 'Buy X Get Y — buy X, get Y items at a discount'),
+        (MIN_QTY,     'Minimum Quantity — buy min qty, get X% off'),
+    ]
+
+    name        = models.CharField(max_length=100)
+    offer_type  = models.CharField(max_length=20, choices=OFFER_TYPES)
+    description = models.CharField(
+        max_length=255, blank=True,
+        help_text="Short label shown to the customer on cart and checkout pages. "
+                  "Leave blank to use the offer name.",
+    )
+    is_active  = models.BooleanField(default=True)
+    valid_from = models.DateField(null=True, blank=True)
+    valid_to   = models.DateField(null=True, blank=True)
+
+    # ── PERCENTAGE / MIN_QTY ───────────────────────────────────────────
+    discount_percent = models.PositiveIntegerField(
+        default=0,
+        help_text="Discount % (1–100). Used for Percentage and Min Quantity offer types.",
+    )
+
+    # ── BUY_X_GET_Y ───────────────────────────────────────────────────
+    buy_quantity = models.PositiveIntegerField(
+        default=1,
+        help_text="Number of items the customer must buy. (BUY X GET Y only)",
+    )
+    get_quantity = models.PositiveIntegerField(
+        default=1,
+        help_text="Number of items the customer gets at a discount. (BUY X GET Y only)",
+    )
+    get_discount_percent = models.PositiveIntegerField(
+        default=100,
+        help_text="Discount % on the 'get' items — 100 means completely free. (BUY X GET Y only)",
+    )
+
+    # ── MIN_QTY ───────────────────────────────────────────────────────
+    min_quantity = models.PositiveIntegerField(
+        default=2,
+        help_text="Minimum number of matching items needed to trigger the discount. (Min Quantity only)",
+    )
+
+    # ── Scope — both empty = entire cart ──────────────────────────────
+    applicable_products   = models.ManyToManyField(
+        'Product', blank=True, related_name='offers',
+        verbose_name="Applicable Products",
+        help_text="Restrict this offer to specific products. Leave empty to apply to all.",
+    )
+    applicable_categories = models.ManyToManyField(
+        'Category', blank=True, related_name='offers',
+        verbose_name="Applicable Categories",
+        help_text="Restrict this offer to specific categories. Leave empty to apply to all.",
+    )
+
+    class Meta:
+        ordering = ['name']
+        verbose_name = "Offer"
+        verbose_name_plural = "Offers"
+
+    def __str__(self):
+        return self.name
+
+    def is_valid(self):
+        from django.utils import timezone
+        today = timezone.localdate()
+        if not self.is_active:
+            return False
+        if self.valid_from and today < self.valid_from:
+            return False
+        if self.valid_to and today > self.valid_to:
+            return False
+        return True
 
 
 class Review(models.Model):

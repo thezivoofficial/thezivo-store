@@ -5,6 +5,15 @@
     <span id="cart-subtotal" style="font-size:0.82rem; font-weight:600; color:#111;">₹{{ cart_subtotal }}</span>
 </div>
 
+{% if offer_discount %}
+{% for ol in offer_lines %}
+<div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+    <span style="font-size:0.80rem; color:#2e7d32;">🎁 {{ ol.label }}</span>
+    <span style="font-size:0.80rem; font-weight:600; color:#2e7d32;">-₹{{ ol.discount }}</span>
+</div>
+{% endfor %}
+{% endif %}
+
 <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
     <span style="font-size:0.82rem; color:#888;">Delivery</span>
     <span style="font-size:0.82rem; font-weight:600;">

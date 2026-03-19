@@ -11,7 +11,7 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import path, reverse
 from django.utils.html import format_html
 from unfold.admin import ModelAdmin, TabularInline
-from .models import Product, SKU, Order, OrderItem, StockNotification, ProductImage, Address, Customer, SiteSettings, Coupon, Review, Announcement, Category
+from .models import Product, SKU, Order, OrderItem, StockNotification, ProductImage, Address, Customer, SiteSettings, Coupon, Review, Announcement, Category, Offer
 from .utils import send_whatsapp, send_order_email
 from django.conf import settings
 
@@ -798,6 +798,67 @@ class CouponAdmin(ModelAdmin):
     list_filter = ("is_active", "one_per_customer")
     search_fields = ("code",)
     list_editable = ("is_active",)
+
+
+# ── Offer ─────────────────────────────────────────────────────────────────────
+
+@admin.register(Offer)
+class OfferAdmin(ModelAdmin):
+    list_display  = ("name", "offer_type", "discount_summary", "scope_summary", "is_active", "valid_from", "valid_to")
+    list_filter   = ("offer_type", "is_active")
+    list_editable = ("is_active",)
+    search_fields = ("name", "description")
+    filter_horizontal = ("applicable_products", "applicable_categories")
+
+    fieldsets = (
+        ("Offer Details", {
+            "fields": ("name", "offer_type", "description", "is_active", "valid_from", "valid_to"),
+        }),
+        ("Discount Configuration", {
+            "fields": ("discount_percent", "buy_quantity", "get_quantity", "get_discount_percent", "min_quantity"),
+            "description": (
+                "<strong>Percentage / Min Qty:</strong> set <em>Discount %</em>. &nbsp;"
+                "<strong>Buy X Get Y:</strong> set <em>Buy qty</em>, <em>Get qty</em>, <em>Get discount %</em>. &nbsp;"
+                "<strong>BOGO:</strong> no extra config needed. &nbsp;"
+                "<strong>Min Qty:</strong> set <em>Min quantity</em> and <em>Discount %</em>."
+            ),
+        }),
+        ("Scope — leave both empty to apply to the entire cart", {
+            "fields": ("applicable_products", "applicable_categories"),
+        }),
+    )
+
+    def discount_summary(self, obj):
+        t = obj.offer_type
+        if t == "PERCENTAGE":
+            return format_html("<span>{}</span>", f"{obj.discount_percent}% off")
+        if t == "BOGO":
+            return format_html("<span>Buy 1 Get 1 Free</span>")
+        if t == "BUY_X_GET_Y":
+            return format_html(
+                "<span>Buy {} Get {} at {}% off</span>",
+                obj.buy_quantity, obj.get_quantity, obj.get_discount_percent,
+            )
+        if t == "MIN_QTY":
+            return format_html(
+                "<span>Buy {}+, get {}% off</span>",
+                obj.min_quantity, obj.discount_percent,
+            )
+        return "—"
+    discount_summary.short_description = "Discount"
+
+    def scope_summary(self, obj):
+        prods = obj.applicable_products.count()
+        cats  = obj.applicable_categories.count()
+        if not prods and not cats:
+            return "Entire cart"
+        parts = []
+        if prods:
+            parts.append(f"{prods} product{'s' if prods > 1 else ''}")
+        if cats:
+            parts.append(f"{cats} categor{'ies' if cats > 1 else 'y'}")
+        return ", ".join(parts)
+    scope_summary.short_description = "Scope"
 
 
 # ── Announcement ──────────────────────────────────────────────────────────────

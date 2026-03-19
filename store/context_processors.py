@@ -1,6 +1,6 @@
 from django.db import models as db_models
 from .models import SKU, CartItem, WishlistItem, Coupon, Announcement, Category
-from .utils import calculate_delivery_and_final
+from .utils import calculate_delivery_and_final, calculate_offer_discounts
 
 
 def cart_context(request):
@@ -34,12 +34,16 @@ def cart_context(request):
                 continue
         request.session["cart"] = cleaned_cart
 
-    delivery_charge, final_amount, remaining = calculate_delivery_and_final(subtotal)
+    offer_discount, offer_lines = calculate_offer_discounts(items)
+    subtotal_after_offers = max(0, subtotal - offer_discount)
+    delivery_charge, final_amount, remaining = calculate_delivery_and_final(subtotal_after_offers)
 
     return {
         "items": items,
         "cart_count": total_items,
         "cart_subtotal": subtotal,
+        "offer_discount": offer_discount,
+        "offer_lines": offer_lines,
         "cart_total": final_amount,
         "delivery_charge": delivery_charge,
         "free_delivery_remaining": remaining,

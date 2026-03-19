@@ -12,7 +12,7 @@ from django.contrib import messages
 from django.db import transaction
 from .models import Customer
 from .customer_auth import customer_login, customer_logout, customer_login_required
-from .utils import calculate_delivery_and_final
+from .utils import calculate_delivery_and_final, calculate_offer_discounts
 from django.db.models import Exists, OuterRef, Prefetch
 from django.views.decorators.http import require_POST
 
@@ -646,60 +646,35 @@ def update_cart(request):
             "subtotal": item_subtotal
         })
 
-    delivery_charge, final_amount, remaining = calculate_delivery_and_final(subtotal)
+    # ---------------- OFFERS + DELIVERY ----------------
+    offer_discount, offer_lines = calculate_offer_discounts(items)
+    subtotal_after_offers = max(0, subtotal - offer_discount)
+    delivery_charge, final_amount, remaining = calculate_delivery_and_final(subtotal_after_offers)
 
-    # ---------------- AJAX (SIDE CART) ----------------
-    delivery_charge, final_amount, remaining = calculate_delivery_and_final(subtotal)
+    partial_ctx = {
+        "items": items,
+        "cart_subtotal": subtotal,
+        "offer_discount": offer_discount,
+        "offer_lines": offer_lines,
+        "cart_total": final_amount,
+        "delivery_charge": delivery_charge,
+        "free_delivery_remaining": remaining,
+    }
 
-    cart_html = render_to_string(
-        "store/cart_items_partial.html",
-        {"items": items},
-        request=request
-    )
-
-    checkout_html = render_to_string(
-        "store/checkout_items_partial.html",
-        {"items": items},
-        request=request
-    )
-
-    cart_summary = render_to_string(
-        "store/cart_summary_partial.html",
-        {
-            "items": items,
-            "cart_subtotal": subtotal,
-            "cart_total": final_amount,
-            "delivery_charge": delivery_charge,
-            "free_delivery_remaining": remaining,
-        },
-        request=request
-    )
-
-    cart_footer = render_to_string(
-        "store/cart_footer_partial.html",
-        {
-            "items": items,
-            "cart_subtotal": subtotal,
-            "cart_total": final_amount,
-            "delivery_charge": delivery_charge,
-            "free_delivery_remaining": remaining,
-        },
-        request=request
-    )
-
+    cart_html     = render_to_string("store/cart_items_partial.html",    {"items": items},  request=request)
+    checkout_html = render_to_string("store/checkout_items_partial.html", {"items": items}, request=request)
+    cart_summary  = render_to_string("store/cart_summary_partial.html",  partial_ctx,       request=request)
+    cart_footer   = render_to_string("store/cart_footer_partial.html",   partial_ctx,       request=request)
 
     return JsonResponse({
-
         "status": "success",
-
         "cart_html": cart_html,
         "checkout_html": checkout_html,
         "cart_summary": cart_summary,
         "cart_footer": cart_footer,
-
         "cart_count": total_qty,
-
         "cart_subtotal": subtotal,
+        "offer_discount": offer_discount,
         "cart_total": final_amount,
         "delivery_charge": delivery_charge,
         "free_delivery_remaining": remaining,
@@ -753,10 +728,14 @@ def checkout(request):
             "subtotal": subtotal
         })
 
-    # ✅ DELIVERY & FINAL AMOUNT (ON FULL CART TOTAL)
-    delivery_charge, final_amount, remaining = calculate_delivery_and_final(total)
+    # ── Offers (auto-applied, no code required) ──────────────────────────
+    offer_discount, offer_lines = calculate_offer_discounts(items)
+    subtotal_after_offers = max(0, total - offer_discount)
 
-    # ── Coupon ──────────────────────────────────────────────────────────
+    # ── Delivery (on offer-adjusted subtotal) ─────────────────────────
+    delivery_charge, final_amount, remaining = calculate_delivery_and_final(subtotal_after_offers)
+
+    # ── Coupon ───────────────────────────────────────────────────────────
     coupon_session = request.session.get('coupon')
     coupon_discount = 0
     coupon_code_applied = ''
@@ -778,6 +757,8 @@ def checkout(request):
         "cod_enabled": cod_enabled,
         "coupon_discount": coupon_discount,
         "coupon_code_applied": coupon_code_applied,
+        "offer_discount": offer_discount,
+        "offer_lines": offer_lines,
     }
 
     # ---------- POST ----------
@@ -859,6 +840,7 @@ def checkout(request):
                     status="PLACED",
                     coupon=coupon_obj,
                     discount_amount=coupon_discount,
+                    offer_discount=offer_discount,
                 )
 
                 for item in items:
@@ -903,6 +885,7 @@ def checkout(request):
                 status="CREATED",
                 coupon=coupon_obj,
                 discount_amount=coupon_discount,
+                offer_discount=offer_discount,
             )
 
             for item in items:
@@ -1757,12 +1740,19 @@ def cancel_order(request, order_id):
 def apply_coupon(request):
     code = request.POST.get('code', '').strip().upper()
     cart = get_cart(request)
-    subtotal = sum(
-        SKU.objects.get(id=sku_id).selling_price * qty
-        for sku_id, qty in cart.items()
-        if SKU.objects.filter(id=sku_id).exists()
-    )
-    delivery_charge, final_amount, _ = calculate_delivery_and_final(subtotal)
+    items = []
+    subtotal = 0
+    for sku_id, qty in cart.items():
+        try:
+            sku_obj = SKU.objects.get(id=sku_id)
+            subtotal += sku_obj.selling_price * qty
+            items.append({'sku': sku_obj, 'quantity': qty})
+        except SKU.DoesNotExist:
+            continue
+
+    offer_discount, _ = calculate_offer_discounts(items)
+    subtotal_after_offers = max(0, subtotal - offer_discount)
+    _, final_amount, _ = calculate_delivery_and_final(subtotal_after_offers)
 
     try:
         coupon = Coupon.objects.get(code__iexact=code)
@@ -1798,12 +1788,17 @@ def remove_coupon(request):
     request.session.pop('coupon', None)
     request.session.modified = True
     cart = get_cart(request)
-    subtotal = sum(
-        SKU.objects.get(id=sku_id).selling_price * qty
-        for sku_id, qty in cart.items()
-        if SKU.objects.filter(id=sku_id).exists()
-    )
-    _, final_amount, _ = calculate_delivery_and_final(subtotal)
+    items = []
+    subtotal = 0
+    for sku_id, qty in cart.items():
+        try:
+            sku_obj = SKU.objects.get(id=sku_id)
+            subtotal += sku_obj.selling_price * qty
+            items.append({'sku': sku_obj, 'quantity': qty})
+        except SKU.DoesNotExist:
+            continue
+    offer_discount, _ = calculate_offer_discounts(items)
+    _, final_amount, _ = calculate_delivery_and_final(max(0, subtotal - offer_discount))
     return JsonResponse({'status': 'ok', 'final_amount': final_amount})
 
 

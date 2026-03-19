@@ -44,6 +44,125 @@ def send_order_email(order, template_name, subject):
     threading.Thread(target=_send, daemon=False).start()
 
 
+# ─────────────────────────── Offer engine ────────────────────────────────────
+
+def _get_active_offers():
+    from django.db.models import Q
+    from django.utils import timezone
+    from .models import Offer
+    today = timezone.localdate()
+    return (
+        Offer.objects
+        .filter(is_active=True)
+        .filter(Q(valid_from__isnull=True) | Q(valid_from__lte=today))
+        .filter(Q(valid_to__isnull=True)   | Q(valid_to__gte=today))
+        .prefetch_related('applicable_products', 'applicable_categories')
+    )
+
+
+def _matching_items(offer, cart_items):
+    """Return cart_items that fall within the offer's scope (empty scope = all items)."""
+    prod_ids = set(offer.applicable_products.values_list('id', flat=True))
+    cat_ids  = set(offer.applicable_categories.values_list('id', flat=True))
+    if not prod_ids and not cat_ids:
+        return cart_items
+    result = []
+    for item in cart_items:
+        sku = item['sku']
+        if (prod_ids and sku.product_id in prod_ids) or \
+           (cat_ids  and sku.product.category_id in cat_ids):
+            result.append(item)
+    return result
+
+
+def _unit_prices(matching):
+    """Expand items to a flat list of unit prices (int), sorted ascending."""
+    units = []
+    for item in matching:
+        units.extend([int(item['sku'].selling_price)] * item['quantity'])
+    return sorted(units)
+
+
+def _calc_percentage(offer, matching):
+    total = sum(int(item['sku'].selling_price) * item['quantity'] for item in matching)
+    return round(total * offer.discount_percent / 100)
+
+
+def _calc_bogo(matching):
+    """Every 2 items: the cheaper one is free."""
+    units = _unit_prices(matching)          # sorted ascending (cheapest first)
+    free_count = len(units) // 2
+    return sum(units[:free_count])
+
+
+def _calc_buy_x_get_y(offer, matching):
+    """Buy X, get Y at get_discount_percent% off. Applied in groups."""
+    units = sorted(_unit_prices(matching), reverse=True)  # most expensive first
+    group = offer.buy_quantity + offer.get_quantity
+    discount = 0
+    i = 0
+    while i + group <= len(units):
+        # The Y cheapest in this group get the discount
+        cheapest_y = sorted(units[i:i + group])[:offer.get_quantity]
+        discount += sum(p * offer.get_discount_percent // 100 for p in cheapest_y)
+        i += group
+    return discount
+
+
+def _calc_min_qty(offer, matching):
+    total_qty = sum(item['quantity'] for item in matching)
+    if total_qty < offer.min_quantity:
+        return 0
+    total_price = sum(int(item['sku'].selling_price) * item['quantity'] for item in matching)
+    return round(total_price * offer.discount_percent / 100)
+
+
+def calculate_offer_discounts(cart_items):
+    """
+    Auto-apply all currently valid offers to the given cart items.
+
+    cart_items: list of dicts — each with 'sku' (SKU instance) and 'quantity' (int).
+    Returns:
+        total_discount (int)  — total ₹ discount from all applicable offers
+        applied_offers (list) — [{'name': str, 'label': str, 'discount': int}, ...]
+    """
+    try:
+        offers = list(_get_active_offers())
+    except Exception:
+        return 0, []
+
+    applied = []
+    total   = 0
+
+    for offer in offers:
+        matching = _matching_items(offer, cart_items)
+        if not matching:
+            continue
+        t = offer.offer_type
+        if t == 'PERCENTAGE':
+            d = _calc_percentage(offer, matching)
+        elif t == 'BOGO':
+            d = _calc_bogo(matching)
+        elif t == 'BUY_X_GET_Y':
+            d = _calc_buy_x_get_y(offer, matching)
+        elif t == 'MIN_QTY':
+            d = _calc_min_qty(offer, matching)
+        else:
+            d = 0
+
+        if d > 0:
+            applied.append({
+                'name':     offer.name,
+                'label':    offer.description or offer.name,
+                'discount': d,
+            })
+            total += d
+
+    return total, applied
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+
 def calculate_delivery_and_final(subtotal):
     try:
         from .models import SiteSettings
