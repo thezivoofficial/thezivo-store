@@ -5,58 +5,83 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>New Arrival — {{ store_name }}</title>
 </head>
-<body style="margin:0;padding:0;background:#f8f7f5;font-family:'Helvetica Neue',Arial,sans-serif;color:#111;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#f8f7f5;padding:32px 0;">
+<body style="margin:0;padding:0;background:#f0efed;font-family:'Helvetica Neue',Arial,sans-serif;color:#111;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f0efed;padding:32px 16px;">
   <tr><td align="center">
-    <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#fff;border-radius:16px;border:1px solid #ececec;overflow:hidden;">
+    <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#fff;border-radius:18px;overflow:hidden;border:1px solid #e4e2df;">
 
       <!-- HEADER -->
-      <tr><td style="background:#111;padding:28px 32px;text-align:center;">
-        <div style="font-size:1.4rem;font-weight:700;color:#fff;letter-spacing:1px;">{{ store_name|upper }}</div>
-        <div style="font-size:0.8rem;color:rgba(255,255,255,0.6);margin-top:4px;">New Arrival</div>
+      <tr><td style="background:#111;padding:24px 32px 20px;text-align:center;">
+        <div style="font-size:1.5rem;font-weight:800;color:#fff;letter-spacing:2px;font-family:Georgia,serif;">{{ store_name|upper }}</div>
       </td></tr>
 
-      <!-- PRODUCT IMAGE -->
-      {% if product.image %}
-      <tr><td style="padding:0;">
-        <img src="{{ site_url }}{{ product.image.url }}" alt="{{ product.name }}"
-             width="600" style="width:100%;max-height:340px;object-fit:cover;display:block;">
-      </td></tr>
-      {% endif %}
-
-      <!-- PRODUCT INFO -->
-      <tr><td style="padding:32px 32px 8px;">
-        <div style="font-size:0.72rem;font-weight:600;color:#aaa;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px;">
-          {{ product.category }} &nbsp;·&nbsp; {{ product.get_gender_display }}
-        </div>
-        <h2 style="font-size:1.3rem;font-weight:700;margin:0 0 12px;line-height:1.3;">{{ product.name }}</h2>
-        {% with product.sku_set.first as sku %}
-        {% if sku %}
-        <div style="font-size:1rem;font-weight:600;color:#111;margin-bottom:4px;">
-          ₹{{ sku.selling_price }}
-          {% if sku.mrp > sku.selling_price %}
-          <span style="font-size:0.82rem;color:#aaa;text-decoration:line-through;margin-left:6px;">₹{{ sku.mrp }}</span>
-          {% endif %}
-        </div>
-        {% endif %}
-        {% endwith %}
+      <!-- ANNOUNCEMENT BAND -->
+      <tr><td style="background:#f5f0e8;padding:12px 32px;text-align:center;border-bottom:1px solid #e8e4dc;">
+        <span style="font-size:0.7rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#8c7b5e;">
+          ✦ &nbsp; Just Dropped &nbsp; ✦
+        </span>
       </td></tr>
 
-      <!-- CTA -->
-      <tr><td style="padding:20px 32px 32px;">
-        <a href="{{ site_url }}{% url 'product_detail' product.id %}"
-           style="display:inline-block;background:#111;color:#fff;font-size:0.88rem;font-weight:600;
-                  padding:13px 28px;border-radius:8px;text-decoration:none;letter-spacing:0.3px;">
-          Shop Now
-        </a>
+      <!-- PRODUCT BLOCK: image left, info right -->
+      <tr><td style="padding:28px 32px;">
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr valign="top">
+
+            <!-- IMAGE -->
+            {% if product.image %}
+            <td width="140" style="padding-right:20px;">
+              <img src="{{ site_url }}{{ product.image.url }}" alt="{{ product.name }}"
+                   width="140" height="175"
+                   style="width:140px;height:175px;object-fit:cover;border-radius:10px;display:block;border:1px solid #ececec;">
+            </td>
+            {% endif %}
+
+            <!-- INFO -->
+            <td style="vertical-align:top;">
+              <div style="font-size:0.65rem;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#aaa;margin-bottom:6px;">
+                {{ product.category }} &nbsp;·&nbsp; {{ product.get_gender_display }}
+              </div>
+              <div style="font-size:1.05rem;font-weight:700;color:#111;line-height:1.35;margin-bottom:10px;">
+                {{ product.name }}
+              </div>
+              {% with product.sku_set.first as sku %}
+              {% if sku %}
+              <div style="margin-bottom:16px;">
+                <span style="font-size:1.1rem;font-weight:800;color:#111;">₹{{ sku.selling_price }}</span>
+                {% if sku.mrp > sku.selling_price %}
+                <span style="font-size:0.8rem;color:#bbb;text-decoration:line-through;margin-left:8px;">₹{{ sku.mrp }}</span>
+                {% endif %}
+              </div>
+              {% endif %}
+              {% endwith %}
+              <a href="{{ site_url }}{% url 'product_detail' product.id %}"
+                 style="display:inline-block;background:#111;color:#fff;font-size:0.78rem;font-weight:700;
+                        padding:10px 22px;border-radius:6px;text-decoration:none;letter-spacing:0.5px;text-transform:uppercase;">
+                Shop Now →
+              </a>
+            </td>
+
+          </tr>
+        </table>
+      </td></tr>
+
+      <!-- DIVIDER -->
+      <tr><td style="padding:0 32px;"><div style="height:1px;background:#f0efed;"></div></td></tr>
+
+      <!-- TAGLINE -->
+      <tr><td style="padding:20px 32px 28px;text-align:center;">
+        <p style="font-size:0.82rem;color:#888;margin:0;line-height:1.6;">
+          Handpicked styles, delivered to your door.<br>
+          <a href="{{ site_url }}" style="color:#111;font-weight:600;text-decoration:none;">Browse all new arrivals →</a>
+        </p>
       </td></tr>
 
       <!-- FOOTER -->
-      <tr><td style="background:#f8f7f5;padding:20px 32px;text-align:center;border-top:1px solid #f0f0f0;">
-        <p style="font-size:0.78rem;color:#aaa;margin:0;">
-          You're receiving this because you subscribed to {{ store_name }} updates.<br>
-          Need help? <a href="mailto:support@thezivo.com" style="color:#111;">support@thezivo.com</a><br>
-          © {{ store_name }}. All rights reserved.
+      <tr><td style="background:#f7f6f4;padding:18px 32px;text-align:center;border-top:1px solid #ece9e5;">
+        <p style="font-size:0.72rem;color:#bbb;margin:0;line-height:1.8;">
+          You received this because you subscribed to {{ store_name }} updates.<br>
+          Questions? <a href="mailto:support@thezivo.com" style="color:#888;text-decoration:none;">support@thezivo.com</a>
+          &nbsp;·&nbsp; © {{ store_name }}
         </p>
       </td></tr>
 
