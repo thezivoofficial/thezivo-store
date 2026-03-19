@@ -258,10 +258,16 @@ def home(request):
     except Exception:
         active_offers = []
 
+    home_categories = list(
+        Category.objects.filter(is_active=True, gender__in=["men", "women"])
+        .order_by("sort_order", "name")
+    )
+
     return render(request, "store/home.html", {
         "products": products,
         "has_trending": has_trending,
         "active_offers": active_offers,
+        "home_categories": home_categories,
     })
 
 

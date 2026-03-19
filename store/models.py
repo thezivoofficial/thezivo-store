@@ -56,6 +56,8 @@ class Category(models.Model):
         blank=True, default="",
         help_text="Which nav dropdown this appears under. Leave blank to hide from nav.",
     )
+    image      = models.ImageField(upload_to="categories/", null=True, blank=True,
+                                   help_text="Shown on the home page category tiles")
     sort_order = models.PositiveSmallIntegerField(default=0, help_text="Lower number appears first in nav")
     is_active  = models.BooleanField(default=True)
 

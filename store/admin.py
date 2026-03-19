@@ -91,11 +91,20 @@ class AddressAdmin(ModelAdmin):
 
 @admin.register(Category)
 class CategoryAdmin(ModelAdmin):
-    list_display  = ("name", "slug", "gender", "sort_order", "is_active")
+    list_display  = ("cat_thumbnail", "name", "slug", "gender", "sort_order", "is_active")
     list_editable = ("sort_order", "is_active")
     list_filter   = ("gender", "is_active")
     search_fields = ("name", "slug")
     prepopulated_fields = {"slug": ("name",)}
+
+    def cat_thumbnail(self, obj):
+        if obj.image:
+            return format_html(
+                '<img src="{}" style="height:40px;width:56px;object-fit:cover;border-radius:6px;">',
+                obj.image.url,
+            )
+        return format_html('<span style="color:#9ca3af;font-size:11px;">No image</span>')
+    cat_thumbnail.short_description = ""
 
 
 @admin.register(Product)

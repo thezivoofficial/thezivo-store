@@ -87,39 +87,27 @@
 
 
 <!-- ================= SHOP BY CATEGORY ================= -->
+{% if home_categories %}
 <section class="home-section">
     <div class="home-section-header">
         <h5 class="home-section-title">Shop by Category</h5>
     </div>
-
-    <!-- Mobile: horizontal scroll | Desktop: 4-col grid -->
-    <div class="category-scroll-row">
-        <a href="/men/" class="home-cat-tile home-cat-men">
-            <span class="home-cat-icon">👔</span>
-            <span class="home-cat-name">Men</span>
-        </a>
-        <a href="/women/" class="home-cat-tile home-cat-women">
-            <span class="home-cat-icon">👗</span>
-            <span class="home-cat-name">Women</span>
-        </a>
-        <a href="/men/tshirts/" class="home-cat-tile home-cat-tshirts">
-            <span class="home-cat-icon">👕</span>
-            <span class="home-cat-name">T-Shirts</span>
-        </a>
-        <a href="/men/shirts/" class="home-cat-tile home-cat-shirts">
-            <span class="home-cat-icon">🧥</span>
-            <span class="home-cat-name">Shirts</span>
-        </a>
-        <a href="/women/kurtis/" class="home-cat-tile home-cat-kurtis">
-            <span class="home-cat-icon">🥻</span>
-            <span class="home-cat-name">Kurtis</span>
-        </a>
-        <a href="/men/jeans/" class="home-cat-tile home-cat-jeans">
-            <span class="home-cat-icon">👖</span>
-            <span class="home-cat-name">Jeans</span>
-        </a>
+    <div class="row g-2 g-md-3">
+        {% for cat in home_categories %}
+        <div class="col-4 col-md-2">
+            <a href="/{{ cat.gender }}/{{ cat.slug }}/" class="home-cat-img-tile">
+                {% if cat.image %}
+                <img src="{{ cat.image.url }}" alt="{{ cat.name }}" loading="lazy">
+                {% else %}
+                <div class="home-cat-img-placeholder"></div>
+                {% endif %}
+                <span class="home-cat-img-name">{{ cat.name }}</span>
+            </a>
+        </div>
+        {% endfor %}
     </div>
 </section>
+{% endif %}
 
 
 <!-- ================= ACTIVE OFFERS ================= -->
