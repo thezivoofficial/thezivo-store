@@ -207,18 +207,6 @@ class NewsletterSubscriberAdmin(ModelAdmin):
     list_editable = ("is_active",)
     list_filter   = ("is_active",)
     search_fields = ("email",)
-    actions       = ["export_emails"]
-
-    @admin.action(description="Export selected emails as CSV")
-    def export_emails(self, request, queryset):
-        import csv
-        response = HttpResponse(content_type="text/csv")
-        response["Content-Disposition"] = 'attachment; filename="subscribers.csv"'
-        writer = csv.writer(response)
-        writer.writerow(["Email", "Subscribed At", "Active"])
-        for sub in queryset:
-            writer.writerow([sub.email, sub.subscribed_at, sub.is_active])
-        return response
 
 
 # ── SKU ───────────────────────────────────────────────────────────────────────
