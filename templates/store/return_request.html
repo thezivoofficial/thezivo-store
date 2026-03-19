@@ -90,7 +90,13 @@
       {% endfor %}
     {% endif %}
 
-    <form method="post">
+    <!-- Policy note -->
+    <div style="background:#fff8e1;border:1px solid #fde68a;border-radius:12px;padding:14px 18px;margin-bottom:20px;font-size:0.84rem;color:#92400e;">
+      <strong>Return Policy:</strong> We only accept returns for <strong>wrong item delivered</strong> or <strong>item arrived damaged</strong>.
+      Returns are not accepted for size issues or quality preferences. An <strong>unboxing video</strong> is mandatory as proof.
+    </div>
+
+    <form method="post" enctype="multipart/form-data">
       {% csrf_token %}
 
       <div class="return-card">
@@ -135,6 +141,14 @@
         <div class="form-group">
           <label>Additional Details <span style="font-weight:400;color:#aaa;">(optional)</span></label>
           <textarea name="reason_detail" placeholder="Describe the issue in more detail…"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Unboxing Video <span style="color:#c62828;">*</span></label>
+          <input type="file" name="unboxing_video" accept="video/*" required
+                 style="width:100%;border:1px solid #e5e7eb;border-radius:10px;padding:10px 14px;font-size:0.88rem;background:#fafafa;box-sizing:border-box;">
+          <div style="font-size:0.76rem;color:#6b7280;margin-top:6px;">
+            Upload a video showing the package being opened. This is required to process your return. (MP4, MOV, etc.)
+          </div>
         </div>
         <button type="submit" class="btn-submit">Submit Return Request</button>
       </div>

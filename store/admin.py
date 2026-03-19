@@ -939,12 +939,12 @@ class ReturnRequestAdmin(ModelAdmin):
     list_display = ("id", "display_order", "display_customer", "reason", "display_status", "refund_amount", "created_at")
     list_filter = ("status", "reason", "created_at")
     search_fields = ("order__id", "order__name", "order__phone")
-    readonly_fields = ("order", "reason", "reason_detail", "created_at", "updated_at", "razorpay_refund_id")
+    readonly_fields = ("order", "reason", "reason_detail", "display_video", "created_at", "updated_at", "razorpay_refund_id")
     inlines = [ReturnItemInline]
     actions = ["action_approve", "action_reject", "action_process_refund"]
 
     fieldsets = (
-        ("Return Info", {"fields": ("order", "reason", "reason_detail", "created_at")}),
+        ("Return Info", {"fields": ("order", "reason", "reason_detail", "display_video", "created_at")}),
         ("Resolution", {"fields": ("status", "admin_notes", "refund_amount", "razorpay_refund_id", "updated_at")}),
     )
 
@@ -956,6 +956,12 @@ class ReturnRequestAdmin(ModelAdmin):
     def display_customer(self, obj):
         return obj.order.name
     display_customer.short_description = "Customer"
+
+    def display_video(self, obj):
+        if obj.unboxing_video:
+            return format_html('<a href="{}" target="_blank">▶ View Unboxing Video</a>', obj.unboxing_video.url)
+        return "—"
+    display_video.short_description = "Unboxing Video"
 
     def display_status(self, obj):
         colors = {

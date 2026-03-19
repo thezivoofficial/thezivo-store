@@ -280,11 +280,8 @@ class OrderItem(models.Model):
     
 class ReturnRequest(models.Model):
     REASON_CHOICES = [
-        ("SIZE_ISSUE",    "Size issue / doesn't fit"),
-        ("QUALITY_ISSUE", "Quality not as expected"),
-        ("WRONG_ITEM",    "Wrong item delivered"),
-        ("DAMAGED",       "Item arrived damaged"),
-        ("OTHER",         "Other"),
+        ("WRONG_ITEM", "Wrong item delivered"),
+        ("DAMAGED",    "Item arrived damaged"),
     ]
     STATUS_CHOICES = [
         ("REQUESTED",        "Requested"),
@@ -296,6 +293,11 @@ class ReturnRequest(models.Model):
     order          = models.OneToOneField(Order, on_delete=models.CASCADE, related_name="return_request")
     reason         = models.CharField(max_length=20, choices=REASON_CHOICES)
     reason_detail  = models.TextField(blank=True, default="")
+    unboxing_video = models.FileField(
+        upload_to="return_videos/",
+        blank=True, null=True,
+        help_text="Unboxing video uploaded by customer as proof.",
+    )
     status         = models.CharField(max_length=20, choices=STATUS_CHOICES, default="REQUESTED")
     admin_notes    = models.TextField(blank=True, default="", help_text="Internal notes (not shown to customer).")
     refund_amount  = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)

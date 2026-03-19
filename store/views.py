@@ -2033,13 +2033,20 @@ def submit_return(request, order_id):
 
         if not selected_items:
             messages.error(request, "Please select at least one item to return.")
-            return render(request, "store/return_request.html", {"order": order, "order_items": order_items})
+            return render(request, "store/return_request.html", {"order": order, "order_items": order_items, "reason_choices": ReturnRequest.REASON_CHOICES})
+
+        # Unboxing video is required
+        video = request.FILES.get("unboxing_video")
+        if not video:
+            messages.error(request, "Please upload an unboxing video as proof.")
+            return render(request, "store/return_request.html", {"order": order, "order_items": order_items, "reason_choices": ReturnRequest.REASON_CHOICES})
 
         with transaction.atomic():
             rr = ReturnRequest.objects.create(
                 order=order,
                 reason=reason,
                 reason_detail=reason_detail,
+                unboxing_video=video,
             )
             for item, qty in selected_items:
                 ReturnItem.objects.create(return_request=rr, order_item=item, quantity=qty)
