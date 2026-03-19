@@ -263,11 +263,13 @@ def home(request):
         .order_by("sort_order", "name")
     )
 
+    store = SiteSettings.get()
     return render(request, "store/home.html", {
         "products": products,
         "has_trending": has_trending,
         "active_offers": active_offers,
         "home_categories": home_categories,
+        "free_delivery_min": store.free_delivery_min_order,
     })
 
 
