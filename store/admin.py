@@ -939,12 +939,14 @@ class ReturnRequestAdmin(ModelAdmin):
     list_display = ("id", "display_order", "display_customer", "reason", "display_status", "refund_amount", "created_at")
     list_filter = ("status", "reason", "created_at")
     search_fields = ("order__id", "order__name", "order__phone")
-    readonly_fields = ("order", "reason", "reason_detail", "display_video", "created_at", "updated_at", "razorpay_refund_id")
+    readonly_fields = ("order", "reason", "reason_detail", "display_video", "refund_via", "upi_id", "bank_account_name", "bank_account_number", "bank_ifsc", "created_at", "updated_at", "razorpay_refund_id")
     inlines = [ReturnItemInline]
     actions = ["action_approve", "action_reject", "action_process_refund"]
 
     fieldsets = (
         ("Return Info", {"fields": ("order", "reason", "reason_detail", "display_video", "created_at")}),
+        ("COD Refund Details", {"fields": ("refund_via", "upi_id", "bank_account_name", "bank_account_number", "bank_ifsc"),
+                                "description": "Filled by customer for COD orders only."}),
         ("Resolution", {"fields": ("status", "admin_notes", "refund_amount", "razorpay_refund_id", "updated_at")}),
     )
 

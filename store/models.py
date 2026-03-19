@@ -353,6 +353,16 @@ class ReturnRequest(models.Model):
     admin_notes    = models.TextField(blank=True, default="", help_text="Internal notes (not shown to customer).")
     refund_amount  = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     razorpay_refund_id = models.CharField(max_length=100, blank=True, default="")
+
+    # COD refund details (filled by customer during return request)
+    refund_via          = models.CharField(max_length=10, blank=True, default="",
+                            choices=[("UPI", "UPI"), ("BANK", "Bank Transfer")],
+                            help_text="Preferred refund method for COD orders.")
+    upi_id              = models.CharField(max_length=100, blank=True, default="")
+    bank_account_name   = models.CharField(max_length=100, blank=True, default="")
+    bank_account_number = models.CharField(max_length=20, blank=True, default="")
+    bank_ifsc           = models.CharField(max_length=15, blank=True, default="")
+
     created_at     = models.DateTimeField(auto_now_add=True)
     updated_at     = models.DateTimeField(auto_now=True)
 

@@ -137,8 +137,22 @@
       {% if order.payment_method == "COD" %}
       <div class="detail-row">
         <span class="detail-label">Refund Method</span>
-        <span class="detail-value">Bank transfer (our team will contact you)</span>
+        <span class="detail-value">
+          {% if rr.refund_via == "UPI" %}UPI — {{ rr.upi_id }}
+          {% elif rr.refund_via == "BANK" %}Bank Transfer — {{ rr.bank_account_name }}
+          {% else %}To be confirmed{% endif %}
+        </span>
       </div>
+      {% if rr.refund_via == "BANK" %}
+      <div class="detail-row">
+        <span class="detail-label">Account Number</span>
+        <span class="detail-value">••••{{ rr.bank_account_number|slice:"-4:" }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">IFSC</span>
+        <span class="detail-value">{{ rr.bank_ifsc }}</span>
+      </div>
+      {% endif %}
       {% else %}
       <div class="detail-row">
         <span class="detail-label">Refund Method</span>

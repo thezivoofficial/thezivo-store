@@ -2051,12 +2051,35 @@ def submit_return(request, order_id):
             messages.error(request, "Please upload an unboxing video as proof.")
             return render(request, "store/return_request.html", {"order": order, "order_items": order_items, "reason_choices": ReturnRequest.REASON_CHOICES, "cloudinary_cloud_name": settings.CLOUDINARY_STORAGE.get("CLOUD_NAME", "")})
 
+        # COD refund details
+        refund_via = request.POST.get("refund_via", "").strip()
+        upi_id = request.POST.get("upi_id", "").strip()
+        bank_account_name = request.POST.get("bank_account_name", "").strip()
+        bank_account_number = request.POST.get("bank_account_number", "").strip()
+        bank_ifsc = request.POST.get("bank_ifsc", "").strip()
+
+        if order.payment_method == "COD":
+            if not refund_via:
+                messages.error(request, "Please select a refund method (UPI or Bank Transfer).")
+                return render(request, "store/return_request.html", {"order": order, "order_items": order_items, "reason_choices": ReturnRequest.REASON_CHOICES, "cloudinary_cloud_name": settings.CLOUDINARY_STORAGE.get("CLOUD_NAME", ""), "cloudinary_upload_preset": settings.CLOUDINARY_UPLOAD_PRESET})
+            if refund_via == "UPI" and not upi_id:
+                messages.error(request, "Please enter your UPI ID.")
+                return render(request, "store/return_request.html", {"order": order, "order_items": order_items, "reason_choices": ReturnRequest.REASON_CHOICES, "cloudinary_cloud_name": settings.CLOUDINARY_STORAGE.get("CLOUD_NAME", ""), "cloudinary_upload_preset": settings.CLOUDINARY_UPLOAD_PRESET})
+            if refund_via == "BANK" and not (bank_account_number and bank_ifsc and bank_account_name):
+                messages.error(request, "Please fill in all bank account details.")
+                return render(request, "store/return_request.html", {"order": order, "order_items": order_items, "reason_choices": ReturnRequest.REASON_CHOICES, "cloudinary_cloud_name": settings.CLOUDINARY_STORAGE.get("CLOUD_NAME", ""), "cloudinary_upload_preset": settings.CLOUDINARY_UPLOAD_PRESET})
+
         with transaction.atomic():
             rr = ReturnRequest.objects.create(
                 order=order,
                 reason=reason,
                 reason_detail=reason_detail,
                 unboxing_video=video_url,
+                refund_via=refund_via,
+                upi_id=upi_id,
+                bank_account_name=bank_account_name,
+                bank_account_number=bank_account_number,
+                bank_ifsc=bank_ifsc,
             )
             for item, qty in selected_items:
                 ReturnItem.objects.create(return_request=rr, order_item=item, quantity=qty)

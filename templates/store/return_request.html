@@ -159,6 +159,55 @@
           <!-- Hidden field to store the Cloudinary URL after upload -->
           <input type="hidden" name="unboxing_video_url" id="videoUrl">
         </div>
+
+        {% if order.payment_method == "COD" %}
+        <!-- Refund method — COD orders only -->
+        <div class="form-group" style="border-top:1px solid #f3f4f6;padding-top:20px;margin-top:4px;">
+          <label>Refund Method <span style="color:#c62828;">*</span></label>
+          <div style="display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;">
+            <label style="display:flex;align-items:center;gap:8px;font-weight:400;cursor:pointer;
+                          border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 16px;flex:1;min-width:120px;"
+                   id="upi-label">
+              <input type="radio" name="refund_via" value="UPI" id="refund_upi" onchange="toggleRefundFields()">
+              UPI Transfer
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;font-weight:400;cursor:pointer;
+                          border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 16px;flex:1;min-width:120px;"
+                   id="bank-label">
+              <input type="radio" name="refund_via" value="BANK" id="refund_bank" onchange="toggleRefundFields()">
+              Bank Transfer
+            </label>
+          </div>
+        </div>
+
+        <!-- UPI fields -->
+        <div id="upi-fields" class="form-group" style="display:none;">
+          <label>UPI ID <span style="color:#c62828;">*</span></label>
+          <input type="text" name="upi_id" placeholder="yourname@upi"
+                 style="width:100%;border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;font-size:0.9rem;background:#fafafa;box-sizing:border-box;">
+          <div style="font-size:0.76rem;color:#6b7280;margin-top:5px;">e.g. 9876543210@ybl or name@paytm</div>
+        </div>
+
+        <!-- Bank account fields -->
+        <div id="bank-fields" style="display:none;">
+          <div class="form-group">
+            <label>Account Holder Name <span style="color:#c62828;">*</span></label>
+            <input type="text" name="bank_account_name" placeholder="As per bank records"
+                   style="width:100%;border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;font-size:0.9rem;background:#fafafa;box-sizing:border-box;">
+          </div>
+          <div class="form-group">
+            <label>Account Number <span style="color:#c62828;">*</span></label>
+            <input type="text" name="bank_account_number" placeholder="Enter account number"
+                   style="width:100%;border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;font-size:0.9rem;background:#fafafa;box-sizing:border-box;">
+          </div>
+          <div class="form-group">
+            <label>IFSC Code <span style="color:#c62828;">*</span></label>
+            <input type="text" name="bank_ifsc" placeholder="e.g. SBIN0001234"
+                   style="width:100%;border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;font-size:0.9rem;background:#fafafa;box-sizing:border-box;text-transform:uppercase;">
+          </div>
+        </div>
+        {% endif %}
+
         <button type="submit" id="submitBtn" class="btn-submit" disabled style="opacity:0.5;cursor:not-allowed;">
           Select a video to continue
         </button>
@@ -235,6 +284,29 @@ videoFile.addEventListener('change', function() {
   xhr.send(formData);
 });
 
+// Toggle UPI / Bank fields
+function toggleRefundFields() {
+  const upi = document.getElementById('refund_upi');
+  const bank = document.getElementById('refund_bank');
+  const upiFields = document.getElementById('upi-fields');
+  const bankFields = document.getElementById('bank-fields');
+  const upiLabel = document.getElementById('upi-label');
+  const bankLabel = document.getElementById('bank-label');
+  if (!upi) return;
+
+  if (upi && upi.checked) {
+    upiFields.style.display = 'block';
+    bankFields.style.display = 'none';
+    upiLabel.style.borderColor = '#7c3aed';
+    bankLabel.style.borderColor = '#e5e7eb';
+  } else if (bank && bank.checked) {
+    upiFields.style.display = 'none';
+    bankFields.style.display = 'block';
+    bankLabel.style.borderColor = '#7c3aed';
+    upiLabel.style.borderColor = '#e5e7eb';
+  }
+}
+
 // Validate items before submit
 document.querySelector('form').addEventListener('submit', function(e) {
   const inputs = document.querySelectorAll('input[name^="qty_"]');
@@ -242,10 +314,21 @@ document.querySelector('form').addEventListener('submit', function(e) {
   if (!anySelected) {
     e.preventDefault();
     alert('Please select at least one item to return.');
+    return;
   }
   if (!videoUrl.value) {
     e.preventDefault();
     alert('Please wait for the video to finish uploading.');
+    return;
+  }
+  // Validate refund method for COD
+  const refundUpi = document.getElementById('refund_upi');
+  if (refundUpi !== null) { // COD order
+    const refundBank = document.getElementById('refund_bank');
+    if (!refundUpi.checked && !refundBank.checked) {
+      e.preventDefault();
+      alert('Please select a refund method.');
+    }
   }
 });
 </script>
