@@ -248,9 +248,9 @@ def home(request):
         Prefetch("images", queryset=ProductImage.objects.all())
     ).annotate(has_sku=Exists(SKU.objects.filter(product=OuterRef("pk")))).filter(has_sku=True)
 
-    products = list(base_qs.filter(is_trending=True))
-    if not products:
-        products = list(base_qs[:8])
+    trending = list(base_qs.filter(is_trending=True))
+    has_trending = bool(trending)
+    products = trending if has_trending else list(base_qs[:8])
 
     from .utils import _get_active_offers
     try:
@@ -260,6 +260,7 @@ def home(request):
 
     return render(request, "store/home.html", {
         "products": products,
+        "has_trending": has_trending,
         "active_offers": active_offers,
     })
 

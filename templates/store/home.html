@@ -154,8 +154,8 @@
 <!-- ================= TRENDING PRODUCTS ================= -->
 <section class="home-section">
     <div class="home-section-header">
-        <h5 class="home-section-title">Trending Now</h5>
-        <a href="{% url 'trending_products' %}" class="home-section-link">View all →</a>
+        <h5 class="home-section-title">{% if has_trending %}Trending Now{% else %}New Arrivals{% endif %}</h5>
+        {% if has_trending %}<a href="{% url 'trending_products' %}" class="home-section-link">View all →</a>{% endif %}
     </div>
 
     {% if products %}
