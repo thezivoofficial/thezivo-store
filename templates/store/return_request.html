@@ -187,6 +187,7 @@ videoFile.addEventListener('change', function() {
   formData.append('file', file);
   formData.append('upload_preset', UPLOAD_PRESET);
   formData.append('resource_type', 'video');
+  formData.append('auto_delete_after', 2592000); // auto-delete after 30 days
 
   uploadStatus.style.display = 'block';
   submitBtn.disabled = true;
