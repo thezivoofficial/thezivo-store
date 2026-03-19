@@ -117,6 +117,11 @@ UNFOLD = {
                         "icon": "receipt_long",
                         "link": reverse_lazy("admin:store_orderitem_changelist"),
                     },
+                    {
+                        "title": "Return Requests",
+                        "icon": "assignment_return",
+                        "link": reverse_lazy("admin:store_returnrequest_changelist"),
+                    },
                 ],
             },
             {
