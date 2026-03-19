@@ -172,6 +172,11 @@ UNFOLD = {
                 "separator": True,
                 "items": [
                     {
+                        "title": "Offers",
+                        "icon": "redeem",
+                        "link": reverse_lazy("admin:store_offer_changelist"),
+                    },
+                    {
                         "title": "Coupons",
                         "icon": "local_offer",
                         "link": reverse_lazy("admin:store_coupon_changelist"),
