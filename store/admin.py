@@ -1004,6 +1004,7 @@ class ReturnRequestAdmin(ModelAdmin):
                 try:
                     resp = client.payment.refund(order.razorpay_payment_id, {
                         "amount": int(refund_amount * 100),  # paise
+                        "speed": "optimum",  # instant refund, falls back to normal
                         "notes": {"return_request_id": str(rr.id)},
                     })
                     rr.razorpay_refund_id = resp.get("id", "")
