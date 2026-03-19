@@ -617,6 +617,30 @@
                 </span>
             </div>
         </div>
+        {% elif order.status == "DELIVERED" %}
+        <div class="detail-card">
+            {% if order.return_request %}
+                <div class="cancel-section" style="text-align:center;">
+                    <div style="font-size:0.82rem; color:#6b7280; margin-bottom:10px;">
+                        You have submitted a return request for this order.
+                    </div>
+                    <a href="{% url 'return_status' order.id %}" class="btn-cancel"
+                       style="display:inline-block; text-decoration:none; background:#7c3aed; color:#fff;">
+                        View Return Status
+                    </a>
+                </div>
+            {% else %}
+                <div class="cancel-section">
+                    <div style="font-size:0.82rem; color:#999; margin-bottom:12px;">
+                        Not satisfied? You can request a return within the eligible return window.
+                    </div>
+                    <a href="{% url 'submit_return' order.id %}" class="btn-cancel"
+                       style="display:inline-block; text-decoration:none;">
+                        Request Return
+                    </a>
+                </div>
+            {% endif %}
+        </div>
         {% endif %}
 
     </div>

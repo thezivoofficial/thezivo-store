@@ -11,7 +11,7 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import path, reverse
 from django.utils.html import format_html
 from unfold.admin import ModelAdmin, TabularInline
-from .models import Product, SKU, Order, OrderItem, StockNotification, ProductImage, Address, Customer, SiteSettings, Coupon, Review, Announcement, Category, Offer, NewsletterSubscriber
+from .models import Product, SKU, Order, OrderItem, StockNotification, ProductImage, Address, Customer, SiteSettings, Coupon, Review, Announcement, Category, Offer, NewsletterSubscriber, ReturnRequest, ReturnItem
 from .utils import send_whatsapp, send_order_email, send_new_product_alert
 from django.conf import settings
 
@@ -923,3 +923,90 @@ class ReviewAdmin(ModelAdmin):
     list_filter = ("rating",)
     search_fields = ("customer__name", "product__name", "title")
     readonly_fields = ("customer", "product", "order_item", "rating", "title", "comment", "created_at")
+
+
+# ── Return Requests ───────────────────────────────────────────────────────────
+
+class ReturnItemInline(TabularInline):
+    model = ReturnItem
+    extra = 0
+    readonly_fields = ("order_item", "quantity")
+    can_delete = False
+
+
+@admin.register(ReturnRequest)
+class ReturnRequestAdmin(ModelAdmin):
+    list_display = ("id", "display_order", "display_customer", "reason", "display_status", "refund_amount", "created_at")
+    list_filter = ("status", "reason", "created_at")
+    search_fields = ("order__id", "order__name", "order__phone")
+    readonly_fields = ("order", "reason", "reason_detail", "created_at", "updated_at", "razorpay_refund_id")
+    inlines = [ReturnItemInline]
+    actions = ["action_approve", "action_reject", "action_process_refund"]
+
+    fieldsets = (
+        ("Return Info", {"fields": ("order", "reason", "reason_detail", "created_at")}),
+        ("Resolution", {"fields": ("status", "admin_notes", "refund_amount", "razorpay_refund_id", "updated_at")}),
+    )
+
+    def display_order(self, obj):
+        url = reverse("admin:store_order_change", args=[obj.order_id])
+        return format_html('<a href="{}">Order #{}</a>', url, obj.order_id)
+    display_order.short_description = "Order"
+
+    def display_customer(self, obj):
+        return obj.order.name
+    display_customer.short_description = "Customer"
+
+    def display_status(self, obj):
+        colors = {
+            "REQUESTED":        ("#fef9c3", "#854d0e"),
+            "APPROVED":         ("#dcfce7", "#166534"),
+            "REJECTED":         ("#fee2e2", "#991b1b"),
+            "REFUND_PROCESSED": ("#ede9fe", "#5b21b6"),
+        }
+        bg, fg = colors.get(obj.status, ("#f3f4f6", "#374151"))
+        return format_html(
+            '<span style="background:{};color:{};padding:3px 10px;border-radius:12px;font-size:0.78rem;font-weight:600;">{}</span>',
+            bg, fg, obj.get_status_display()
+        )
+    display_status.short_description = "Status"
+
+    @admin.action(description="Approve selected return requests")
+    def action_approve(self, request, queryset):
+        updated = queryset.filter(status="REQUESTED").update(status="APPROVED")
+        for rr in queryset.filter(status="APPROVED"):
+            from .views import _send_return_email
+            _send_return_email(rr, "return_update.html", f"Return Request #{rr.id} Approved — Zivo")
+        self.message_user(request, f"{updated} return request(s) approved.")
+
+    @admin.action(description="Reject selected return requests")
+    def action_reject(self, request, queryset):
+        updated = queryset.filter(status="REQUESTED").update(status="REJECTED")
+        for rr in queryset.filter(status="REJECTED"):
+            from .views import _send_return_email
+            _send_return_email(rr, "return_update.html", f"Return Request #{rr.id} Update — Zivo")
+        self.message_user(request, f"{updated} return request(s) rejected.")
+
+    @admin.action(description="Mark refund processed (online orders via Razorpay)")
+    def action_process_refund(self, request, queryset):
+        import razorpay
+        client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+        for rr in queryset.filter(status="APPROVED"):
+            order = rr.order
+            refund_amount = rr.refund_amount or order.total_amount
+            if order.payment_method == "ONLINE" and order.razorpay_payment_id:
+                try:
+                    resp = client.payment.refund(order.razorpay_payment_id, {
+                        "amount": int(refund_amount * 100),  # paise
+                        "notes": {"return_request_id": str(rr.id)},
+                    })
+                    rr.razorpay_refund_id = resp.get("id", "")
+                except Exception as e:
+                    self.message_user(request, f"Razorpay refund failed for Return #{rr.id}: {e}", level="error")
+                    continue
+            rr.status = "REFUND_PROCESSED"
+            rr.refund_amount = refund_amount
+            rr.save()
+            from .views import _send_return_email
+            _send_return_email(rr, "return_update.html", f"Refund Processed for Return #{rr.id} — Zivo")
+        self.message_user(request, "Refund(s) processed.")

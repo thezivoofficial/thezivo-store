@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404
-from .models import Product, SKU, Order, OrderItem, StockNotification, ProductImage, Address, SiteSettings, CartItem, WishlistItem, Coupon, Review, Category, NewsletterSubscriber
+from .models import Product, SKU, Order, OrderItem, StockNotification, ProductImage, Address, SiteSettings, CartItem, WishlistItem, Coupon, Review, Category, NewsletterSubscriber, ReturnRequest, ReturnItem
 from django.shortcuts import redirect
 from django.http import JsonResponse, HttpResponse
 from django.db.models import Min, F, ExpressionWrapper, IntegerField, Sum, Q
@@ -1982,3 +1982,127 @@ def terms_conditions(request):
 
 def privacy_policy(request):
     return render(request, 'store/privacy_policy.html')
+
+
+# ─────────────────────────── Return flow ────────────────────────────
+
+@customer_login_required
+def submit_return(request, order_id):
+    from django.utils import timezone
+
+    order = get_object_or_404(Order, id=order_id, customer=request.customer)
+
+    # Guard: only DELIVERED orders
+    if order.status != "DELIVERED":
+        messages.error(request, "Returns can only be requested for delivered orders.")
+        return redirect("order_detail", order_id=order.id)
+
+    # Guard: return window
+    store = SiteSettings.get()
+    if order.delivered_at:
+        days_since = (timezone.now() - order.delivered_at).days
+        if days_since > store.return_window_days:
+            messages.error(request, f"The {store.return_window_days}-day return window has passed.")
+            return redirect("order_detail", order_id=order.id)
+
+    # Guard: already has a return request
+    if hasattr(order, "return_request"):
+        return redirect("return_status", order_id=order.id)
+
+    order_items = order.items.select_related("sku__product").all()
+
+    if request.method == "POST":
+        reason = request.POST.get("reason", "").strip()
+        reason_detail = request.POST.get("reason_detail", "").strip()
+
+        if reason not in dict(ReturnRequest.REASON_CHOICES):
+            messages.error(request, "Please select a valid reason.")
+            return render(request, "store/return_request.html", {"order": order, "order_items": order_items})
+
+        # Collect items to return
+        selected_items = []
+        for item in order_items:
+            qty_key = f"qty_{item.id}"
+            try:
+                qty = int(request.POST.get(qty_key, 0))
+            except (ValueError, TypeError):
+                qty = 0
+            if qty > 0:
+                qty = min(qty, item.quantity)  # cap at ordered qty
+                selected_items.append((item, qty))
+
+        if not selected_items:
+            messages.error(request, "Please select at least one item to return.")
+            return render(request, "store/return_request.html", {"order": order, "order_items": order_items})
+
+        with transaction.atomic():
+            rr = ReturnRequest.objects.create(
+                order=order,
+                reason=reason,
+                reason_detail=reason_detail,
+            )
+            for item, qty in selected_items:
+                ReturnItem.objects.create(return_request=rr, order_item=item, quantity=qty)
+
+        # Send notification email to customer
+        _send_return_email(rr, "return_submitted.html", f"Return Request #{rr.id} Received — Zivo")
+
+        messages.success(request, "Return request submitted. We'll review it within 1–2 business days.")
+        return redirect("return_status", order_id=order.id)
+
+    return render(request, "store/return_request.html", {
+        "order": order,
+        "order_items": order_items,
+        "reason_choices": ReturnRequest.REASON_CHOICES,
+    })
+
+
+@customer_login_required
+def return_status(request, order_id):
+    order = get_object_or_404(Order, id=order_id, customer=request.customer)
+    try:
+        rr = order.return_request
+    except ReturnRequest.DoesNotExist:
+        return redirect("order_detail", order_id=order.id)
+
+    return_items = rr.return_items.select_related("order_item__sku__product").all()
+    return render(request, "store/return_status.html", {
+        "order": order,
+        "rr": rr,
+        "return_items": return_items,
+    })
+
+
+def _send_return_email(rr, template_name, subject):
+    """Send a return-related email to the customer in a background thread."""
+    import threading
+    from django.template.loader import render_to_string
+
+    customer = rr.order.customer
+    if not customer or not customer.email:
+        return
+
+    html = render_to_string(f"store/emails/{template_name}", {
+        "rr": rr,
+        "order": rr.order,
+        "return_items": rr.return_items.select_related("order_item__sku__product").all(),
+        "store_name": "Zivo",
+    })
+    recipient = customer.email
+
+    def _send():
+        try:
+            from brevo import Brevo, SendTransacEmailRequestToItem, SendTransacEmailRequestSender
+            client = Brevo(api_key=settings.BREVO_API_KEY)
+            client.transactional_emails.send_transac_email(
+                to=[SendTransacEmailRequestToItem(email=recipient)],
+                sender=SendTransacEmailRequestSender(
+                    email=settings.DEFAULT_FROM_EMAIL, name="Zivo"
+                ),
+                subject=subject,
+                html_content=html,
+            )
+        except Exception as e:
+            print(f"[RETURN EMAIL ERROR] {template_name} for return #{rr.id}: {e}")
+
+    threading.Thread(target=_send, daemon=False).start()

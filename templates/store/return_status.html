@@ -1,0 +1,175 @@
+{% extends "store/base.html" %}
+{% block title %}Return Status — Order #{{ order.id }} | TheZivo{% endblock %}
+
+{% block content %}
+<style>
+    .return-page {
+        background: #f8f7f5; min-height: 100vh;
+        padding: 48px 0 80px; font-family: 'DM Sans', sans-serif;
+    }
+    .return-wrap { max-width: 680px; margin: 0 auto; padding: 0 16px; }
+    .back-link {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 0.85rem; color: #888; text-decoration: none;
+        margin-bottom: 28px; transition: color 0.15s;
+    }
+    .back-link:hover { color: #111; }
+    .return-card {
+        background: #fff; border-radius: 16px; padding: 28px 32px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 20px;
+    }
+    .return-card h2 { font-size: 1.2rem; font-weight: 700; color: #111; margin: 0 0 4px; }
+    .return-card .sub { font-size: 0.82rem; color: #888; margin-bottom: 0; }
+    .status-badge {
+        display: inline-block; padding: 4px 14px; border-radius: 20px;
+        font-size: 0.78rem; font-weight: 600; letter-spacing: 0.03em;
+    }
+    .status-REQUESTED { background: #fef9c3; color: #854d0e; }
+    .status-APPROVED  { background: #dcfce7; color: #166534; }
+    .status-REJECTED  { background: #fee2e2; color: #991b1b; }
+    .status-REFUND_PROCESSED { background: #ede9fe; color: #5b21b6; }
+    .detail-row {
+        display: flex; justify-content: space-between; align-items: flex-start;
+        padding: 10px 0; border-bottom: 1px solid #f3f4f6; font-size: 0.88rem;
+    }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-label { color: #6b7280; }
+    .detail-value { color: #111; font-weight: 500; text-align: right; max-width: 60%; }
+    .section-label {
+        font-size: 0.78rem; font-weight: 600; color: #6b7280;
+        text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 14px;
+    }
+    .item-row { display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid #f3f4f6; }
+    .item-row:last-child { border-bottom: none; }
+    .item-img { width: 52px; height: 52px; object-fit: cover; border-radius: 8px; background: #f3f4f6; }
+    .item-name { font-size: 0.88rem; font-weight: 600; color: #111; }
+    .item-meta { font-size: 0.76rem; color: #888; margin-top: 2px; }
+    .timeline { padding: 4px 0; }
+    .tl-step { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 20px; }
+    .tl-step:last-child { margin-bottom: 0; }
+    .tl-dot {
+        width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;
+        margin-top: 2px; display: flex; align-items: center; justify-content: center;
+        font-size: 0.65rem; color: #fff;
+    }
+    .tl-dot.done { background: #7c3aed; }
+    .tl-dot.active { background: #f59e0b; }
+    .tl-dot.pending { background: #e5e7eb; }
+    .tl-text .tl-label { font-size: 0.88rem; font-weight: 600; color: #111; }
+    .tl-text .tl-sub { font-size: 0.78rem; color: #888; margin-top: 2px; }
+</style>
+
+<div class="return-page">
+  <div class="return-wrap">
+    <a href="{% url 'order_detail' order.id %}" class="back-link">← Back to Order</a>
+
+    <div class="return-card">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
+        <div>
+          <h2>Return Request #{{ rr.id }}</h2>
+          <div class="sub">Order #{{ order.id }} &nbsp;·&nbsp; Submitted {{ rr.created_at|date:"d M Y" }}</div>
+        </div>
+        <span class="status-badge status-{{ rr.status }}">{{ rr.get_status_display }}</span>
+      </div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="return-card">
+      <div class="section-label">Request Progress</div>
+      <div class="timeline">
+        <div class="tl-step">
+          <div class="tl-dot done">✓</div>
+          <div class="tl-text">
+            <div class="tl-label">Return Requested</div>
+            <div class="tl-sub">{{ rr.created_at|date:"d M Y, g:i A" }}</div>
+          </div>
+        </div>
+        <div class="tl-step">
+          <div class="tl-dot {% if rr.status in 'APPROVED,REFUND_PROCESSED' %}done{% elif rr.status == 'REJECTED' %}active{% else %}pending{% endif %}">
+            {% if rr.status in "APPROVED,REFUND_PROCESSED" %}✓{% elif rr.status == "REJECTED" %}✕{% else %}·{% endif %}
+          </div>
+          <div class="tl-text">
+            <div class="tl-label">
+              {% if rr.status == "REJECTED" %}Return Rejected{% else %}Return Approved{% endif %}
+            </div>
+            <div class="tl-sub">
+              {% if rr.status in "APPROVED,REFUND_PROCESSED,REJECTED" %}{{ rr.updated_at|date:"d M Y" }}{% else %}Pending review{% endif %}
+            </div>
+          </div>
+        </div>
+        <div class="tl-step">
+          <div class="tl-dot {% if rr.status == 'REFUND_PROCESSED' %}done{% else %}pending{% endif %}">
+            {% if rr.status == "REFUND_PROCESSED" %}✓{% else %}·{% endif %}
+          </div>
+          <div class="tl-text">
+            <div class="tl-label">Refund Processed</div>
+            <div class="tl-sub">
+              {% if rr.status == "REFUND_PROCESSED" %}
+                ₹{{ rr.refund_amount }} — {{ rr.updated_at|date:"d M Y" }}
+              {% else %}
+                Pending
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Return details -->
+    <div class="return-card">
+      <div class="section-label">Return Details</div>
+      <div class="detail-row">
+        <span class="detail-label">Reason</span>
+        <span class="detail-value">{{ rr.get_reason_display }}</span>
+      </div>
+      {% if rr.reason_detail %}
+      <div class="detail-row">
+        <span class="detail-label">Details</span>
+        <span class="detail-value">{{ rr.reason_detail }}</span>
+      </div>
+      {% endif %}
+      {% if rr.refund_amount %}
+      <div class="detail-row">
+        <span class="detail-label">Refund Amount</span>
+        <span class="detail-value" style="color:#7c3aed; font-weight:700;">₹{{ rr.refund_amount }}</span>
+      </div>
+      {% endif %}
+      {% if order.payment_method == "COD" %}
+      <div class="detail-row">
+        <span class="detail-label">Refund Method</span>
+        <span class="detail-value">Bank transfer (our team will contact you)</span>
+      </div>
+      {% else %}
+      <div class="detail-row">
+        <span class="detail-label">Refund Method</span>
+        <span class="detail-value">Original payment method (Razorpay)</span>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Items -->
+    <div class="return-card">
+      <div class="section-label">Items Being Returned</div>
+      {% for ri in return_items %}
+      <div class="item-row">
+        {% with ri.order_item.sku.product.images.all as imgs %}
+        {% if imgs %}
+          <img src="{{ imgs.0.image.url }}" class="item-img" alt="{{ ri.order_item.sku.product.name }}">
+        {% else %}
+          <div class="item-img" style="display:flex;align-items:center;justify-content:center;color:#ccc;font-size:1.2rem;">👕</div>
+        {% endif %}
+        {% endwith %}
+        <div>
+          <div class="item-name">{{ ri.order_item.sku.product.name }}</div>
+          <div class="item-meta">
+            Size: {{ ri.order_item.sku.size }} &nbsp;|&nbsp; Color: {{ ri.order_item.sku.color }}
+            &nbsp;|&nbsp; Qty: {{ ri.quantity }}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}

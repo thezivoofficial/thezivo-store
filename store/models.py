@@ -278,6 +278,53 @@ class OrderItem(models.Model):
         verbose_name_plural = "Order Items"
     
     
+class ReturnRequest(models.Model):
+    REASON_CHOICES = [
+        ("SIZE_ISSUE",    "Size issue / doesn't fit"),
+        ("QUALITY_ISSUE", "Quality not as expected"),
+        ("WRONG_ITEM",    "Wrong item delivered"),
+        ("DAMAGED",       "Item arrived damaged"),
+        ("OTHER",         "Other"),
+    ]
+    STATUS_CHOICES = [
+        ("REQUESTED",        "Requested"),
+        ("APPROVED",         "Approved"),
+        ("REJECTED",         "Rejected"),
+        ("REFUND_PROCESSED", "Refund Processed"),
+    ]
+
+    order          = models.OneToOneField(Order, on_delete=models.CASCADE, related_name="return_request")
+    reason         = models.CharField(max_length=20, choices=REASON_CHOICES)
+    reason_detail  = models.TextField(blank=True, default="")
+    status         = models.CharField(max_length=20, choices=STATUS_CHOICES, default="REQUESTED")
+    admin_notes    = models.TextField(blank=True, default="", help_text="Internal notes (not shown to customer).")
+    refund_amount  = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    razorpay_refund_id = models.CharField(max_length=100, blank=True, default="")
+    created_at     = models.DateTimeField(auto_now_add=True)
+    updated_at     = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Return Request"
+        verbose_name_plural = "Return Requests"
+
+    def __str__(self):
+        return f"Return #{self.id} — Order #{self.order_id} [{self.status}]"
+
+
+class ReturnItem(models.Model):
+    return_request = models.ForeignKey(ReturnRequest, on_delete=models.CASCADE, related_name="return_items")
+    order_item     = models.ForeignKey(OrderItem, on_delete=models.CASCADE, related_name="return_items")
+    quantity       = models.PositiveIntegerField()
+
+    class Meta:
+        verbose_name = "Return Item"
+        verbose_name_plural = "Return Items"
+
+    def __str__(self):
+        return f"{self.order_item.sku} x{self.quantity}"
+
+
 class StockNotification(models.Model):
     customer = models.ForeignKey("Customer", on_delete=models.CASCADE, null=True, blank=True)
     product  = models.ForeignKey(Product, on_delete=models.CASCADE)
@@ -342,6 +389,13 @@ class SiteSettings(models.Model):
     store_address = models.TextField(
         blank=True, default="",
         help_text="Full return/pickup address printed on shipping labels.",
+    )
+
+    # Returns
+    return_window_days = models.PositiveIntegerField(
+        default=7,
+        verbose_name="Return window (days)",
+        help_text="Number of days after delivery within which customers can request a return.",
     )
 
     class Meta:

@@ -1,0 +1,156 @@
+{% extends "store/base.html" %}
+{% block title %}Request Return — Order #{{ order.id }} | TheZivo{% endblock %}
+
+{% block content %}
+<style>
+    .return-page {
+        background: #f8f7f5;
+        min-height: 100vh;
+        padding: 48px 0 80px;
+        font-family: 'DM Sans', sans-serif;
+    }
+    .return-wrap { max-width: 680px; margin: 0 auto; padding: 0 16px; }
+    .back-link {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 0.85rem; color: #888; text-decoration: none;
+        margin-bottom: 28px; transition: color 0.15s;
+    }
+    .back-link:hover { color: #111; }
+    .return-card {
+        background: #fff; border-radius: 16px;
+        padding: 32px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        margin-bottom: 20px;
+    }
+    .return-card h2 {
+        font-size: 1.25rem; font-weight: 700; color: #111; margin: 0 0 6px;
+    }
+    .return-card .sub { font-size: 0.83rem; color: #888; margin-bottom: 24px; }
+    .section-label {
+        font-size: 0.78rem; font-weight: 600; color: #6b7280;
+        text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 14px;
+    }
+    .item-row {
+        display: flex; align-items: center; gap: 14px;
+        padding: 14px 0; border-bottom: 1px solid #f0f0f0;
+    }
+    .item-row:last-child { border-bottom: none; }
+    .item-img {
+        width: 58px; height: 58px; object-fit: cover;
+        border-radius: 8px; background: #f3f4f6; flex-shrink: 0;
+    }
+    .item-info { flex: 1; }
+    .item-name { font-size: 0.9rem; font-weight: 600; color: #111; }
+    .item-meta { font-size: 0.78rem; color: #888; margin-top: 2px; }
+    .item-qty-select {
+        display: flex; align-items: center; gap: 8px;
+    }
+    .item-qty-select label { font-size: 0.8rem; color: #555; white-space: nowrap; }
+    .item-qty-select input[type=number] {
+        width: 64px; border: 1px solid #e5e7eb; border-radius: 8px;
+        padding: 6px 10px; font-size: 0.85rem; color: #111;
+        background: #f9fafb; text-align: center;
+    }
+    .form-group { margin-bottom: 20px; }
+    .form-group label {
+        display: block; font-size: 0.83rem; font-weight: 600;
+        color: #374151; margin-bottom: 8px;
+    }
+    .form-group select,
+    .form-group textarea {
+        width: 100%; border: 1px solid #e5e7eb; border-radius: 10px;
+        padding: 12px 14px; font-size: 0.9rem; color: #111;
+        background: #fafafa; font-family: inherit;
+        transition: border-color 0.15s; box-sizing: border-box;
+    }
+    .form-group select:focus,
+    .form-group textarea:focus {
+        outline: none; border-color: #7c3aed;
+        background: #fff;
+    }
+    .form-group textarea { resize: vertical; min-height: 90px; }
+    .btn-submit {
+        width: 100%; padding: 14px; background: #7c3aed; color: #fff;
+        border: none; border-radius: 12px; font-size: 1rem; font-weight: 600;
+        cursor: pointer; transition: background 0.15s;
+    }
+    .btn-submit:hover { background: #6d28d9; }
+    .alert-error {
+        background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px;
+        padding: 12px 16px; color: #c62828; font-size: 0.85rem; margin-bottom: 20px;
+    }
+</style>
+
+<div class="return-page">
+  <div class="return-wrap">
+    <a href="{% url 'order_detail' order.id %}" class="back-link">← Back to Order</a>
+
+    {% if messages %}
+      {% for msg in messages %}
+        <div class="alert-error">{{ msg }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="post">
+      {% csrf_token %}
+
+      <div class="return-card">
+        <h2>Request Return</h2>
+        <div class="sub">Order #{{ order.id }} &nbsp;·&nbsp; Select items and reason below</div>
+
+        <div class="section-label">Items to Return</div>
+        {% for item in order_items %}
+        <div class="item-row">
+          {% with item.sku.product.images.all as imgs %}
+          {% if imgs %}
+            <img src="{{ imgs.0.image.url }}" class="item-img" alt="{{ item.sku.product.name }}">
+          {% else %}
+            <div class="item-img" style="display:flex;align-items:center;justify-content:center;color:#ccc;font-size:1.4rem;">👕</div>
+          {% endif %}
+          {% endwith %}
+          <div class="item-info">
+            <div class="item-name">{{ item.sku.product.name }}</div>
+            <div class="item-meta">
+              Size: {{ item.sku.size }} &nbsp;|&nbsp; Color: {{ item.sku.color }}
+              &nbsp;|&nbsp; ₹{{ item.price }} × {{ item.quantity }}
+            </div>
+          </div>
+          <div class="item-qty-select">
+            <label>Qty:</label>
+            <input type="number" name="qty_{{ item.id }}" value="0" min="0" max="{{ item.quantity }}">
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="return-card">
+        <div class="form-group">
+          <label>Reason for Return</label>
+          <select name="reason" required>
+            <option value="">— Select a reason —</option>
+            {% for value, label in reason_choices %}
+              <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Additional Details <span style="font-weight:400;color:#aaa;">(optional)</span></label>
+          <textarea name="reason_detail" placeholder="Describe the issue in more detail…"></textarea>
+        </div>
+        <button type="submit" class="btn-submit">Submit Return Request</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// Validate that at least one item qty > 0 before submit
+document.querySelector('form').addEventListener('submit', function(e) {
+  const selects = document.querySelectorAll('select[name^="qty_"]');
+  const anySelected = Array.from(selects).some(s => parseInt(s.value) > 0);
+  if (!anySelected) {
+    e.preventDefault();
+    alert('Please select at least one item to return.');
+  }
+});
+</script>
+{% endblock %}

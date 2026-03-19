@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Return Request Received</title>
+</head>
+<body style="margin:0;padding:0;background:#f8f7f5;font-family:'Helvetica Neue',Arial,sans-serif;color:#111;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f8f7f5;padding:32px 0;">
+  <tr><td align="center">
+    <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#fff;border-radius:16px;border:1px solid #ececec;overflow:hidden;">
+
+      <!-- HEADER -->
+      <tr><td style="background:#111;padding:28px 32px;text-align:center;">
+        <div style="font-size:1.4rem;font-weight:700;color:#fff;letter-spacing:1px;">{{ store_name|upper }}</div>
+        <div style="font-size:0.8rem;color:rgba(255,255,255,0.6);margin-top:4px;">Return Request Received</div>
+      </td></tr>
+
+      <!-- BODY -->
+      <tr><td style="padding:32px 32px 0;">
+        <h2 style="font-size:1.2rem;font-weight:600;margin:0 0 8px;">We've received your return request</h2>
+        <p style="font-size:0.88rem;color:#666;margin:0 0 24px;line-height:1.6;">
+          Hi {{ order.name }}, your return request for Order #{{ order.id }} has been submitted.<br>
+          Our team will review it within 1–2 business days and update you by email.
+        </p>
+
+        <div style="background:#f8f7f5;border-radius:10px;padding:14px 18px;margin-bottom:24px;font-size:0.85rem;">
+          <strong>Return Request #{{ rr.id }}</strong> &nbsp;·&nbsp; Order #{{ order.id }}
+          &nbsp;·&nbsp; {{ rr.created_at|date:"d M Y" }}<br>
+          <span style="color:#6b7280;">Reason: {{ rr.get_reason_display }}</span>
+        </div>
+      </td></tr>
+
+      <!-- ITEMS -->
+      <tr><td style="padding:0 32px 24px;">
+        <div style="font-size:0.78rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:12px;">Items Being Returned</div>
+        {% for ri in return_items %}
+        <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #f3f4f6;">
+          <div style="flex:1;font-size:0.86rem;">
+            <strong>{{ ri.order_item.sku.product.name }}</strong><br>
+            <span style="color:#888;">Size: {{ ri.order_item.sku.size }} &nbsp;|&nbsp; Color: {{ ri.order_item.sku.color }} &nbsp;|&nbsp; Qty: {{ ri.quantity }}</span>
+          </div>
+        </div>
+        {% endfor %}
+      </td></tr>
+
+      <!-- FOOTER -->
+      <tr><td style="padding:24px 32px;border-top:1px solid #f0f0f0;text-align:center;">
+        <p style="font-size:0.8rem;color:#aaa;margin:0;">
+          Questions? Contact us at <a href="mailto:support@thezivo.com" style="color:#7c3aed;text-decoration:none;">support@thezivo.com</a>
+        </p>
+      </td></tr>
+
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>
