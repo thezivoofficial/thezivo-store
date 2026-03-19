@@ -24,6 +24,7 @@
                 <input type="text"
                     name="name"
                     class="form-control"
+                    autocomplete="off"
                     value="{{ form_data.name }}"
                     required>
             </div>
@@ -33,6 +34,7 @@
                 <input type="tel"
                     name="phone"
                     class="form-control"
+                    autocomplete="off"
                     placeholder="9876543210 or +919876543210"
                     value="{{ form_data.phone }}"
                     pattern="[6-9][0-9]{9}|\+91[6-9][0-9]{9}|\+(?!91)[1-9][0-9]{6,12}"
@@ -46,6 +48,7 @@
                 <input type="email"
                     name="email"
                     class="form-control"
+                    autocomplete="off"
                     placeholder="you@example.com"
                     value="{{ form_data.email }}">
             </div>
@@ -57,6 +60,7 @@
                         id="signup-password"
                         name="password"
                         class="form-control"
+                        autocomplete="new-password"
                         minlength="8"
                         required>
                     <button type="button" onclick="togglePwd()" tabindex="-1"
