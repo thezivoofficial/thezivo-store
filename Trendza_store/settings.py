@@ -215,9 +215,8 @@ UNFOLD = {
 
 CACHES = {
     "default": {
-        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
-        "LOCATION": "django_cache",
-        "TIMEOUT": 300,  # 5 minutes default
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "TIMEOUT": 300,
         "OPTIONS": {"MAX_ENTRIES": 2000},
     }
 }
