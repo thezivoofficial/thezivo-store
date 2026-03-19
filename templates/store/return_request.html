@@ -183,9 +183,10 @@
         <!-- UPI fields -->
         <div id="upi-fields" class="form-group" style="display:none;">
           <label>UPI ID <span style="color:#c62828;">*</span></label>
-          <input type="text" name="upi_id" placeholder="yourname@upi"
+          <input type="text" name="upi_id" id="upiIdInput" placeholder="yourname@upi"
                  style="width:100%;border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;font-size:0.9rem;background:#fafafa;box-sizing:border-box;">
           <div style="font-size:0.76rem;color:#6b7280;margin-top:5px;">e.g. 9876543210@ybl or name@paytm</div>
+          <div id="upiStatus" style="font-size:0.8rem;margin-top:6px;display:none;"></div>
         </div>
 
         <!-- Bank account fields -->
@@ -307,6 +308,52 @@ function toggleRefundFields() {
   }
 }
 
+// UPI validation
+let upiValid = false;
+const upiInput = document.getElementById('upiIdInput');
+const upiStatus = document.getElementById('upiStatus');
+
+function showUpiStatus(msg, color) {
+  upiStatus.textContent = msg;
+  upiStatus.style.color = color;
+  upiStatus.style.display = 'block';
+  upiInput.style.borderColor = color === '#16a34a' ? '#16a34a' : (color === '#c62828' ? '#f87171' : '#e5e7eb');
+}
+
+if (upiInput) {
+  upiInput.addEventListener('blur', function() {
+    const val = this.value.trim();
+    if (!val) { upiStatus.style.display = 'none'; upiValid = false; return; }
+    showUpiStatus('Verifying…', '#7c3aed');
+    upiValid = false;
+    const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    fetch('/validate-upi/', {
+      method: 'POST',
+      headers: {'X-CSRFToken': csrf, 'Content-Type': 'application/x-www-form-urlencoded'},
+      body: 'upi_id=' + encodeURIComponent(val)
+    }).then(r => r.json()).then(d => {
+      if (d.valid) {
+        upiValid = true;
+        showUpiStatus('✓ Verified: ' + (d.name || val), '#16a34a');
+      } else {
+        upiValid = false;
+        showUpiStatus('✕ ' + (d.error || 'Invalid UPI ID'), '#c62828');
+      }
+    }).catch(() => {
+      // Network error — allow form submission
+      upiValid = true;
+      showUpiStatus('Could not verify — please double-check your UPI ID', '#92400e');
+    });
+  });
+
+  // Re-validate if user edits after blur
+  upiInput.addEventListener('input', function() {
+    upiValid = false;
+    upiStatus.style.display = 'none';
+    upiInput.style.borderColor = '#e5e7eb';
+  });
+}
+
 // Validate items before submit
 document.querySelector('form').addEventListener('submit', function(e) {
   const inputs = document.querySelectorAll('input[name^="qty_"]');
@@ -328,6 +375,12 @@ document.querySelector('form').addEventListener('submit', function(e) {
     if (!refundUpi.checked && !refundBank.checked) {
       e.preventDefault();
       alert('Please select a refund method.');
+      return;
+    }
+    if (refundUpi.checked && !upiValid) {
+      e.preventDefault();
+      if (upiInput) upiInput.focus();
+      showUpiStatus('Please enter and verify a valid UPI ID before submitting.', '#c62828');
     }
   }
 });

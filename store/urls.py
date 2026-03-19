@@ -36,6 +36,7 @@ urlpatterns = [
     path("orders/<int:order_id>/", views.order_detail, name="order_detail"),
     path("orders/<int:order_id>/cancel/", views.cancel_order, name="cancel_order"),
     path("orders/<int:order_id>/return/", views.submit_return, name="submit_return"),
+    path("validate-upi/", views.validate_upi, name="validate_upi"),
     path("orders/<int:order_id>/return/status/", views.return_status, name="return_status"),
     path("orders/<int:order_id>/invoice/", views.download_invoice, name="download_invoice"),
     path("addresses/", views.manage_addresses, name="manage_addresses"),
