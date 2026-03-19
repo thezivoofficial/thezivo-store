@@ -200,11 +200,13 @@ def send_new_product_alert(product):
             sender = SendTransacEmailRequestSender(email=settings.DEFAULT_FROM_EMAIL, name="Zivo")
             from store.models import Product as P
             prod = P.objects.get(id=product_id)
+            product_url = f"{settings.SITE_URL}/product/{product_id}/"
             for email, token in subscribers:
                 html = render_to_string("store/emails/new_product_alert.html", {
                     "product": prod,
                     "store_name": "Zivo",
                     "site_url": settings.SITE_URL,
+                    "product_url": product_url,
                     "unsubscribe_token": token,
                 })
                 try:
