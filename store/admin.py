@@ -763,6 +763,12 @@ class SiteSettingsAdmin(ModelAdmin):
                 "When disabled, customers can only pay online."
             ),
         }),
+        ("Delivery Pricing", {
+            "fields": ("delivery_charge", "free_delivery_min_order"),
+            "description": (
+                "Set the flat delivery fee and the cart total above which delivery becomes free."
+            ),
+        }),
         ("Store Identity", {
             "fields": ("store_name", "store_phone", "store_address"),
             "description": (

@@ -320,6 +320,18 @@ class SiteSettings(models.Model):
         help_text="Uncheck to disable COD and force all customers to pay online.",
     )
 
+    # Delivery pricing
+    delivery_charge = models.PositiveIntegerField(
+        default=59,
+        verbose_name="Delivery charge (₹)",
+        help_text="Flat delivery fee charged when order is below the free-delivery threshold.",
+    )
+    free_delivery_min_order = models.PositiveIntegerField(
+        default=799,
+        verbose_name="Free delivery above (₹)",
+        help_text="Orders at or above this amount get free delivery.",
+    )
+
     # Store identity — printed on invoices & shipping labels
     store_name    = models.CharField(max_length=100, default="Zivo Fashion Store")
     store_phone   = models.CharField(max_length=20, blank=True, default="")

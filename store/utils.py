@@ -1,5 +1,6 @@
 from django.conf import settings
 
+# Fallback defaults used if DB is unavailable (e.g. during migrations)
 FREE_DELIVERY_LIMIT = 799
 DELIVERY_CHARGE = 59
 
@@ -44,10 +45,18 @@ def send_order_email(order, template_name, subject):
 
 
 def calculate_delivery_and_final(subtotal):
-    if subtotal >= FREE_DELIVERY_LIMIT:
+    try:
+        from .models import SiteSettings
+        s = SiteSettings.get()
+        free_limit = s.free_delivery_min_order
+        charge = s.delivery_charge
+    except Exception:
+        free_limit = FREE_DELIVERY_LIMIT
+        charge = DELIVERY_CHARGE
+    if subtotal >= free_limit:
         return 0, subtotal, 0
-    remaining = FREE_DELIVERY_LIMIT - subtotal
-    return DELIVERY_CHARGE, subtotal + DELIVERY_CHARGE, remaining
+    remaining = free_limit - subtotal
+    return charge, subtotal + charge, remaining
 
 
 def send_whatsapp(phone, message):
