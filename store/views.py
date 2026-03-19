@@ -2164,12 +2164,47 @@ def _send_return_email(rr, template_name, subject):
 
 @require_POST
 def validate_upi(request):
-    """Validate UPI ID format (localpart@handle). Real verification happens at refund time."""
+    """Validate UPI ID against known PSP handles. Real amount verification at refund time."""
     import re
+    # Known UPI PSP handles in India (covers 99%+ of users)
+    KNOWN_UPI_HANDLES = {
+        # PhonePe
+        "ybl", "ibl", "axl",
+        # Google Pay
+        "okaxis", "oksbi", "okhdfcbank", "okicici",
+        # Paytm
+        "paytm", "pthdfc", "ptaxis", "ptyes", "ptkotak",
+        # Amazon Pay
+        "apl",
+        # BHIM / generic
+        "upi", "bhim",
+        # Banks (net banking apps)
+        "sbi", "icici", "hdfcbank", "axisbank", "kotak", "pnb", "boi", "bob",
+        "unionbank", "indus", "aubank", "idfc", "idfcbank", "rbl", "jsb",
+        "federal", "fbl", "kvb", "tmb", "dcb", "dlb", "scb", "lvb",
+        "cnrb", "uboi", "ubi", "vijb", "mahb", "barodampay", "dbs",
+        "idbi", "cbi", "jkb", "sbm", "nsdl", "hsbc", "citi",
+        # Wallets / fintech
+        "abfspay", "jupiteraxis", "fi", "slice", "niyox", "timecosmos",
+        "juspay", "naviaxis", "postbank", "freecharge", "mobikwik",
+        "airtel", "airtelpaymentsbank", "fino", "equitas", "esaf",
+        "suryoday", "utbi", "ujjivan",
+    }
+
     vpa = request.POST.get("upi_id", "").strip().lower()
     if not vpa:
         return JsonResponse({"valid": False, "error": "Please enter a UPI ID."})
-    # UPI format: alphanumeric/dots/hyphens/underscores @ alphabetic handle
-    if re.match(r'^[a-zA-Z0-9.\-_]+@[a-zA-Z]{2,}$', vpa):
-        return JsonResponse({"valid": True, "name": ""})
-    return JsonResponse({"valid": False, "error": "Invalid UPI ID format. Use format: name@upi or number@bank"})
+
+    # Must have exactly one @
+    parts = vpa.split("@")
+    if len(parts) != 2:
+        return JsonResponse({"valid": False, "error": "Invalid UPI ID. Use format: name@upi or number@bank"})
+
+    localpart, handle = parts
+    if not re.match(r'^[a-zA-Z0-9.\-_]+$', localpart) or not handle:
+        return JsonResponse({"valid": False, "error": "Invalid UPI ID format."})
+
+    if handle not in KNOWN_UPI_HANDLES:
+        return JsonResponse({"valid": False, "error": f"Unrecognised UPI handle '@{handle}'. Please check and try again."})
+
+    return JsonResponse({"valid": True, "name": ""})
