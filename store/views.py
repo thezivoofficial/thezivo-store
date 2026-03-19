@@ -2164,25 +2164,12 @@ def _send_return_email(rr, template_name, subject):
 
 @require_POST
 def validate_upi(request):
-    """Validate a UPI VPA using Razorpay API and return the account holder name."""
-    import requests as http_requests
-    vpa = request.POST.get("upi_id", "").strip()
+    """Validate UPI ID format (localpart@handle). Real verification happens at refund time."""
+    import re
+    vpa = request.POST.get("upi_id", "").strip().lower()
     if not vpa:
         return JsonResponse({"valid": False, "error": "Please enter a UPI ID."})
-
-    try:
-        resp = http_requests.post(
-            "https://api.razorpay.com/v1/payments/validate/vpa",
-            json={"vpa": vpa},
-            auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET),
-            timeout=8,
-        )
-        data = resp.json()
-        print(f"[UPI VALIDATE] vpa={vpa} status={resp.status_code} response={data}")
-        if resp.ok and data.get("success"):
-            return JsonResponse({"valid": True, "name": data.get("customer_name", "")})
-        else:
-            return JsonResponse({"valid": False, "error": "UPI ID not found. Please check and try again."})
-    except Exception as e:
-        print(f"[UPI VALIDATE ERROR] {e}")
-        return JsonResponse({"valid": False, "error": "Could not verify UPI ID. Please check your connection."})
+    # UPI format: alphanumeric/dots/hyphens/underscores @ alphabetic handle
+    if re.match(r'^[a-zA-Z0-9.\-_]+@[a-zA-Z]{2,}$', vpa):
+        return JsonResponse({"valid": True, "name": ""})
+    return JsonResponse({"valid": False, "error": "Invalid UPI ID format. Use format: name@upi or number@bank"})
