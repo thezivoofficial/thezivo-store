@@ -178,48 +178,46 @@ def calculate_delivery_and_final(subtotal):
     return charge, subtotal + charge, remaining
 
 
-def send_new_product_alert(product):
+def send_new_product_alert(product_id):
     """Email all active newsletter subscribers about a newly added product.
-    Runs entirely after DB commit so the save button returns instantly."""
+    Call with just the product ID — all work happens in a background thread
+    after the DB transaction commits, so the save button returns instantly."""
     import threading
     from django.db import transaction
-    from django.template.loader import render_to_string
-
-    # Capture primitives now — don't hold a DB connection in the thread
-    product_id   = product.id
-    product_name = product.name
-    image_url    = product.image.url if product.image else None
-    category     = str(product.category)
-    gender       = product.get_gender_display()
-    sku          = product.sku_set.first()
-    subject      = f"New Arrival: {product_name} | Zivo"
-    product_url  = f"{settings.SITE_URL}/product/{product_id}/"
-
-    # Build a lightweight dict so the template doesn't need the ORM object
-    product_ctx = {
-        "id": product_id, "name": product_name, "image_url": image_url,
-        "category": category, "gender": gender,
-        "selling_price": sku.selling_price if sku else None,
-        "mrp": sku.mrp if sku else None,
-    }
 
     def _send():
         try:
-            from .models import NewsletterSubscriber
+            from django.template.loader import render_to_string
+            from .models import NewsletterSubscriber, Product
             from brevo import Brevo, SendTransacEmailRequestToItem, SendTransacEmailRequestSender
+
+            prod = Product.objects.select_related('category').prefetch_related('sku_set').get(id=product_id)
+            sku  = prod.sku_set.first()
+            product_ctx = {
+                "name":          prod.name,
+                "image_url":     prod.image.url if prod.image else None,
+                "category":      str(prod.category),
+                "gender":        prod.get_gender_display(),
+                "selling_price": sku.selling_price if sku else None,
+                "mrp":           sku.mrp if sku else None,
+            }
+            product_url = f"{settings.SITE_URL}/product/{product_id}/"
+            subject     = f"New Arrival: {prod.name} | Zivo"
+
             subscribers = list(
                 NewsletterSubscriber.objects.filter(is_active=True).values_list("email", "token")
             )
             if not subscribers:
                 return
+
             client = Brevo(api_key=settings.BREVO_API_KEY)
             sender = SendTransacEmailRequestSender(email=settings.DEFAULT_FROM_EMAIL, name="Zivo")
             for email, token in subscribers:
                 html = render_to_string("store/emails/new_product_alert.html", {
-                    "product": product_ctx,
-                    "store_name": "Zivo",
-                    "site_url": settings.SITE_URL,
-                    "product_url": product_url,
+                    "product":           product_ctx,
+                    "store_name":        "Zivo",
+                    "site_url":          settings.SITE_URL,
+                    "product_url":       product_url,
                     "unsubscribe_token": token,
                 })
                 try:
@@ -234,7 +232,6 @@ def send_new_product_alert(product):
         except Exception as e:
             print(f"[EMAIL ERROR] New product alert failed for product {product_id}: {e}")
 
-    # Start thread only after the transaction commits (save button returns instantly)
     transaction.on_commit(lambda: threading.Thread(target=_send, daemon=False).start())
 
 

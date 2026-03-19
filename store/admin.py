@@ -186,7 +186,7 @@ class ProductAdmin(ModelAdmin):
         is_new = obj.pk is None
         super().save_model(request, obj, form, change)
         if is_new and obj.active:
-            send_new_product_alert(obj)
+            send_new_product_alert(obj.pk)
 
     def change_view(self, request, object_id, form_url="", extra_context=None):
         response = super().change_view(request, object_id, form_url, extra_context)
