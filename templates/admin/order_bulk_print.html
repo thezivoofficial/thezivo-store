@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bulk Print — {{ orders_data|length }} Orders</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -31,11 +32,14 @@
     @page { size: 4in 6in; margin: 5mm; }
     body  { background: #fff; font-size: 9px; }
     .toolbar { display: none !important; }
+    .label-wrap { display: block; overflow: visible; }
     .label-page {
       width: auto; min-height: auto;
       padding: 0; margin: 0;
       border: none; box-shadow: none;
       page-break-after: always;
+      zoom: 1 !important;
+      transform: none !important;
     }
     .page-hidden { display: none !important; }
   }
@@ -64,6 +68,15 @@
     .tb-pipe  { display: none; }
     .tb-meta  { display: none; }
     .range-form { margin-left: 0; width: 100%; justify-content: flex-start; }
+    /* Bigger touch targets */
+    .tb-print, .tb-back { height: 44px !important; font-size: 13px !important; }
+    .tb-toggle { padding: 8px 16px !important; font-size: 12px !important; }
+  }
+  /* Mobile label preview wrapper — clips overflow and centres card */
+  .label-wrap {
+    display: flex;
+    justify-content: center;
+    overflow: hidden;
   }
 
   /* Brand mark */
@@ -370,7 +383,7 @@
 {% with order=entry.order items=entry.items subtotal=entry.subtotal delivery=entry.delivery total=entry.total qr_b64=entry.qr_b64 %}
 
 <!-- ════ INVOICE — Order #{{ order.id }} ════ -->
-<div class="label-page invoice-page">
+<div class="label-wrap invoice-page"><div class="label-page">
 
   <div class="inv-header">
     <div>
@@ -457,10 +470,10 @@
     Thank you for shopping with {{ store.store_name|default:"Zivo" }}!
   </div>
 
-</div>
+</div></div>
 
 <!-- ════ SHIPPING LABEL — Order #{{ order.id }} ════ -->
-<div class="label-page shipping-page">
+<div class="label-wrap shipping-page"><div class="label-page">
   <div class="sl-outer">
 
     <div class="sl-head">
@@ -513,7 +526,7 @@
     </div>
 
   </div>
-</div>
+</div></div>
 
 {% endwith %}
 {% endfor %}
@@ -552,6 +565,25 @@
   }
 
   updatePrintBtn();
+
+  /* ── Mobile: zoom label cards to fit viewport width ── */
+  function scaleMobile() {
+    var cards = document.querySelectorAll('.label-page');
+    if (window.innerWidth < 480) {
+      var z = (window.innerWidth - 24) / 384;
+      cards.forEach(function(el) {
+        el.style.zoom = z;
+        el.style.margin = '8px auto';
+      });
+    } else {
+      cards.forEach(function(el) {
+        el.style.zoom = '';
+        el.style.margin = '';
+      });
+    }
+  }
+  scaleMobile();
+  window.addEventListener('resize', scaleMobile);
 </script>
 </body>
 </html>
