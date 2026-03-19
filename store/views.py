@@ -245,7 +245,10 @@ def home(request):
 
     request.session.pop("open_cart", None)
 
-    cached = cache.get("home_page_data")
+    try:
+        cached = cache.get("home_page_data")
+    except Exception:
+        cached = None
     if cached is None:
         base_qs = Product.objects.filter(active=True).prefetch_related(
             Prefetch("images", queryset=ProductImage.objects.all())
@@ -274,7 +277,10 @@ def home(request):
             "home_categories": home_categories,
             "free_delivery_min": store.free_delivery_min_order,
         }
-        cache.set("home_page_data", cached, 300)  # 5 minutes
+        try:
+            cache.set("home_page_data", cached, 300)  # 5 minutes
+        except Exception:
+            pass
 
     return render(request, "store/home.html", cached)
 
@@ -406,7 +412,10 @@ def product_detail(request, product_id):
 
     # Cache the non-user-specific data (product info, SKUs, images, related, offers)
     cache_key = f"product_detail_{product_id}"
-    pdata = cache.get(cache_key)
+    try:
+        pdata = cache.get(cache_key)
+    except Exception:
+        pdata = None
     if pdata is None:
         images = list(product.images.all())
         skus = list(SKU.objects.filter(product=product))
@@ -442,7 +451,10 @@ def product_detail(request, product_id):
             "default_sku": default_sku, "color_variants": color_variants,
             "related": related, "reviews": reviews, "product_offers": product_offers,
         }
-        cache.set(cache_key, pdata, 600)  # 10 minutes
+        try:
+            cache.set(cache_key, pdata, 600)  # 10 minutes
+        except Exception:
+            pass
 
     # Recently viewed is per-user — always fresh
     viewed = request.session.get('recently_viewed', [])
