@@ -860,6 +860,9 @@ class OfferAdmin(ModelAdmin):
         return ", ".join(parts)
     scope_summary.short_description = "Scope"
 
+    class Media:
+        js = ("store/offer_admin.js",)
+
 
 # ── Announcement ──────────────────────────────────────────────────────────────
 

@@ -735,14 +735,18 @@ def checkout(request):
     # ── Delivery (on offer-adjusted subtotal) ─────────────────────────
     delivery_charge, final_amount, remaining = calculate_delivery_and_final(subtotal_after_offers)
 
-    # ── Coupon ───────────────────────────────────────────────────────────
-    coupon_session = request.session.get('coupon')
+    # ── Coupon (blocked when any offer is active) ────────────────────────
     coupon_discount = 0
     coupon_code_applied = ''
-    if coupon_session:
-        coupon_discount = min(coupon_session.get('discount', 0), final_amount)
-        coupon_code_applied = coupon_session.get('code', '')
-        final_amount = max(0, final_amount - coupon_discount)
+    if offer_discount > 0:
+        # Offers and coupons cannot be stacked — clear any saved coupon
+        request.session.pop('coupon', None)
+    else:
+        coupon_session = request.session.get('coupon')
+        if coupon_session:
+            coupon_discount = min(coupon_session.get('discount', 0), final_amount)
+            coupon_code_applied = coupon_session.get('code', '')
+            final_amount = max(0, final_amount - coupon_discount)
 
     from .models import SiteSettings
     cod_enabled = SiteSettings.get().cod_enabled
@@ -1751,6 +1755,11 @@ def apply_coupon(request):
             continue
 
     offer_discount, _ = calculate_offer_discounts(items)
+    if offer_discount > 0:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Coupon codes cannot be combined with active offers.',
+        })
     subtotal_after_offers = max(0, subtotal - offer_discount)
     _, final_amount, _ = calculate_delivery_and_final(subtotal_after_offers)
 

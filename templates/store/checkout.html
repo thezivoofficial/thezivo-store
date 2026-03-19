@@ -699,6 +699,12 @@
 
                     <!-- COUPON -->
                     <div style="padding:12px 24px; border-top:1px solid #f5f5f5;">
+                        {% if offer_discount %}
+                        <div style="font-size:0.78rem; color:#888; background:#fafafa; border-radius:8px;
+                                    padding:8px 12px; border:1px dashed #e0e0e0; text-align:center;">
+                            🎁 Coupon codes cannot be combined with active offers
+                        </div>
+                        {% else %}
                         <div id="coupon-input-row" {% if coupon_code_applied %}style="display:none;"{% endif %}>
                             <div class="d-flex gap-2">
                                 <input id="coupon-input" type="text" placeholder="Promo code" maxlength="20"
@@ -718,6 +724,7 @@
                                     style="background:none; border:none; color:#c62828; font-size:0.75rem;
                                            cursor:pointer; font-weight:600; padding:0;">Remove</button>
                         </div>
+                        {% endif %}
                     </div>
 
                     <div class="summary-totals" id="checkoutTotals">
