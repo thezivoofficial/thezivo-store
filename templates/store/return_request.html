@@ -144,26 +144,108 @@
         </div>
         <div class="form-group">
           <label>Unboxing Video <span style="color:#c62828;">*</span></label>
-          <input type="file" name="unboxing_video" accept="video/*" required
+          <input type="file" id="videoFile" accept="video/*"
                  style="width:100%;border:1px solid #e5e7eb;border-radius:10px;padding:10px 14px;font-size:0.88rem;background:#fafafa;box-sizing:border-box;">
           <div style="font-size:0.76rem;color:#6b7280;margin-top:6px;">
             Upload a video showing the package being opened. This is required to process your return. (MP4, MOV, etc.)
           </div>
+          <!-- Upload progress -->
+          <div id="uploadStatus" style="display:none;margin-top:10px;">
+            <div style="height:6px;background:#e5e7eb;border-radius:4px;overflow:hidden;">
+              <div id="uploadBar" style="height:100%;width:0%;background:#7c3aed;transition:width 0.2s;"></div>
+            </div>
+            <div id="uploadText" style="font-size:0.78rem;color:#7c3aed;margin-top:6px;">Uploading…</div>
+          </div>
+          <!-- Hidden field to store the Cloudinary URL after upload -->
+          <input type="hidden" name="unboxing_video_url" id="videoUrl">
         </div>
-        <button type="submit" class="btn-submit">Submit Return Request</button>
+        <button type="submit" id="submitBtn" class="btn-submit" disabled style="opacity:0.5;cursor:not-allowed;">
+          Select a video to continue
+        </button>
       </div>
     </form>
   </div>
 </div>
 
 <script>
-// Validate that at least one item qty > 0 before submit
+const CLOUD_NAME    = "{{ cloudinary_cloud_name }}";
+const UPLOAD_PRESET = "{{ cloudinary_upload_preset }}";
+
+const videoFile   = document.getElementById('videoFile');
+const uploadStatus = document.getElementById('uploadStatus');
+const uploadBar   = document.getElementById('uploadBar');
+const uploadText  = document.getElementById('uploadText');
+const videoUrl    = document.getElementById('videoUrl');
+const submitBtn   = document.getElementById('submitBtn');
+
+videoFile.addEventListener('change', function() {
+  const file = this.files[0];
+  if (!file) return;
+
+  // Start upload immediately on file select
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', UPLOAD_PRESET);
+  formData.append('resource_type', 'video');
+
+  uploadStatus.style.display = 'block';
+  submitBtn.disabled = true;
+  submitBtn.style.opacity = '0.5';
+  submitBtn.style.cursor = 'not-allowed';
+  submitBtn.textContent = 'Uploading video…';
+
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`);
+
+  xhr.upload.addEventListener('progress', function(e) {
+    if (e.lengthComputable) {
+      const pct = Math.round((e.loaded / e.total) * 100);
+      uploadBar.style.width = pct + '%';
+      uploadText.textContent = `Uploading… ${pct}%`;
+    }
+  });
+
+  xhr.addEventListener('load', function() {
+    if (xhr.status === 200) {
+      const resp = JSON.parse(xhr.responseText);
+      videoUrl.value = resp.secure_url;
+      uploadBar.style.width = '100%';
+      uploadText.textContent = '✓ Video uploaded successfully';
+      uploadText.style.color = '#16a34a';
+      submitBtn.disabled = false;
+      submitBtn.style.opacity = '1';
+      submitBtn.style.cursor = 'pointer';
+      submitBtn.textContent = 'Submit Return Request';
+    } else {
+      uploadText.textContent = '✕ Upload failed. Please try again.';
+      uploadText.style.color = '#c62828';
+      uploadBar.style.background = '#ef4444';
+      submitBtn.textContent = 'Select a video to continue';
+      videoFile.value = '';
+    }
+  });
+
+  xhr.addEventListener('error', function() {
+    uploadText.textContent = '✕ Upload failed. Please check your connection.';
+    uploadText.style.color = '#c62828';
+    submitBtn.textContent = 'Select a video to continue';
+    videoFile.value = '';
+  });
+
+  xhr.send(formData);
+});
+
+// Validate items before submit
 document.querySelector('form').addEventListener('submit', function(e) {
-  const selects = document.querySelectorAll('select[name^="qty_"]');
-  const anySelected = Array.from(selects).some(s => parseInt(s.value) > 0);
+  const inputs = document.querySelectorAll('input[name^="qty_"]');
+  const anySelected = Array.from(inputs).some(i => parseInt(i.value) > 0);
   if (!anySelected) {
     e.preventDefault();
     alert('Please select at least one item to return.');
+  }
+  if (!videoUrl.value) {
+    e.preventDefault();
+    alert('Please wait for the video to finish uploading.');
   }
 });
 </script>

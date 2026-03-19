@@ -32,7 +32,7 @@
             after reviewing your return request for Order #{{ order.id }}, we're unable to process it at this time. Please contact us if you have questions.
           {% elif rr.status == "REFUND_PROCESSED" %}
             your refund of <strong>₹{{ rr.refund_amount }}</strong> for Order #{{ order.id }} has been processed.
-            {% if order.payment_method == "ONLINE" %}It will reflect in your account within 5–7 business days.{% else %}Our team will contact you for bank details.{% endif %}
+            {% if order.payment_method == "ONLINE" %}For UPI and most cards, it reflects within minutes. For other payment methods it may take up to 5–7 business days.{% else %}Our team will contact you for bank details.{% endif %}
           {% endif %}
         </p>
 

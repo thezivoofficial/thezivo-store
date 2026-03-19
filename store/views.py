@@ -2035,18 +2035,18 @@ def submit_return(request, order_id):
             messages.error(request, "Please select at least one item to return.")
             return render(request, "store/return_request.html", {"order": order, "order_items": order_items, "reason_choices": ReturnRequest.REASON_CHOICES})
 
-        # Unboxing video is required
-        video = request.FILES.get("unboxing_video")
-        if not video:
+        # Unboxing video URL (pre-uploaded to Cloudinary from browser)
+        video_url = request.POST.get("unboxing_video_url", "").strip()
+        if not video_url:
             messages.error(request, "Please upload an unboxing video as proof.")
-            return render(request, "store/return_request.html", {"order": order, "order_items": order_items, "reason_choices": ReturnRequest.REASON_CHOICES})
+            return render(request, "store/return_request.html", {"order": order, "order_items": order_items, "reason_choices": ReturnRequest.REASON_CHOICES, "cloudinary_cloud_name": settings.CLOUDINARY_STORAGE.get("CLOUD_NAME", "")})
 
         with transaction.atomic():
             rr = ReturnRequest.objects.create(
                 order=order,
                 reason=reason,
                 reason_detail=reason_detail,
-                unboxing_video=video,
+                unboxing_video=video_url,
             )
             for item, qty in selected_items:
                 ReturnItem.objects.create(return_request=rr, order_item=item, quantity=qty)
@@ -2061,6 +2061,8 @@ def submit_return(request, order_id):
         "order": order,
         "order_items": order_items,
         "reason_choices": ReturnRequest.REASON_CHOICES,
+        "cloudinary_cloud_name": settings.CLOUDINARY_STORAGE.get("CLOUD_NAME", ""),
+        "cloudinary_upload_preset": settings.CLOUDINARY_UPLOAD_PRESET,
     })
 
 

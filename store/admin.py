@@ -959,7 +959,7 @@ class ReturnRequestAdmin(ModelAdmin):
 
     def display_video(self, obj):
         if obj.unboxing_video:
-            return format_html('<a href="{}" target="_blank">▶ View Unboxing Video</a>', obj.unboxing_video.url)
+            return format_html('<a href="{}" target="_blank">▶ View Unboxing Video</a>', obj.unboxing_video)
         return "—"
     display_video.short_description = "Unboxing Video"
 
