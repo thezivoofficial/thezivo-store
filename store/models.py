@@ -138,20 +138,55 @@ class ProductImage(models.Model):
         return f"Image - {self.product.name}"
 
 
-from django.db.models.signals import post_delete
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
+
+
+# ── Cloudinary cleanup ────────────────────────────────────────────────────────
 
 @receiver(post_delete, sender=ProductImage)
 def delete_product_image_from_cloudinary(sender, instance, **kwargs):
-    """Delete the image file from Cloudinary when a ProductImage record is deleted."""
     if instance.image:
         try:
             import cloudinary.uploader
-            # Extract public_id from the image name (strip extension)
             public_id = instance.image.name.rsplit(".", 1)[0]
             cloudinary.uploader.destroy(public_id)
         except Exception as e:
             print(f"[CLOUDINARY] Failed to delete image {instance.image.name}: {e}")
+
+
+# ── Cache invalidation ────────────────────────────────────────────────────────
+
+def _clear_product_cache(product_id):
+    from django.core.cache import cache
+    cache.delete(f"product_detail_{product_id}")
+    cache.delete("home_page_data")
+
+
+@receiver(post_save, sender="store.Product")
+def on_product_save(sender, instance, **kwargs):
+    _clear_product_cache(instance.id)
+
+
+@receiver(post_delete, sender="store.Product")
+def on_product_delete(sender, instance, **kwargs):
+    _clear_product_cache(instance.id)
+
+
+@receiver(post_save, sender="store.ProductImage")
+def on_product_image_save(sender, instance, **kwargs):
+    _clear_product_cache(instance.product_id)
+
+
+@receiver(post_save, sender="store.SKU")
+def on_sku_save(sender, instance, **kwargs):
+    _clear_product_cache(instance.product_id)
+
+
+@receiver(post_save, sender="store.SiteSettings")
+def on_site_settings_save(sender, instance, **kwargs):
+    from django.core.cache import cache
+    cache.delete("home_page_data")
 
 
 class SKU(models.Model):

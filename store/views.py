@@ -241,36 +241,42 @@ def build_cart_context(request):
 
 
 def home(request):
+    from django.core.cache import cache
 
     request.session.pop("open_cart", None)
 
-    base_qs = Product.objects.filter(active=True).prefetch_related(
-        Prefetch("images", queryset=ProductImage.objects.all())
-    ).annotate(has_sku=Exists(SKU.objects.filter(product=OuterRef("pk")))).filter(has_sku=True)
+    cached = cache.get("home_page_data")
+    if cached is None:
+        base_qs = Product.objects.filter(active=True).prefetch_related(
+            Prefetch("images", queryset=ProductImage.objects.all())
+        ).annotate(has_sku=Exists(SKU.objects.filter(product=OuterRef("pk")))).filter(has_sku=True)
 
-    trending = list(base_qs.filter(is_trending=True))
-    has_trending = bool(trending)
-    products = trending if has_trending else list(base_qs[:8])
+        trending = list(base_qs.filter(is_trending=True))
+        has_trending = bool(trending)
+        products = trending if has_trending else list(base_qs[:8])
 
-    from .utils import _get_active_offers
-    try:
-        active_offers = list(_get_active_offers())
-    except Exception:
-        active_offers = []
+        from .utils import _get_active_offers
+        try:
+            active_offers = list(_get_active_offers())
+        except Exception:
+            active_offers = []
 
-    home_categories = list(
-        Category.objects.filter(is_active=True, gender__in=["men", "women"])
-        .order_by("sort_order", "name")
-    )
+        home_categories = list(
+            Category.objects.filter(is_active=True, gender__in=["men", "women"])
+            .order_by("sort_order", "name")
+        )
 
-    store = SiteSettings.get()
-    return render(request, "store/home.html", {
-        "products": products,
-        "has_trending": has_trending,
-        "active_offers": active_offers,
-        "home_categories": home_categories,
-        "free_delivery_min": store.free_delivery_min_order,
-    })
+        store = SiteSettings.get()
+        cached = {
+            "products": products,
+            "has_trending": has_trending,
+            "active_offers": active_offers,
+            "home_categories": home_categories,
+            "free_delivery_min": store.free_delivery_min_order,
+        }
+        cache.set("home_page_data", cached, 300)  # 5 minutes
+
+    return render(request, "store/home.html", cached)
 
 
 def login_view(request):
@@ -394,19 +400,51 @@ def notify_me(request, product_id):
 
 
 def product_detail(request, product_id):
+    from django.core.cache import cache
+
     product = get_object_or_404(Product, id=product_id)
-    images = product.images.all()
-    skus = SKU.objects.filter(product=product)
-    in_stock = any(sku.stock > 0 for sku in skus)
-    default_sku = skus.filter(stock__gt=0).first() or skus.first()
 
-    # Build color_variants: {color_name: first_sku_of_that_color}
-    color_variants = {}
-    for sku in skus:
-        if sku.color not in color_variants:
-            color_variants[sku.color] = sku
+    # Cache the non-user-specific data (product info, SKUs, images, related, offers)
+    cache_key = f"product_detail_{product_id}"
+    pdata = cache.get(cache_key)
+    if pdata is None:
+        images = list(product.images.all())
+        skus = list(SKU.objects.filter(product=product))
+        in_stock = any(sku.stock > 0 for sku in skus)
+        default_sku = next((s for s in skus if s.stock > 0), skus[0] if skus else None)
 
-    # ── Recently viewed (session-based, max 8) ──────────────────────────
+        color_variants = {}
+        for sku in skus:
+            if sku.color not in color_variants:
+                color_variants[sku.color] = sku
+
+        related = list(
+            Product.objects.filter(category=product.category, gender=product.gender, active=True)
+            .exclude(id=product.id).prefetch_related('images')[:6]
+        )
+        reviews = list(product.reviews.select_related('customer').order_by('-created_at')[:20])
+
+        from .utils import _get_active_offers
+        try:
+            product_offers = []
+            for offer in _get_active_offers():
+                p_ids = {p.id for p in offer.applicable_products.all()}
+                c_ids = {c.id for c in offer.applicable_categories.all()}
+                if not p_ids and not c_ids:
+                    product_offers.append(offer)
+                elif product.id in p_ids or product.category_id in c_ids:
+                    product_offers.append(offer)
+        except Exception:
+            product_offers = []
+
+        pdata = {
+            "images": images, "skus": skus, "in_stock": in_stock,
+            "default_sku": default_sku, "color_variants": color_variants,
+            "related": related, "reviews": reviews, "product_offers": product_offers,
+        }
+        cache.set(cache_key, pdata, 600)  # 10 minutes
+
+    # Recently viewed is per-user — always fresh
     viewed = request.session.get('recently_viewed', [])
     viewed = [x for x in viewed if x != product.id]
     viewed.insert(0, product.id)
@@ -416,14 +454,7 @@ def product_detail(request, product_id):
     recently_viewed = list(Product.objects.filter(id__in=recent_ids, active=True).prefetch_related('images'))
     recently_viewed.sort(key=lambda p: recent_ids.index(p.id) if p.id in recent_ids else 99)
 
-    # ── Related products (same category + gender) ───────────────────────
-    related = list(
-        Product.objects.filter(category=product.category, gender=product.gender, active=True)
-        .exclude(id=product.id).prefetch_related('images')[:6]
-    )
-
-    # ── Reviews ─────────────────────────────────────────────────────────
-    reviews = product.reviews.select_related('customer').order_by('-created_at')[:20]
+    # Review eligibility is per-user — always fresh
     customer_review = None
     can_review = False
     if request.customer:
@@ -435,33 +466,12 @@ def product_detail(request, product_id):
                 order__status__in=['DELIVERED', 'SHIPPED']
             ).exists()
 
-    # ── Offers applicable to this product ───────────────────────────────
-    from .utils import _get_active_offers
-    try:
-        product_offers = []
-        for offer in _get_active_offers():
-            p_ids = {p.id for p in offer.applicable_products.all()}
-            c_ids = {c.id for c in offer.applicable_categories.all()}
-            if not p_ids and not c_ids:
-                product_offers.append(offer)
-            elif product.id in p_ids or product.category_id in c_ids:
-                product_offers.append(offer)
-    except Exception:
-        product_offers = []
-
     return render(request, "store/product_detail.html", {
         "product": product,
-        "images": images,
-        "skus": skus,
-        "default_sku": default_sku,
-        "in_stock": in_stock,
-        "color_variants": color_variants,
         "recently_viewed": recently_viewed,
-        "related": related,
-        "reviews": reviews,
         "customer_review": customer_review,
         "can_review": can_review,
-        "product_offers": product_offers,
+        **pdata,
     })
 
 

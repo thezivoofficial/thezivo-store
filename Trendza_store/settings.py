@@ -213,6 +213,15 @@ UNFOLD = {
     },
 }
 
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+        "LOCATION": "django_cache",
+        "TIMEOUT": 300,  # 5 minutes default
+        "OPTIONS": {"MAX_ENTRIES": 2000},
+    }
+}
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
