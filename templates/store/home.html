@@ -131,19 +131,18 @@
     <div class="offers-scroll-row">
         {% for offer in active_offers %}
         <a href="{% url 'offer_products' offer.id %}" class="offer-card">
-            <div class="offer-type-badge offer-type-{{ offer.offer_type|lower }}">
-                {% if offer.offer_type == 'BOGO' %}Buy 1 Get 1
-                {% elif offer.offer_type == 'PERCENTAGE' %}{{ offer.discount_percent }}% OFF
-                {% elif offer.offer_type == 'BUY_X_GET_Y' %}Buy {{ offer.buy_quantity }} Get {{ offer.get_quantity }}
-                {% elif offer.offer_type == 'MIN_QTY' %}Qty Deal
-                {% endif %}
-            </div>
-            <div class="offer-card-name">{{ offer.name }}</div>
-            {% if offer.description %}
-            <div class="offer-card-desc">{{ offer.description }}</div>
-            {% endif %}
-            <div style="margin-top:10px; font-size:0.72rem; color:#166534; font-weight:600; letter-spacing:.3px;">
-                Shop Now →
+            <div class="offer-card-accent offer-card-accent-{{ offer.offer_type|lower }}"></div>
+            <div class="offer-card-body">
+                <div class="offer-card-eyebrow">Exclusive Offer</div>
+                <div class="offer-card-headline">
+                    {% if offer.offer_type == 'BOGO' %}Buy 1<br>Get 1 Free
+                    {% elif offer.offer_type == 'PERCENTAGE' %}{{ offer.discount_percent }}%<br>Off
+                    {% elif offer.offer_type == 'BUY_X_GET_Y' %}Buy {{ offer.buy_quantity }}<br>Get {{ offer.get_quantity }}
+                    {% elif offer.offer_type == 'MIN_QTY' %}Qty<br>Deal
+                    {% endif %}
+                </div>
+                <div class="offer-card-subdesc">{{ offer.name }}{% if offer.description %} — {{ offer.description }}{% endif %}</div>
+                <div class="offer-card-cta">Shop Now →</div>
             </div>
         </a>
         {% endfor %}

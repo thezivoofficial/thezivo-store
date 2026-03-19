@@ -86,6 +86,7 @@ class Product(models.Model):
     )
     image = models.ImageField(upload_to="products/")
     active = models.BooleanField(default=True, db_index=True)
+    is_trending = models.BooleanField(default=False, db_index=True)
     brand = models.CharField(max_length=100)
 
     def save(self, *args, **kwargs):

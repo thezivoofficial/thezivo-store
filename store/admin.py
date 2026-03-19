@@ -100,14 +100,15 @@ class CategoryAdmin(ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(ModelAdmin):
-    list_display        = ("thumbnail", "name", "brand", "gender", "category", "sku_count", "stock_status", "active")
-    list_filter         = ("active", "gender", "category", "brand")
+    list_display        = ("thumbnail", "name", "brand", "gender", "category", "sku_count", "stock_status", "trending_badge", "active", "is_trending")
+    list_filter         = ("active", "is_trending", "gender", "category", "brand")
     search_fields       = ("name", "brand")
-    list_editable       = ("active",)
+    list_editable       = ("active", "is_trending")
     list_per_page       = 25
     list_select_related = True
     inlines             = [ProductImageInline, SKUInline]
     compressed_fields   = True
+    actions             = ["mark_trending", "unmark_trending"]
 
     fieldsets = (
         ("Basic Info", {
@@ -120,9 +121,25 @@ class ProductAdmin(ModelAdmin):
             "fields": ("image",),
         }),
         ("Visibility", {
-            "fields": ("active",),
+            "fields": ("active", "is_trending"),
         }),
     )
+
+    @admin.action(description="⭐ Mark selected as Trending")
+    def mark_trending(self, request, queryset):
+        updated = queryset.update(is_trending=True)
+        self.message_user(request, f"{updated} product(s) marked as trending.")
+
+    @admin.action(description="✕ Remove selected from Trending")
+    def unmark_trending(self, request, queryset):
+        updated = queryset.update(is_trending=False)
+        self.message_user(request, f"{updated} product(s) removed from trending.")
+
+    def trending_badge(self, obj):
+        if obj.is_trending:
+            return format_html('<span class="zivo-badge zivo-purple">⭐ Trending</span>')
+        return format_html('<span style="color:#d1d5db;font-size:11px;">—</span>')
+    trending_badge.short_description = "Trending"
 
     class Media:
         css = {"all": ("store/admin.css",)}

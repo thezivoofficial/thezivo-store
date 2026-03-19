@@ -244,15 +244,13 @@ def home(request):
 
     request.session.pop("open_cart", None)
 
-    products = Product.objects.filter(
-        active=True
-    ).prefetch_related(
+    base_qs = Product.objects.filter(active=True).prefetch_related(
         Prefetch("images", queryset=ProductImage.objects.all())
-    ).annotate(
-        has_sku=Exists(
-            SKU.objects.filter(product=OuterRef("pk"))
-        )
-    ).filter(has_sku=True)[:8]
+    ).annotate(has_sku=Exists(SKU.objects.filter(product=OuterRef("pk")))).filter(has_sku=True)
+
+    products = list(base_qs.filter(is_trending=True))
+    if not products:
+        products = list(base_qs[:8])
 
     from .utils import _get_active_offers
     try:

@@ -2428,17 +2428,20 @@ No size-change dropdown — editing lives on the main cart page.
 .sc-btn-checkout:hover { background: #333; color: #fff; }
 
 /* ── Offer Cards (home page section) ────────────────────────────────────── */
-.offers-scroll-row { display:flex; gap:12px; overflow-x:auto; padding-bottom:6px; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
+.offers-scroll-row { display:flex; gap:14px; overflow-x:auto; padding:4px 2px 12px; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
 .offers-scroll-row::-webkit-scrollbar { display:none; }
-.offer-card { flex-shrink:0; min-width:200px; max-width:240px; background:linear-gradient(135deg,#f0fdf4,#dcfce7); border:1.5px solid #86efac; border-radius:14px; padding:16px 18px; text-decoration:none; display:block; transition:transform 0.15s, box-shadow 0.15s; }
-.offer-card:hover { transform:translateY(-2px); box-shadow:0 4px 16px rgba(22,101,52,.12); }
-.offer-type-badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:0.7rem; font-weight:700; letter-spacing:.4px; text-transform:uppercase; margin-bottom:10px; }
-.offer-type-bogo { background:#fef9c3; color:#854d0e; }
-.offer-type-percentage { background:#dbeafe; color:#1e40af; }
-.offer-type-buy_x_get_y { background:#ede9fe; color:#5b21b6; }
-.offer-type-min_qty { background:#fce7f3; color:#9d174d; }
-.offer-card-name { font-size:0.88rem; font-weight:700; color:#166534; margin-bottom:4px; font-family:'Playfair Display',serif; }
-.offer-card-desc { font-size:0.78rem; color:#15803d; line-height:1.4; }
+.offer-card { flex-shrink:0; min-width:220px; max-width:260px; background:#111; border-radius:16px; padding:0; text-decoration:none; display:flex; flex-direction:column; overflow:hidden; transition:transform 0.2s, box-shadow 0.2s; }
+.offer-card:hover { transform:translateY(-3px); box-shadow:0 10px 30px rgba(0,0,0,.3); }
+.offer-card-accent { height:4px; flex-shrink:0; }
+.offer-card-accent-bogo        { background:#f59e0b; }
+.offer-card-accent-percentage  { background:#3b82f6; }
+.offer-card-accent-buy_x_get_y { background:#8b5cf6; }
+.offer-card-accent-min_qty     { background:#10b981; }
+.offer-card-body { padding:18px 20px 20px; flex:1; display:flex; flex-direction:column; }
+.offer-card-eyebrow { font-size:0.6rem; letter-spacing:2.5px; color:rgba(255,255,255,.4); text-transform:uppercase; margin-bottom:10px; }
+.offer-card-headline { font-size:1.3rem; font-weight:900; color:#fff; line-height:1.1; margin-bottom:8px; font-family:'Playfair Display',serif; }
+.offer-card-subdesc { font-size:0.75rem; color:rgba(255,255,255,.5); line-height:1.4; flex:1; margin-bottom:16px; }
+.offer-card-cta { display:inline-block; font-size:0.7rem; font-weight:700; color:#111; background:#fff; padding:6px 14px; border-radius:20px; letter-spacing:0.5px; align-self:flex-start; }
 
 /* ── Offer badge on product cards ───────────────────────────────────────── */
 .offer-badge-card { position:absolute; top:8px; left:8px; background:#16a34a; color:#fff; font-size:0.65rem; font-weight:700; padding:3px 8px; border-radius:20px; letter-spacing:.3px; pointer-events:none; z-index:2; }
