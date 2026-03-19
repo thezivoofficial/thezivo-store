@@ -1917,6 +1917,16 @@ def offer_products_page(request, offer_id):
     })
 
 
+def trending_products_page(request):
+    products = list(
+        Product.objects.filter(is_trending=True, active=True)
+        .prefetch_related(Prefetch('images', queryset=ProductImage.objects.all()))
+        .annotate(has_sku=Exists(SKU.objects.filter(product=OuterRef('pk'))))
+        .filter(has_sku=True)
+    )
+    return render(request, 'store/trending_products.html', {'products': products})
+
+
 def contact_us(request):
     store = SiteSettings.get()
     return render(request, 'store/contact_us.html', {'store': store})

@@ -1,0 +1,35 @@
+{% extends "store/base.html" %}
+
+{% block title %}Trending Now — TheZivo{% endblock %}
+
+{% block content %}
+
+<div style="padding:20px 16px 8px;">
+    <div class="small text-muted mb-1" style="font-size:0.78rem;">
+        <a href="{% url 'home' %}" style="color:#888; text-decoration:none;">Home</a> / Trending Now
+    </div>
+    <h5 style="font-family:'Playfair Display',serif; font-size:1.1rem; font-weight:700; color:#111; margin:0;">
+        Trending Now
+        <span style="font-size:0.78rem; font-weight:400; color:#888; margin-left:8px;">{{ products|length }} item{{ products|length|pluralize }}</span>
+    </h5>
+</div>
+
+<div style="padding:12px 16px 80px;">
+    {% if products %}
+    <div class="row g-3">
+        {% for product in products %}
+        <div class="col-6 col-md-3">
+            {% include "store/product_card.html" %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align:center; padding:60px 20px; color:#888;">
+        <div style="font-size:2rem; margin-bottom:12px;">🔥</div>
+        <p style="font-size:0.9rem;">No trending products right now. Check back soon!</p>
+        <a href="{% url 'home' %}" style="font-size:0.85rem; color:#111; font-weight:600;">← Back to Home</a>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}
