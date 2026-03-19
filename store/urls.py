@@ -54,4 +54,5 @@ urlpatterns = [
     path("offers/<int:offer_id>/", views.offer_products_page, name="offer_products"),
     path("trending/", views.trending_products_page, name="trending_products"),
     path("newsletter/subscribe/", views.subscribe_newsletter, name="subscribe_newsletter"),
+    path("newsletter/unsubscribe/<str:token>/", views.newsletter_unsubscribe, name="newsletter_unsubscribe"),
 ]

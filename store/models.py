@@ -544,11 +544,18 @@ class NewsletterSubscriber(models.Model):
     email         = models.EmailField(unique=True)
     subscribed_at = models.DateTimeField(auto_now_add=True)
     is_active     = models.BooleanField(default=True)
+    token         = models.CharField(max_length=64, unique=True, blank=True)
 
     class Meta:
         ordering = ["-subscribed_at"]
         verbose_name = "Newsletter Subscriber"
         verbose_name_plural = "Newsletter Subscribers"
+
+    def save(self, *args, **kwargs):
+        if not self.token:
+            import secrets
+            self.token = secrets.token_urlsafe(32)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.email

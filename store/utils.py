@@ -185,33 +185,39 @@ def send_new_product_alert(product):
     from .models import NewsletterSubscriber
 
     subscribers = list(
-        NewsletterSubscriber.objects.filter(is_active=True).values_list("email", flat=True)
+        NewsletterSubscriber.objects.filter(is_active=True).values_list("email", "token")
     )
     if not subscribers:
         return
 
-    html = render_to_string("store/emails/new_product_alert.html", {
-        "product": product,
-        "store_name": "Zivo",
-        "site_url": settings.SITE_URL,
-    })
     subject = f"New Arrival: {product.name} | Zivo"
+    product_id = product.id
 
     def _send():
         try:
             from brevo import Brevo, SendTransacEmailRequestToItem, SendTransacEmailRequestSender
             client = Brevo(api_key=settings.BREVO_API_KEY)
-            to_list = [SendTransacEmailRequestToItem(email=e) for e in subscribers]
-            client.transactional_emails.send_transac_email(
-                to=to_list,
-                sender=SendTransacEmailRequestSender(
-                    email=settings.DEFAULT_FROM_EMAIL, name="Zivo"
-                ),
-                subject=subject,
-                html_content=html,
-            )
+            sender = SendTransacEmailRequestSender(email=settings.DEFAULT_FROM_EMAIL, name="Zivo")
+            from store.models import Product as P
+            prod = P.objects.get(id=product_id)
+            for email, token in subscribers:
+                html = render_to_string("store/emails/new_product_alert.html", {
+                    "product": prod,
+                    "store_name": "Zivo",
+                    "site_url": settings.SITE_URL,
+                    "unsubscribe_token": token,
+                })
+                try:
+                    client.transactional_emails.send_transac_email(
+                        to=[SendTransacEmailRequestToItem(email=email)],
+                        sender=sender,
+                        subject=subject,
+                        html_content=html,
+                    )
+                except Exception as e:
+                    print(f"[EMAIL ERROR] Failed to send to {email}: {e}")
         except Exception as e:
-            print(f"[EMAIL ERROR] New product alert failed for product {product.id}: {e}")
+            print(f"[EMAIL ERROR] New product alert failed for product {product_id}: {e}")
 
     threading.Thread(target=_send, daemon=False).start()
 

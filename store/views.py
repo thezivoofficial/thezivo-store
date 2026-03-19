@@ -1950,6 +1950,17 @@ def subscribe_newsletter(request):
     return JsonResponse({"status": "ok", "message": "You're subscribed!"})
 
 
+def newsletter_unsubscribe(request, token):
+    try:
+        sub = NewsletterSubscriber.objects.get(token=token)
+        sub.is_active = False
+        sub.save()
+        unsubscribed = True
+    except NewsletterSubscriber.DoesNotExist:
+        unsubscribed = False
+    return render(request, "store/newsletter_unsubscribe.html", {"unsubscribed": unsubscribed})
+
+
 def contact_us(request):
     store = SiteSettings.get()
     return render(request, 'store/contact_us.html', {'store': store})
