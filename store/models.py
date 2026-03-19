@@ -158,9 +158,12 @@ def delete_product_image_from_cloudinary(sender, instance, **kwargs):
 # ── Cache invalidation ────────────────────────────────────────────────────────
 
 def _clear_product_cache(product_id):
-    from django.core.cache import cache
-    cache.delete(f"product_detail_{product_id}")
-    cache.delete("home_page_data")
+    try:
+        from django.core.cache import cache
+        cache.delete(f"product_detail_{product_id}")
+        cache.delete("home_page_data")
+    except Exception:
+        pass
 
 
 @receiver(post_save, sender="store.Product")
@@ -185,8 +188,11 @@ def on_sku_save(sender, instance, **kwargs):
 
 @receiver(post_save, sender="store.SiteSettings")
 def on_site_settings_save(sender, instance, **kwargs):
-    from django.core.cache import cache
-    cache.delete("home_page_data")
+    try:
+        from django.core.cache import cache
+        cache.delete("home_page_data")
+    except Exception:
+        pass
 
 
 class SKU(models.Model):
