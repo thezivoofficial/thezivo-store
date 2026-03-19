@@ -254,8 +254,15 @@ def home(request):
         )
     ).filter(has_sku=True)[:8]
 
+    from .utils import _get_active_offers
+    try:
+        active_offers = list(_get_active_offers())
+    except Exception:
+        active_offers = []
+
     return render(request, "store/home.html", {
-        "products": products
+        "products": products,
+        "active_offers": active_offers,
     })
 
 
@@ -421,6 +428,20 @@ def product_detail(request, product_id):
                 order__status__in=['DELIVERED', 'SHIPPED']
             ).exists()
 
+    # ── Offers applicable to this product ───────────────────────────────
+    from .utils import _get_active_offers
+    try:
+        product_offers = []
+        for offer in _get_active_offers():
+            p_ids = {p.id for p in offer.applicable_products.all()}
+            c_ids = {c.id for c in offer.applicable_categories.all()}
+            if not p_ids and not c_ids:
+                product_offers.append(offer)
+            elif product.id in p_ids or product.category_id in c_ids:
+                product_offers.append(offer)
+    except Exception:
+        product_offers = []
+
     return render(request, "store/product_detail.html", {
         "product": product,
         "images": images,
@@ -433,6 +454,7 @@ def product_detail(request, product_id):
         "reviews": reviews,
         "customer_review": customer_review,
         "can_review": can_review,
+        "product_offers": product_offers,
     })
 
 

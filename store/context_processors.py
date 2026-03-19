@@ -1,6 +1,6 @@
 from django.db import models as db_models
 from .models import SKU, CartItem, WishlistItem, Coupon, Announcement, Category
-from .utils import calculate_delivery_and_final, calculate_offer_discounts
+from .utils import calculate_delivery_and_final, calculate_offer_discounts, _get_active_offers
 
 
 def cart_context(request):
@@ -80,6 +80,31 @@ def nav_categories(request):
     men    = list(Category.objects.filter(gender="men",    is_active=True).order_by("sort_order", "name"))
     women  = list(Category.objects.filter(gender="women",  is_active=True).order_by("sort_order", "name"))
     return {"nav_men_categories": men, "nav_women_categories": women}
+
+
+def active_offers_context(request):
+    try:
+        offers = list(_get_active_offers())
+    except Exception:
+        offers = []
+
+    has_global = False
+    prod_ids = set()
+    cat_ids = set()
+
+    for offer in offers:
+        p_ids = {p.id for p in offer.applicable_products.all()}
+        c_ids = {c.id for c in offer.applicable_categories.all()}
+        if not p_ids and not c_ids:
+            has_global = True
+        prod_ids |= p_ids
+        cat_ids |= c_ids
+
+    return {
+        'has_global_offer': has_global,
+        'offer_product_ids': prod_ids,
+        'offer_category_ids': cat_ids,
+    }
 
 
 def wishlist_count(request):

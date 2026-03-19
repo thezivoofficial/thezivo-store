@@ -122,6 +122,33 @@
 </section>
 
 
+<!-- ================= ACTIVE OFFERS ================= -->
+{% if active_offers %}
+<section class="home-section">
+    <div class="home-section-header">
+        <h5 class="home-section-title">🎁 Active Offers</h5>
+    </div>
+    <div class="offers-scroll-row">
+        {% for offer in active_offers %}
+        <div class="offer-card">
+            <div class="offer-type-badge offer-type-{{ offer.offer_type|lower }}">
+                {% if offer.offer_type == 'BOGO' %}Buy 1 Get 1
+                {% elif offer.offer_type == 'PERCENTAGE' %}{{ offer.discount_percent }}% OFF
+                {% elif offer.offer_type == 'BUY_X_GET_Y' %}Buy {{ offer.buy_quantity }} Get {{ offer.get_quantity }}
+                {% elif offer.offer_type == 'MIN_QTY' %}Qty Deal
+                {% endif %}
+            </div>
+            <div class="offer-card-name">{{ offer.name }}</div>
+            {% if offer.description %}
+            <div class="offer-card-desc">{{ offer.description }}</div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+
 <!-- ================= TRENDING PRODUCTS ================= -->
 <section class="home-section">
     <div class="home-section-header">

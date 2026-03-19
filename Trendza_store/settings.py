@@ -228,6 +228,7 @@ TEMPLATES = [
                 'store.context_processors.wishlist_count',
                 'store.context_processors.announcement_banner',
                 'store.context_processors.nav_categories',
+                'store.context_processors.active_offers_context',
             ],
         },
     },

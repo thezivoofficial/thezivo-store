@@ -2427,6 +2427,28 @@ No size-change dropdown — editing lives on the main cart page.
 
 .sc-btn-checkout:hover { background: #333; color: #fff; }
 
+/* ── Offer Cards (home page section) ────────────────────────────────────── */
+.offers-scroll-row { display:flex; gap:12px; overflow-x:auto; padding-bottom:6px; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
+.offers-scroll-row::-webkit-scrollbar { display:none; }
+.offer-card { flex-shrink:0; min-width:200px; max-width:240px; background:linear-gradient(135deg,#f0fdf4,#dcfce7); border:1.5px solid #86efac; border-radius:14px; padding:16px 18px; }
+.offer-type-badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:0.7rem; font-weight:700; letter-spacing:.4px; text-transform:uppercase; margin-bottom:10px; }
+.offer-type-bogo { background:#fef9c3; color:#854d0e; }
+.offer-type-percentage { background:#dbeafe; color:#1e40af; }
+.offer-type-buy_x_get_y { background:#ede9fe; color:#5b21b6; }
+.offer-type-min_qty { background:#fce7f3; color:#9d174d; }
+.offer-card-name { font-size:0.88rem; font-weight:700; color:#166534; margin-bottom:4px; font-family:'Playfair Display',serif; }
+.offer-card-desc { font-size:0.78rem; color:#15803d; line-height:1.4; }
+
+/* ── Offer badge on product cards ───────────────────────────────────────── */
+.offer-badge-card { position:absolute; top:8px; left:8px; background:#16a34a; color:#fff; font-size:0.65rem; font-weight:700; padding:3px 8px; border-radius:20px; letter-spacing:.3px; pointer-events:none; z-index:2; }
+
+/* ── Offer callout on product detail ────────────────────────────────────── */
+.offer-callout { background:#f0fdf4; border:1.5px solid #86efac; border-radius:10px; padding:12px 16px; margin-bottom:20px; }
+.offer-callout-item { display:flex; align-items:flex-start; gap:8px; }
+.offer-callout-item + .offer-callout-item { margin-top:8px; padding-top:8px; border-top:1px solid #bbf7d0; }
+.offer-callout-icon { font-size:1rem; flex-shrink:0; margin-top:1px; }
+.offer-callout-text { font-size:0.82rem; color:#166534; line-height:1.4; }
+
 /* ── Product Row Scroll (related / recently viewed) ─────────────────────── */
 .product-row-scroll { overflow-x: auto; scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: #e0e0e0 transparent; -webkit-overflow-scrolling: touch; }
 .product-row-scroll::-webkit-scrollbar { height: 4px; }

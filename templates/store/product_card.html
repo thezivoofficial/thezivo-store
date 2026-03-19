@@ -30,6 +30,13 @@
             <div class="oos-overlay">Out of Stock</div>
         {% endif %}
 
+        <!-- Offer badge -->
+        {% if stock > 0 %}
+        {% if has_global_offer or product.id in offer_product_ids or product.category_id in offer_category_ids %}
+        <div class="offer-badge-card">🎁 Offer</div>
+        {% endif %}
+        {% endif %}
+
         <!-- Wishlist (hidden for OOS) -->
         {% if stock > 0 %}
         <button class="wishlist-btn-card {% if product.id in wishlist_ids %}wish-active{% endif %}"

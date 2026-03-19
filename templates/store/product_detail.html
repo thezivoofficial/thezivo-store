@@ -647,6 +647,20 @@
                         <span class="price-discount" id="discount">{{ default_sku.discount_percent }}% OFF</span>
                     </div>
 
+                    <!-- OFFER CALLOUT -->
+                    {% if product_offers %}
+                    <div class="offer-callout">
+                        {% for offer in product_offers %}
+                        <div class="offer-callout-item">
+                            <span class="offer-callout-icon">🎁</span>
+                            <span class="offer-callout-text">
+                                <strong>{{ offer.name }}</strong>{% if offer.description %} — {{ offer.description }}{% endif %}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
                     <!-- COLOR SWATCHES -->
                     <div style="margin-bottom:20px;">
                         <div class="section-label">
