@@ -82,28 +82,47 @@ def nav_categories(request):
     return {"nav_men_categories": men, "nav_women_categories": women}
 
 
+def _offer_badge_label(offer):
+    t = offer.offer_type
+    if t == 'BOGO':
+        return 'BUY 1 GET 1'
+    elif t == 'PERCENTAGE':
+        return f'{offer.discount_percent}% OFF'
+    elif t == 'BUY_X_GET_Y':
+        return f'BUY {offer.buy_quantity} GET {offer.get_quantity}'
+    elif t == 'MIN_QTY':
+        return 'QTY DEAL'
+    return 'OFFER'
+
+
 def active_offers_context(request):
     try:
         offers = list(_get_active_offers())
     except Exception:
         offers = []
 
-    has_global = False
-    prod_ids = set()
-    cat_ids = set()
+    global_offer_badge = ''
+    prod_labels = {}   # product_id → badge label
+    cat_labels = {}    # category_id → badge label
 
     for offer in offers:
+        label = _offer_badge_label(offer)
         p_ids = {p.id for p in offer.applicable_products.all()}
         c_ids = {c.id for c in offer.applicable_categories.all()}
         if not p_ids and not c_ids:
-            has_global = True
-        prod_ids |= p_ids
-        cat_ids |= c_ids
+            global_offer_badge = label
+        for pid in p_ids:
+            prod_labels[pid] = label
+        for cid in c_ids:
+            cat_labels[cid] = label
 
     return {
-        'has_global_offer': has_global,
-        'offer_product_ids': prod_ids,
-        'offer_category_ids': cat_ids,
+        'has_global_offer': bool(global_offer_badge),
+        'global_offer_badge': global_offer_badge,
+        'offer_product_ids': set(prod_labels.keys()),
+        'offer_category_ids': set(cat_labels.keys()),
+        'offer_product_labels': prod_labels,
+        'offer_category_labels': cat_labels,
     }
 
 

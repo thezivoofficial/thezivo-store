@@ -1890,6 +1890,35 @@ def check_pincode(request):
     return JsonResponse({'available': False, 'message': 'Enter a valid 6-digit pincode'})
 
 
+# ─────────────────────────── Offer products page ─────────────────────────────
+
+def offer_products_page(request, offer_id):
+    from .models import Offer
+    offer = get_object_or_404(Offer, id=offer_id, is_active=True)
+
+    prod_ids = set(offer.applicable_products.values_list('id', flat=True))
+    cat_ids  = set(offer.applicable_categories.values_list('id', flat=True))
+
+    base_qs = Product.objects.filter(active=True).prefetch_related(
+        Prefetch('images', queryset=ProductImage.objects.all())
+    ).annotate(has_sku=Exists(SKU.objects.filter(product=OuterRef('pk')))).filter(has_sku=True)
+
+    if not prod_ids and not cat_ids:
+        products = base_qs
+    else:
+        q = Q()
+        if prod_ids:
+            q |= Q(id__in=prod_ids)
+        if cat_ids:
+            q |= Q(category_id__in=cat_ids)
+        products = base_qs.filter(q)
+
+    return render(request, 'store/offer_products.html', {
+        'offer': offer,
+        'products': list(products),
+    })
+
+
 def contact_us(request):
     store = SiteSettings.get()
     return render(request, 'store/contact_us.html', {'store': store})

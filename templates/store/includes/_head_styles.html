@@ -2430,7 +2430,8 @@ No size-change dropdown — editing lives on the main cart page.
 /* ── Offer Cards (home page section) ────────────────────────────────────── */
 .offers-scroll-row { display:flex; gap:12px; overflow-x:auto; padding-bottom:6px; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
 .offers-scroll-row::-webkit-scrollbar { display:none; }
-.offer-card { flex-shrink:0; min-width:200px; max-width:240px; background:linear-gradient(135deg,#f0fdf4,#dcfce7); border:1.5px solid #86efac; border-radius:14px; padding:16px 18px; }
+.offer-card { flex-shrink:0; min-width:200px; max-width:240px; background:linear-gradient(135deg,#f0fdf4,#dcfce7); border:1.5px solid #86efac; border-radius:14px; padding:16px 18px; text-decoration:none; display:block; transition:transform 0.15s, box-shadow 0.15s; }
+.offer-card:hover { transform:translateY(-2px); box-shadow:0 4px 16px rgba(22,101,52,.12); }
 .offer-type-badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:0.7rem; font-weight:700; letter-spacing:.4px; text-transform:uppercase; margin-bottom:10px; }
 .offer-type-bogo { background:#fef9c3; color:#854d0e; }
 .offer-type-percentage { background:#dbeafe; color:#1e40af; }

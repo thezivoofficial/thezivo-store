@@ -1,3 +1,4 @@
+{% load cart_extras %}
 <div class="product-card">
 
     {# Prefer in-stock SKU for price; fall back to any SKU so OOS products still show price #}
@@ -32,8 +33,12 @@
 
         <!-- Offer badge -->
         {% if stock > 0 %}
-        {% if has_global_offer or product.id in offer_product_ids or product.category_id in offer_category_ids %}
-        <div class="offer-badge-card">🎁 Offer</div>
+        {% if has_global_offer %}
+        <div class="offer-badge-card">{{ global_offer_badge }}</div>
+        {% elif product.id in offer_product_ids %}
+        <div class="offer-badge-card">{{ offer_product_labels|dict_get:product.id }}</div>
+        {% elif product.category_id in offer_category_ids %}
+        <div class="offer-badge-card">{{ offer_category_labels|dict_get:product.category_id }}</div>
         {% endif %}
         {% endif %}
 

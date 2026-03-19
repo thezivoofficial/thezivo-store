@@ -51,4 +51,5 @@ urlpatterns = [
     path("cancellations-refunds/", views.cancellations_refunds, name="cancellations_refunds"),
     path("terms-conditions/", views.terms_conditions, name="terms_conditions"),
     path("privacy-policy/", views.privacy_policy, name="privacy_policy"),
+    path("offers/<int:offer_id>/", views.offer_products_page, name="offer_products"),
 ]

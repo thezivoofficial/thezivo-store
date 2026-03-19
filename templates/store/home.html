@@ -130,7 +130,7 @@
     </div>
     <div class="offers-scroll-row">
         {% for offer in active_offers %}
-        <div class="offer-card">
+        <a href="{% url 'offer_products' offer.id %}" class="offer-card">
             <div class="offer-type-badge offer-type-{{ offer.offer_type|lower }}">
                 {% if offer.offer_type == 'BOGO' %}Buy 1 Get 1
                 {% elif offer.offer_type == 'PERCENTAGE' %}{{ offer.discount_percent }}% OFF
@@ -142,7 +142,10 @@
             {% if offer.description %}
             <div class="offer-card-desc">{{ offer.description }}</div>
             {% endif %}
-        </div>
+            <div style="margin-top:10px; font-size:0.72rem; color:#166534; font-weight:600; letter-spacing:.3px;">
+                Shop Now →
+            </div>
+        </a>
         {% endfor %}
     </div>
 </section>

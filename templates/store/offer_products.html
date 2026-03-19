@@ -1,0 +1,48 @@
+{% extends "store/base.html" %}
+
+{% block title %}{{ offer.name }} — TheZivo{% endblock %}
+
+{% block content %}
+
+<!-- OFFER HEADER -->
+<div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7); border-bottom:1.5px solid #86efac; padding:24px 20px 20px;">
+    <div style="max-width:1200px; margin:0 auto;">
+        <div class="small text-muted mb-1" style="font-size:0.78rem;">
+            <a href="{% url 'home' %}" style="color:#888; text-decoration:none;">Home</a> / Offers / {{ offer.name }}
+        </div>
+        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+            <span style="font-size:1.3rem;">🎁</span>
+            <div>
+                <h4 style="font-family:'Playfair Display',serif; font-size:1.2rem; font-weight:700;
+                           color:#166534; margin:0 0 4px;">{{ offer.name }}</h4>
+                {% if offer.description %}
+                <p style="font-size:0.84rem; color:#15803d; margin:0;">{{ offer.description }}</p>
+                {% endif %}
+            </div>
+        </div>
+        <div style="margin-top:10px; font-size:0.75rem; color:#888;">
+            {{ products|length }} item{{ products|length|pluralize }} on offer
+        </div>
+    </div>
+</div>
+
+<!-- PRODUCT GRID -->
+<div style="max-width:1200px; margin:0 auto; padding:24px 16px 80px;">
+    {% if products %}
+    <div class="row g-4">
+        {% for product in products %}
+        <div class="col-6 col-md-3">
+            {% include "store/product_card.html" %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align:center; padding:60px 20px; color:#888;">
+        <div style="font-size:2rem; margin-bottom:12px;">🛍️</div>
+        <p style="font-size:0.9rem;">No products currently available for this offer.</p>
+        <a href="{% url 'home' %}" style="font-size:0.85rem; color:#111; font-weight:600;">← Back to Home</a>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}
