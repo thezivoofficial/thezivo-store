@@ -278,6 +278,16 @@ class OrderItem(models.Model):
         verbose_name_plural = "Order Items"
     
     
+def _video_storage():
+    """Use Cloudinary video storage in prod, default filesystem storage locally."""
+    try:
+        from cloudinary_storage.storage import VideoMediaCloudinaryStorage
+        return VideoMediaCloudinaryStorage()
+    except ImportError:
+        from django.core.files.storage import default_storage
+        return default_storage
+
+
 class ReturnRequest(models.Model):
     REASON_CHOICES = [
         ("WRONG_ITEM", "Wrong item delivered"),
@@ -296,6 +306,7 @@ class ReturnRequest(models.Model):
     unboxing_video = models.FileField(
         upload_to="return_videos/",
         blank=True, null=True,
+        storage=_video_storage(),
         help_text="Unboxing video uploaded by customer as proof.",
     )
     status         = models.CharField(max_length=20, choices=STATUS_CHOICES, default="REQUESTED")
