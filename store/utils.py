@@ -191,19 +191,16 @@ def send_new_product_alert(product):
         return
 
     subject = f"New Arrival: {product.name} | Zivo"
-    product_id = product.id
+    product_url = f"{settings.SITE_URL}/product/{product.id}/"
 
     def _send():
         try:
             from brevo import Brevo, SendTransacEmailRequestToItem, SendTransacEmailRequestSender
             client = Brevo(api_key=settings.BREVO_API_KEY)
             sender = SendTransacEmailRequestSender(email=settings.DEFAULT_FROM_EMAIL, name="Zivo")
-            from store.models import Product as P
-            prod = P.objects.get(id=product_id)
-            product_url = f"{settings.SITE_URL}/product/{product_id}/"
             for email, token in subscribers:
                 html = render_to_string("store/emails/new_product_alert.html", {
-                    "product": prod,
+                    "product": product,
                     "store_name": "Zivo",
                     "site_url": settings.SITE_URL,
                     "product_url": product_url,
@@ -219,7 +216,7 @@ def send_new_product_alert(product):
                 except Exception as e:
                     print(f"[EMAIL ERROR] Failed to send to {email}: {e}")
         except Exception as e:
-            print(f"[EMAIL ERROR] New product alert failed for product {product_id}: {e}")
+            print(f"[EMAIL ERROR] New product alert failed for product {product.id}: {e}")
 
     threading.Thread(target=_send, daemon=False).start()
 
