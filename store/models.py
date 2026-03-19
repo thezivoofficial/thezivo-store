@@ -138,6 +138,22 @@ class ProductImage(models.Model):
         return f"Image - {self.product.name}"
 
 
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
+
+@receiver(post_delete, sender=ProductImage)
+def delete_product_image_from_cloudinary(sender, instance, **kwargs):
+    """Delete the image file from Cloudinary when a ProductImage record is deleted."""
+    if instance.image:
+        try:
+            import cloudinary.uploader
+            # Extract public_id from the image name (strip extension)
+            public_id = instance.image.name.rsplit(".", 1)[0]
+            cloudinary.uploader.destroy(public_id)
+        except Exception as e:
+            print(f"[CLOUDINARY] Failed to delete image {instance.image.name}: {e}")
+
+
 class SKU(models.Model):
     sku_code = models.CharField(
         max_length=20,
