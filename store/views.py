@@ -2178,6 +2178,7 @@ def validate_upi(request):
             timeout=8,
         )
         data = resp.json()
+        print(f"[UPI VALIDATE] vpa={vpa} status={resp.status_code} response={data}")
         if resp.ok and data.get("success"):
             return JsonResponse({"valid": True, "name": data.get("customer_name", "")})
         else:
