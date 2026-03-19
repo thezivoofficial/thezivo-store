@@ -11,8 +11,8 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import path, reverse
 from django.utils.html import format_html
 from unfold.admin import ModelAdmin, TabularInline
-from .models import Product, SKU, Order, OrderItem, StockNotification, ProductImage, Address, Customer, SiteSettings, Coupon, Review, Announcement, Category, Offer
-from .utils import send_whatsapp, send_order_email
+from .models import Product, SKU, Order, OrderItem, StockNotification, ProductImage, Address, Customer, SiteSettings, Coupon, Review, Announcement, Category, Offer, NewsletterSubscriber
+from .utils import send_whatsapp, send_order_email, send_new_product_alert
 from django.conf import settings
 
 
@@ -182,6 +182,12 @@ class ProductAdmin(ModelAdmin):
         return format_html('<span class="zivo-badge zivo-green">{} in stock</span>', total)
     stock_status.short_description = "Stock"
 
+    def save_model(self, request, obj, form, change):
+        is_new = obj.pk is None
+        super().save_model(request, obj, form, change)
+        if is_new and obj.active:
+            send_new_product_alert(obj)
+
     def change_view(self, request, object_id, form_url="", extra_context=None):
         response = super().change_view(request, object_id, form_url, extra_context)
         product = self.get_object(request, object_id)
@@ -190,6 +196,28 @@ class ProductAdmin(ModelAdmin):
                 request,
                 "⚠ This product has no SKUs. It will not appear in the store until at least one SKU is added.",
             )
+        return response
+
+
+# ── Newsletter Subscribers ─────────────────────────────────────────────────────
+
+@admin.register(NewsletterSubscriber)
+class NewsletterSubscriberAdmin(ModelAdmin):
+    list_display  = ("email", "subscribed_at", "is_active")
+    list_editable = ("is_active",)
+    list_filter   = ("is_active",)
+    search_fields = ("email",)
+    actions       = ["export_emails"]
+
+    @admin.action(description="Export selected emails as CSV")
+    def export_emails(self, request, queryset):
+        import csv
+        response = HttpResponse(content_type="text/csv")
+        response["Content-Disposition"] = 'attachment; filename="subscribers.csv"'
+        writer = csv.writer(response)
+        writer.writerow(["Email", "Subscribed At", "Active"])
+        for sub in queryset:
+            writer.writerow([sub.email, sub.subscribed_at, sub.is_active])
         return response
 
 

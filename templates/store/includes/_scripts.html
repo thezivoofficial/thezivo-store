@@ -1129,6 +1129,25 @@ function updateCartUI(data) {
 
 
 <script>
+function subscribeNewsletter(e) {
+    e.preventDefault();
+    var email = document.getElementById('newsletter-email').value;
+    var csrf  = document.querySelector('#newsletter-form [name=csrfmiddlewaretoken]').value;
+    var msg   = document.getElementById('newsletter-msg');
+    fetch('/newsletter/subscribe/', {
+        method: 'POST',
+        headers: {'X-CSRFToken': csrf, 'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'email=' + encodeURIComponent(email)
+    }).then(function(r){ return r.json(); }).then(function(d) {
+        msg.textContent = d.message;
+        msg.style.color = d.status === 'ok' ? '#16a34a' : '#6b7280';
+        if (d.status === 'ok') document.getElementById('newsletter-email').value = '';
+    }).catch(function() {
+        msg.textContent = 'Something went wrong. Please try again.';
+        msg.style.color = '#c62828';
+    });
+}
+
 function checkPin() {
     var pin = (document.getElementById('pin-input')?.value || '').trim();
     var el = document.getElementById('pin-result');

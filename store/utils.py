@@ -178,6 +178,44 @@ def calculate_delivery_and_final(subtotal):
     return charge, subtotal + charge, remaining
 
 
+def send_new_product_alert(product):
+    """Email all active newsletter subscribers about a newly added product."""
+    import threading
+    from django.template.loader import render_to_string
+    from .models import NewsletterSubscriber
+
+    subscribers = list(
+        NewsletterSubscriber.objects.filter(is_active=True).values_list("email", flat=True)
+    )
+    if not subscribers:
+        return
+
+    html = render_to_string("store/emails/new_product_alert.html", {
+        "product": product,
+        "store_name": "Zivo",
+        "site_url": settings.SITE_URL,
+    })
+    subject = f"New Arrival: {product.name} | Zivo"
+
+    def _send():
+        try:
+            from brevo import Brevo, SendTransacEmailRequestToItem, SendTransacEmailRequestSender
+            client = Brevo(api_key=settings.BREVO_API_KEY)
+            to_list = [SendTransacEmailRequestToItem(email=e) for e in subscribers]
+            client.transactional_emails.send_transac_email(
+                to=to_list,
+                sender=SendTransacEmailRequestSender(
+                    email=settings.DEFAULT_FROM_EMAIL, name="Zivo"
+                ),
+                subject=subject,
+                html_content=html,
+            )
+        except Exception as e:
+            print(f"[EMAIL ERROR] New product alert failed for product {product.id}: {e}")
+
+    threading.Thread(target=_send, daemon=False).start()
+
+
 def send_whatsapp(phone, message):
     if not phone:
         return

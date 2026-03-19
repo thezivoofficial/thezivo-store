@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404
-from .models import Product, SKU, Order, OrderItem, StockNotification, ProductImage, Address, SiteSettings, CartItem, WishlistItem, Coupon, Review, Category
+from .models import Product, SKU, Order, OrderItem, StockNotification, ProductImage, Address, SiteSettings, CartItem, WishlistItem, Coupon, Review, Category, NewsletterSubscriber
 from django.shortcuts import redirect
 from django.http import JsonResponse, HttpResponse
 from django.db.models import Min, F, ExpressionWrapper, IntegerField, Sum, Q
@@ -1932,6 +1932,22 @@ def trending_products_page(request):
         .filter(has_sku=True)
     )
     return render(request, 'store/trending_products.html', {'products': products})
+
+
+@require_POST
+def subscribe_newsletter(request):
+    email = request.POST.get("email", "").strip().lower()
+    if not email or "@" not in email:
+        return JsonResponse({"status": "error", "message": "Enter a valid email address."})
+    obj, created = NewsletterSubscriber.objects.get_or_create(
+        email=email, defaults={"is_active": True}
+    )
+    if not created and obj.is_active:
+        return JsonResponse({"status": "exists", "message": "You're already subscribed!"})
+    if not created:
+        obj.is_active = True
+        obj.save()
+    return JsonResponse({"status": "ok", "message": "You're subscribed!"})
 
 
 def contact_us(request):
