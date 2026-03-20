@@ -790,28 +790,14 @@ function toggleWishlist(productId, btn) {
         /* ================= BADGE ================= */
 
         // Desktop badge
-        let badge = document.querySelector(".wishlist-badge");
-
-        if (data.count > 0) {
-
-            if (!badge) {
-
-                const nav =
-                    document.querySelector(".wishlist-nav");
-
-                badge = document.createElement("span");
-
-                badge.className =
-                    "position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger wishlist-badge";
-
-                nav.appendChild(badge);
+        const badge = document.querySelector(".wishlist-badge");
+        if (badge) {
+            if (data.count > 0) {
+                badge.textContent = data.count;
+                badge.style.display = "";
+            } else {
+                badge.style.display = "none";
             }
-
-            badge.innerText = data.count;
-
-        } else if (badge) {
-
-            badge.remove();
         }
 
         // Mobile badge
