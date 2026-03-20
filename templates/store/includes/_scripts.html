@@ -1108,11 +1108,16 @@ function updateCartUI(data) {
 }
 
 
-/* ================= BFCACHE REFRESH ================= */
-/* When browser restores a cached page (back/forward), refresh badge counts */
+/* ================= BFCACHE / BACK-NAV REFRESH ================= */
+/* Refresh badge counts when browser restores page (bfcache or history cache) */
 
 window.addEventListener("pageshow", function(e) {
-    if (!e.persisted) return;
+    // e.persisted = true  → bfcache restore
+    // navigation.type=2   → normal back/forward (no bfcache)
+    const isBackNav = e.persisted ||
+        (typeof performance !== "undefined" &&
+         performance.navigation && performance.navigation.type === 2);
+    if (!isBackNav) return;
     fetch("{% url 'get_counts' %}")
         .then(r => r.json())
         .then(data => {

@@ -376,7 +376,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 const cartCount = document.getElementById("cart-count");
                 if (cartCount) {
                     cartCount.innerText = data.cart_count;
-                    cartCount.style.display = "inline-block";
+                    cartCount.style.display = "";
                 }
                 const toast = document.getElementById("addToCartToast");
                 if (toast) new bootstrap.Toast(toast).show();

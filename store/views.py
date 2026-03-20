@@ -82,12 +82,23 @@ def toggle_wishlist_item(request, product_id, color=""):
     product_id = int(product_id)
     color = color.strip()
     if request.customer:
-        obj, created = WishlistItem.objects.get_or_create(
-            customer=request.customer, product_id=product_id, color=color)
-        if not created:
-            obj.delete()
-            return "removed"
-        return "added"
+        if color:
+            # Color-specific toggle (from category page)
+            obj, created = WishlistItem.objects.get_or_create(
+                customer=request.customer, product_id=product_id, color=color)
+            if not created:
+                obj.delete()
+                return "removed"
+            return "added"
+        else:
+            # No color (from wishlist page / product detail) → remove ALL colors of this product
+            deleted, _ = WishlistItem.objects.filter(
+                customer=request.customer, product_id=product_id).delete()
+            if deleted:
+                return "removed"
+            WishlistItem.objects.create(
+                customer=request.customer, product_id=product_id, color="")
+            return "added"
     wishlist = get_wishlist(request)
     if product_id in wishlist:
         wishlist.remove(product_id)
