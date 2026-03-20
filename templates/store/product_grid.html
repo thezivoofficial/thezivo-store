@@ -1,5 +1,5 @@
 {% load cart_extras %}
-<div class="row g-3 mx-0">
+<div class="row g-2 g-xl-3 mx-0">
 
 {% for variant in color_variants %}
     <div class="col-6 col-md-4 col-lg-3 col-xl-5th mb-2">
@@ -36,8 +36,8 @@
 
                 <!-- Rating badge — bottom-left of image -->
                 {% if variant.avg_rating %}
-                <div class="rating-badge-card {% if variant.avg_rating >= 4 %}rating-green{% elif variant.avg_rating >= 3 %}rating-orange{% else %}rating-red{% endif %}">
-                    {{ variant.avg_rating }} ★
+                <div class="rating-badge-card">
+                    {{ variant.avg_rating }}&thinsp;<span class="rating-star {% if variant.avg_rating >= 4 %}rating-star-green{% elif variant.avg_rating >= 3 %}rating-star-orange{% else %}rating-star-red{% endif %}">★</span>
                     <span class="rating-count-card">| {{ variant.review_count }}</span>
                 </div>
                 {% endif %}
@@ -56,8 +56,8 @@
             <!-- Product name (smaller, muted) -->
             <div class="card-product-name">"{{ variant.product.name }}"</div>
 
-            <!-- Color -->
-            <div class="color-label-card">{{ variant.color }}</div>
+            <!-- Color pill -->
+            <div class="color-pill-card">{{ variant.color }}</div>
 
             <div class="price-box mt-1">
                 <span class="selling-price">

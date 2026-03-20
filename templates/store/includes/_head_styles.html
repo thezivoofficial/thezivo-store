@@ -2214,10 +2214,10 @@
         position: absolute;
         bottom: 8px;
         left: 8px;
-        background: rgba(20,120,40,0.82);
+        background: rgba(0,0,0,0.52);
         color: #fff;
         font-size: 0.68rem;
-        font-weight: 700;
+        font-weight: 600;
         padding: 3px 7px;
         border-radius: 20px;
         z-index: 3;
@@ -2225,13 +2225,25 @@
         backdrop-filter: blur(2px);
         line-height: 1.4;
     }
-    .rating-badge-card.rating-green  { background: rgba(22,163,74,0.88); }
-    .rating-badge-card.rating-orange { background: rgba(217,119,6,0.88); }
-    .rating-badge-card.rating-red    { background: rgba(220,38,38,0.88); }
-    .rating-count-card { font-weight: 400; opacity: 0.9; }
+    .rating-star { font-style: normal; }
+    .rating-star-green  { color: #4ade80; }
+    .rating-star-orange { color: #fbbf24; }
+    .rating-star-red    { color: #f87171; }
+    .rating-count-card  { font-weight: 400; opacity: 0.85; }
 
-    /* Color label under product name */
-    .color-label-card { color: #999; font-size: 0.72rem; margin-top: 1px; }
+    /* Color pill under product name */
+    .color-pill-card {
+        display: inline-block;
+        font-size: 0.68rem;
+        font-weight: 500;
+        color: #555;
+        background: #f3f4f6;
+        border: 1px solid #e5e7eb;
+        border-radius: 20px;
+        padding: 1px 8px;
+        margin-top: 3px;
+        line-height: 1.6;
+    }
 
     /* Brand + product name in card */
     .card-brand-name {
@@ -2264,13 +2276,6 @@
         .col-xl-5th { width: auto; }
     }
 
-    /* Smaller offer badge on mobile */
-    @media (max-width: 767px) {
-        .offer-badge-card {
-            font-size: 0.55rem;
-            padding: 2px 6px;
-        }
-    }
 
     /* Desktop sort pills */
     .sort-pill {
@@ -2523,6 +2528,9 @@ No size-change dropdown — editing lives on the main cart page.
 
 /* ── Offer badge on product cards ───────────────────────────────────────── */
 .offer-badge-card { position:absolute; top:8px; left:8px; background:#16a34a; color:#fff; font-size:0.65rem; font-weight:700; padding:3px 8px; border-radius:20px; letter-spacing:.3px; pointer-events:none; z-index:2; }
+@media (max-width: 767px) {
+    .offer-badge-card { font-size:0.52rem; padding:2px 5px; letter-spacing:0; }
+}
 
 /* ── Offer callout on product detail ────────────────────────────────────── */
 .offer-callout { background:#f0fdf4; border:1.5px solid #86efac; border-radius:10px; padding:12px 16px; margin-bottom:20px; }
