@@ -13,7 +13,7 @@
 
         <!-- Title -->
         <h5 class="mb-3 ps-2">
-            {{ title }} ({{ products|length }} items)
+            {{ title }} ({{ color_variants|length }} items)
         </h5>
 
         <!-- FILTERS -->
@@ -40,7 +40,7 @@
         <!-- Title + count (mobile only) -->
         <div class="d-md-none mb-3">
             <div class="small text-muted">Home / {{ title }}</div>
-            <h6 class="mb-0 mt-1">{{ title }} <span class="text-muted fw-normal">({{ products|length }} items)</span></h6>
+            <h6 class="mb-0 mt-1">{{ title }} <span class="text-muted fw-normal">({{ color_variants|length }} items)</span></h6>
         </div>
 
         <!-- PRODUCT GRID -->

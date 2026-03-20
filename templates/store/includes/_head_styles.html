@@ -2095,6 +2095,13 @@
         overflow: hidden;
     }
 
+    /* Smaller cards on large desktop (6-per-row via col-xl-2) */
+    @media (min-width: 1200px) {
+        .product-img-box {
+            aspect-ratio: 2 / 3;
+        }
+    }
+
     /* IMAGE */
     .product-card-img {
         width: 100%;
@@ -2200,6 +2207,33 @@
     /* Prevent link blocking slideshow */
     .product-card-img {
         pointer-events: none;
+    }
+
+    /* Rating badge — bottom-left of product image */
+    .rating-badge-card {
+        position: absolute;
+        bottom: 8px;
+        left: 8px;
+        background: rgba(0,0,0,0.55);
+        color: #fff;
+        font-size: 0.7rem;
+        font-weight: 600;
+        padding: 3px 7px;
+        border-radius: 20px;
+        z-index: 3;
+        pointer-events: none;
+        backdrop-filter: blur(2px);
+        line-height: 1.4;
+    }
+    .rating-count-card {
+        font-weight: 400;
+        opacity: 0.85;
+    }
+
+    /* Color label under product name */
+    .color-label-card {
+        color: #888;
+        font-size: 0.75rem;
     }
 
     /* Active wishlist */

@@ -1,22 +1,22 @@
 {% load cart_extras %}
 <div class="row g-2 mx-0">
 
-{% for product in products %}
-    <div class="col-6 col-md-4 col-lg-3 mb-3">
+{% for variant in color_variants %}
+    <div class="col-6 col-md-4 col-lg-3 col-xl-2 mb-3">
         <div class="product-card">
 
             <div class="product-img-box"
                 onmouseenter="startHover(this)"
                 onmouseleave="stopHover(this)">
 
-                <a href="{% url 'product_detail' product.id %}" class="img-link">
+                <a href="{% url 'product_detail' variant.product.id %}?color={{ variant.color|urlencode }}" class="img-link">
 
                     <!-- MAIN IMAGE -->
-                    <img src="{{ product.image.url }}"
+                    <img src="{{ variant.product.image.url }}"
                         class="product-card-img active">
 
                     <!-- EXTRA IMAGES -->
-                    {% for img in product.images.all %}
+                    {% for img in variant.product.images.all %}
                         <img src="{{ img.image.url }}"
                             class="product-card-img">
                     {% endfor %}
@@ -24,67 +24,63 @@
                 </a>
 
                 <!-- Offer badge -->
-                {% if product.total_stock > 0 %}
+                {% if variant.total_stock > 0 %}
                 {% if has_global_offer %}
                 <div class="offer-badge-card">{{ global_offer_badge }}</div>
-                {% elif product.id in offer_product_ids %}
-                <div class="offer-badge-card">{{ offer_product_labels|dict_get:product.id }}</div>
-                {% elif product.category_id in offer_category_ids %}
-                <div class="offer-badge-card">{{ offer_category_labels|dict_get:product.category_id }}</div>
+                {% elif variant.product.id in offer_product_ids %}
+                <div class="offer-badge-card">{{ offer_product_labels|dict_get:variant.product.id }}</div>
+                {% elif variant.product.category_id in offer_category_ids %}
+                <div class="offer-badge-card">{{ offer_category_labels|dict_get:variant.product.category_id }}</div>
                 {% endif %}
                 {% endif %}
 
+                <!-- Rating badge — bottom-left of image -->
+                {% if variant.avg_rating %}
+                <div class="rating-badge-card">
+                    {{ variant.avg_rating }} ★
+                    <span class="rating-count-card">| {{ variant.review_count }}</span>
+                </div>
+                {% endif %}
+
                 <!-- WISHLIST -->
-                <button class="wishlist-btn-card {% if product.id in wishlist_ids %}wish-active{% endif %}"
-                        onclick="toggleWishlist('{{ product.id }}', this)">
-                    <i class="bi {% if product.id in wishlist_ids %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
+                <button class="wishlist-btn-card {% if variant.product.id in wishlist_ids %}wish-active{% endif %}"
+                        onclick="toggleWishlist('{{ variant.product.id }}', this)">
+                    <i class="bi {% if variant.product.id in wishlist_ids %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
                 </button>
 
             </div>
 
-
-
-
             <div class="mt-2 small fw-semibold">
-                {{ product.name }}
+                {{ variant.product.name }}
             </div>
 
-            <div class="small text-muted">
-                {{ product.category|title }}
+            <div class="small text-muted d-flex align-items-center gap-1 flex-wrap">
+                <span>{{ variant.product.category|title }}</span>
+                <span class="color-label-card">· {{ variant.color }}</span>
             </div>
 
             <div class="price-box mt-1">
-
                 <span class="selling-price">
-                    ₹{{ product.min_selling_price }}
+                    ₹{{ variant.min_selling_price }}
                 </span>
-
-                {% if product.discount_percent > 0 %}
+                {% if variant.discount_percent > 0 %}
                     <span class="mrp">
-                        ₹{{ product.min_mrp }}
+                        ₹{{ variant.min_mrp }}
                     </span>
-
                     <span class="discount">
-                        ({{ product.discount_percent }}% OFF)
+                        ({{ variant.discount_percent }}% OFF)
                     </span>
                 {% endif %}
-
             </div>
 
-            {% if product.total_stock == 0 %}
-                <div class="out-of-stock-text">
-                    Out Of Stock!
-                </div>
-
-            {% elif product.total_stock <= 3 %}
-                <div class="low-stock-text">
-                    Only Few Left!
-                </div>
+            {% if variant.total_stock == 0 %}
+                <div class="out-of-stock-text">Out Of Stock!</div>
+            {% elif variant.total_stock <= 3 %}
+                <div class="low-stock-text">Only Few Left!</div>
             {% endif %}
 
         </div>
     </div>
 {% endfor %}
-
 
 </div>

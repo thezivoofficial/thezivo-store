@@ -456,6 +456,18 @@ def product_detail(request, product_id):
         except Exception:
             pass
 
+    # Override default_sku based on ?color= URL param so clicking a color card pre-selects correctly
+    selected_color = request.GET.get('color', '').strip()
+    if selected_color:
+        skus = pdata["skus"]
+        default_sku = (
+            next((s for s in skus if s.color == selected_color and s.stock > 0), None)
+            or next((s for s in skus if s.color == selected_color), None)
+            or pdata["default_sku"]
+        )
+    else:
+        default_sku = pdata["default_sku"]
+
     # Recently viewed is per-user — always fresh
     viewed = request.session.get('recently_viewed', [])
     viewed = [x for x in viewed if x != product.id]
@@ -484,6 +496,7 @@ def product_detail(request, product_id):
         "customer_review": customer_review,
         "can_review": can_review,
         **pdata,
+        "default_sku": default_sku,
     })
 
 
@@ -1175,7 +1188,8 @@ def category_products(request, gender, category=None):
         active=True,
         gender=gender
     ).prefetch_related(
-        Prefetch("images", queryset=ProductImage.objects.all())
+        Prefetch("images", queryset=ProductImage.objects.all()),
+        "reviews",
     ).annotate(
         has_sku=Exists(
             SKU.objects.filter(product=OuterRef("pk"))
@@ -1191,7 +1205,6 @@ def category_products(request, gender, category=None):
             output_field=IntegerField()
         )
     )
-
 
     if category:
         products = products.filter(category__slug=category)
@@ -1229,8 +1242,7 @@ def category_products(request, gender, category=None):
     if max_price:
         products = products.filter(sku__selling_price__lte=max_price)
 
-
-    # ── Single query for brands + categories (2 Product queries → 1) ──
+    # ── Single query for brands + categories ──
     product_filter_rows = (
         Product.objects.filter(gender=gender, active=True)
         .values("brand", "category__slug", "category__name")
@@ -1241,7 +1253,7 @@ def category_products(request, gender, category=None):
         for r in product_filter_rows if r["category__slug"]
     ))
 
-    # ── Single query for sizes + colors + price range (3 SKU queries → 1) ──
+    # ── Single query for sizes + colors + price range ──
     SIZE_ORDER = ["XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL"]
     sku_filter_rows = list(
         SKU.objects.filter(product__active=True, product__gender=gender)
@@ -1262,29 +1274,75 @@ def category_products(request, gender, category=None):
     if category:
         cat_obj = Category.objects.filter(slug=category).first()
         title = f"{title} - {cat_obj.name if cat_obj else category.replace('-', ' ').title()}"
-        
+
     sort = request.GET.get("sort")
+
+    # Evaluate queryset and build per-color variant cards
+    products_list = list(products.order_by("-id"))
+    product_ids = [p.id for p in products_list]
+    sku_map = {}
+    for sku in SKU.objects.filter(product_id__in=product_ids).values(
+        'product_id', 'color', 'selling_price', 'mrp', 'stock'
+    ):
+        sku_map.setdefault(sku['product_id'], []).append(sku)
+
+    color_variants = []
+    for product in products_list:
+        product_skus = sku_map.get(product.id, [])
+        reviews = list(product.reviews.all())  # uses prefetch_related cache
+        avg_rating = round(sum(r.rating for r in reviews) / len(reviews), 1) if reviews else None
+        review_count = len(reviews)
+
+        color_data = {}
+        for sku in product_skus:
+            color = sku['color'].strip()
+            if color not in color_data:
+                color_data[color] = {'min_price': sku['selling_price'], 'min_mrp': sku['mrp'], 'stock': sku['stock']}
+            else:
+                color_data[color]['min_price'] = min(color_data[color]['min_price'], sku['selling_price'])
+                color_data[color]['min_mrp'] = min(color_data[color]['min_mrp'], sku['mrp'])
+                color_data[color]['stock'] += sku['stock']
+
+        all_colors = list(color_data.keys())
+        for color, data in color_data.items():
+            discount = 0
+            if data['min_mrp'] > 0:
+                discount = max(0, int((data['min_mrp'] - data['min_price']) / data['min_mrp'] * 100))
+            color_variants.append({
+                'product': product,
+                'color': color,
+                'all_colors': all_colors,
+                'min_selling_price': data['min_price'],
+                'min_mrp': data['min_mrp'],
+                'total_stock': data['stock'],
+                'discount_percent': discount,
+                'avg_rating': avg_rating,
+                'review_count': review_count,
+            })
+
+    # Filter color_variants to only the selected color(s)
+    if selected_colors:
+        color_variants = [v for v in color_variants if v['color'] in selected_colors]
+
+    # Sort
     if sort == "low":
-        products = products.order_by("min_selling_price")
+        color_variants.sort(key=lambda v: v['min_selling_price'])
     elif sort == "high":
-        products = products.order_by("-min_selling_price")
-    else:
-        products = products.order_by("-id")
-        
+        color_variants.sort(key=lambda v: v['min_selling_price'], reverse=True)
+
     # ✅ AJAX RESPONSE
     if request.headers.get("x-requested-with") == "XMLHttpRequest":
         html = render_to_string(
             "store/product_grid.html",
-            {"products": products},
+            {"color_variants": color_variants},
             request=request
         )
         resp = JsonResponse({"html": html})
         resp["Cache-Control"] = "no-store"
         return resp
 
-
     return render(request, "store/category.html", {
-        "products": products,
+        "color_variants": color_variants,
         "title": title,
         "brands": brands,
         "sizes": sizes,
