@@ -2267,13 +2267,18 @@
         text-overflow: ellipsis;
     }
 
-    /* 5-per-row column on XL screens */
-    .col-xl-5th {
-        flex: 0 0 auto;
-        width: 20%;
+    /* 1px bigger text on desktop for brand + product name */
+    @media (min-width: 768px) {
+        .card-brand-name  { font-size: 0.94rem; }
+        .card-product-name { font-size: 0.79rem; }
     }
-    @media (max-width: 1199px) {
-        .col-xl-5th { width: auto; }
+
+    /* 5-per-row column — only on XL screens, never override mobile */
+    @media (min-width: 1200px) {
+        .col-xl-5th {
+            flex: 0 0 auto;
+            width: 20%;
+        }
     }
 
 
