@@ -28,11 +28,24 @@
           Hi {{ order.name }},
           {% if rr.status == "APPROVED" %}
             your return request for Order #{{ order.id }} has been approved. Please wait for our team to arrange a pickup.
+            {% if order.payment_method == "COD" and rr.refund_via == "UPI" %}
+              Once the item is received, your refund will be sent to <strong>{{ rr.upi_id }}</strong>.
+            {% elif order.payment_method == "COD" and rr.refund_via == "BANK" %}
+              Once the item is received, your refund will be transferred to your bank account ending in <strong>{{ rr.bank_account_number|slice:"-4:" }}</strong>.
+            {% endif %}
           {% elif rr.status == "REJECTED" %}
             after reviewing your return request for Order #{{ order.id }}, we're unable to process it at this time. Please contact us if you have questions.
           {% elif rr.status == "REFUND_PROCESSED" %}
             your refund of <strong>₹{{ rr.refund_amount }}</strong> for Order #{{ order.id }} has been processed.
-            {% if order.payment_method == "ONLINE" %}For UPI and most cards, it reflects within minutes. For other payment methods it may take up to 5–7 business days.{% else %}Our team will contact you for bank details.{% endif %}
+            {% if order.payment_method == "ONLINE" %}
+              For UPI and most cards, it reflects within minutes. For other payment methods it may take up to 5–7 business days.
+            {% elif rr.refund_via == "UPI" %}
+              The amount will be credited to your UPI ID <strong>{{ rr.upi_id }}</strong> within 2–3 business days.
+            {% elif rr.refund_via == "BANK" %}
+              The amount will be transferred to your bank account ending in <strong>{{ rr.bank_account_number|slice:"-4:" }}</strong> within 3–5 business days.
+            {% else %}
+              Our team will reach out to you shortly to complete the refund.
+            {% endif %}
           {% endif %}
         </p>
 
