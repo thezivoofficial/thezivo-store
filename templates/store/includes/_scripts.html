@@ -546,7 +546,7 @@ function addWishlistToCart(skuId) {
 
             if (cartCountEl) {
                 cartCountEl.textContent = data.cart_count;
-                cartCountEl.style.display = "inline-block";
+                cartCountEl.style.display = "";
             }
             if (cartCountMob) {
                 cartCountMob.textContent = data.cart_count;
@@ -722,7 +722,7 @@ function checkEmptyWishlist() {
 
 /* ================= MAIN TOGGLE ================= */
 
-function toggleWishlist(productId, btn) {
+function toggleWishlist(productId, btn, color = "") {
 
     fetch("{% url 'toggle_wishlist' %}", {
         method: "POST",
@@ -730,7 +730,7 @@ function toggleWishlist(productId, btn) {
             "X-CSRFToken": "{{ csrf_token }}",
             "Content-Type": "application/x-www-form-urlencoded"
         },
-        body: "product_id=" + productId
+        body: "product_id=" + productId + "&color=" + encodeURIComponent(color)
     })
 
     .then(res => res.json())
@@ -1091,7 +1091,7 @@ function updateCartUI(data) {
     if (cartCount) {
         if (data.cart_count > 0) {
             cartCount.innerText = data.cart_count;
-            cartCount.style.display = "inline-block";
+            cartCount.style.display = "";
         } else {
             cartCount.style.display = "none";
         }
@@ -1106,6 +1106,29 @@ function updateCartUI(data) {
     }
 
 }
+
+
+/* ================= BFCACHE REFRESH ================= */
+/* When browser restores a cached page (back/forward), refresh badge counts */
+
+window.addEventListener("pageshow", function(e) {
+    if (!e.persisted) return;
+    fetch("{% url 'get_counts' %}")
+        .then(r => r.json())
+        .then(data => {
+            const cc  = document.getElementById("cart-count");
+            const ccm = document.getElementById("cart-count-mobile");
+            const wb  = document.querySelector(".wishlist-badge");
+            const wbm = document.querySelector(".wishlist-badge-mobile");
+
+            if (cc)  { cc.textContent  = data.cart_count;     cc.style.display  = data.cart_count     > 0 ? "" : "none"; }
+            if (ccm) { ccm.textContent = data.cart_count;     ccm.style.display = data.cart_count     > 0 ? "inline-block" : "none"; }
+            if (wb)  { wb.textContent  = data.wishlist_count; wb.style.display  = data.wishlist_count > 0 ? "" : "none"; }
+            if (wbm) { wbm.textContent = data.wishlist_count; wbm.style.display = data.wishlist_count > 0 ? "inline-block" : "none"; }
+        })
+        .catch(() => {});
+});
+
 </script>
 
 

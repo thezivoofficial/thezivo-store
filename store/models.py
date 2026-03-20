@@ -503,10 +503,11 @@ class WishlistItem(models.Model):
         Customer, on_delete=models.CASCADE, related_name="wishlist_items"
     )
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    color = models.CharField(max_length=100, blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ("customer", "product")
+        unique_together = ("customer", "product", "color")
         verbose_name = "Wishlist Item"
         verbose_name_plural = "Wishlist Items"
 

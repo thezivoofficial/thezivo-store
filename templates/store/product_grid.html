@@ -43,10 +43,17 @@
                 {% endif %}
 
                 <!-- WISHLIST -->
+                {% if wishlist_color_keys %}
+                <button class="wishlist-btn-card {% if variant.wishlist_key in wishlist_color_keys %}wish-active{% endif %}"
+                        onclick="toggleWishlist('{{ variant.product.id }}', this, '{{ variant.color|escapejs }}')">
+                    <i class="bi {% if variant.wishlist_key in wishlist_color_keys %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
+                </button>
+                {% else %}
                 <button class="wishlist-btn-card {% if variant.product.id in wishlist_ids %}wish-active{% endif %}"
-                        onclick="toggleWishlist('{{ variant.product.id }}', this)">
+                        onclick="toggleWishlist('{{ variant.product.id }}', this, '{{ variant.color|escapejs }}')">
                     <i class="bi {% if variant.product.id in wishlist_ids %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
                 </button>
+                {% endif %}
 
             </div>
 

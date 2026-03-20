@@ -77,12 +77,13 @@ def get_wishlist(request):
     return [int(i) for i in request.session.get("wishlist", []) if str(i).isdigit()]
 
 
-def toggle_wishlist_item(request, product_id):
-    """Toggle product in wishlist. Returns 'added' or 'removed'."""
+def toggle_wishlist_item(request, product_id, color=""):
+    """Toggle product+color in wishlist. Returns 'added' or 'removed'."""
     product_id = int(product_id)
+    color = color.strip()
     if request.customer:
         obj, created = WishlistItem.objects.get_or_create(
-            customer=request.customer, product_id=product_id)
+            customer=request.customer, product_id=product_id, color=color)
         if not created:
             obj.delete()
             return "removed"
@@ -1311,6 +1312,7 @@ def category_products(request, gender, category=None):
             color_variants.append({
                 'product': product,
                 'color': color,
+                'wishlist_key': f"{product.id}_{color}",
                 'all_colors': all_colors,
                 'min_selling_price': data['min_price'],
                 'min_mrp': data['min_mrp'],
@@ -1390,8 +1392,9 @@ def toggle_wishlist(request):
         return JsonResponse({"status": "error"})
 
     product_id = int(product_id)
+    color = request.POST.get("color", "").strip()
 
-    status = toggle_wishlist_item(request, product_id)
+    status = toggle_wishlist_item(request, product_id, color=color)
     wishlist = get_wishlist(request)
 
     return JsonResponse({
@@ -1399,8 +1402,21 @@ def toggle_wishlist(request):
         "count": len(wishlist),
         "product_id": product_id
     })
-    
-    
+
+
+def get_counts(request):
+    """Lightweight endpoint for bfcache refresh — returns cart + wishlist counts."""
+    from .context_processors import cart_context, wishlist_count as wl_ctx
+    cart_ctx = cart_context(request)
+    wl_c = wl_ctx(request)
+    resp = JsonResponse({
+        "cart_count": cart_ctx["cart_count"],
+        "wishlist_count": wl_c["wishlist_count"],
+    })
+    resp["Cache-Control"] = "no-store"
+    return resp
+
+
 def search_products(request):
     query = request.GET.get("q", "").strip()
 

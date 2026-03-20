@@ -130,12 +130,15 @@ def wishlist_count(request):
     customer = getattr(request, "customer", None)
 
     if customer:
-        ids = set(WishlistItem.objects.filter(
-            customer=customer).values_list("product_id", flat=True))
-        return {"wishlist_count": len(ids), "wishlist_ids": ids}
+        rows = list(WishlistItem.objects.filter(customer=customer).values("product_id", "color"))
+        ids = {r["product_id"] for r in rows}
+        color_keys = {f"{r['product_id']}_{r['color']}" for r in rows}
+        return {"wishlist_count": len(ids), "wishlist_ids": ids, "wishlist_color_keys": color_keys}
 
     wishlist = request.session.get("wishlist", [])
+    ids = set(int(x) for x in wishlist if str(x).isdigit())
     return {
-        "wishlist_count": len(wishlist),
-        "wishlist_ids": set(int(x) for x in wishlist if str(x).isdigit()),
+        "wishlist_count": len(ids),
+        "wishlist_ids": ids,
+        "wishlist_color_keys": set(),
     }
