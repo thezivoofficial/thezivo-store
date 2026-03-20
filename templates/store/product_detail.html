@@ -316,24 +316,27 @@
 
     .btn-notify:hover { border-color: #111; background: #fafafa; }
 
-    .btn-wishlist {
-        width: 52px;
-        height: 52px;
-        flex-shrink: 0;
+    .btn-wishlist-full {
+        width: 100%;
         background: #fff;
+        color: #555;
         border: 1.5px solid #e0e0e0;
         border-radius: 10px;
+        padding: 13px 20px;
+        font-family: 'DM Sans', sans-serif;
+        font-weight: 600;
+        font-size: 0.88rem;
+        letter-spacing: 0.3px;
+        cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.2rem;
-        cursor: pointer;
+        gap: 7px;
         transition: border-color 0.15s, background 0.15s, color 0.15s;
-        color: #aaa;
+        margin-top: 10px;
     }
-
-    .btn-wishlist:hover { border-color: #e53935; color: #e53935; }
-    .btn-wishlist.wishlisted { border-color: #e53935; color: #e53935; background: #fff5f5; }
+    .btn-wishlist-full:hover { border-color: #e53935; color: #e53935; background: #fff8f8; }
+    .btn-wishlist-full.wish-active { border-color: #e53935; color: #e53935; background: #fff5f5; }
 
     /* SHARE */
     /* Mobile: frosted circle overlaid on image top-right */
@@ -452,7 +455,6 @@
         .price-selling { font-size: 1.3rem; }
         .action-row { flex-wrap: nowrap; }
         .btn-add-to-bag, .btn-notify { flex: 1 1 auto; }
-        .btn-wishlist { flex-shrink: 0; width: 52px; border-radius: 10px; }
     }
 
     /* SIZE CHART */
@@ -751,15 +753,17 @@
                             ADD TO BAG
                         </button>
                         {% endif %}
-
-                        <button type="button"
-                                class="btn-wishlist"
-                                onclick="toggleWishlist('{{ product.id }}', this)"
-                                title="Add to Wishlist">
-                            <i class="bi bi-heart"></i>
-                        </button>
-
                     </div>
+
+                    <!-- SAVE TO WISHLIST -->
+                    <button type="button"
+                            id="product-wishlist-btn"
+                            class="btn-wishlist-full"
+                            onclick="toggleWishlist('{{ product.id }}', this, getCurrentColor())"
+                            title="Save to Wishlist">
+                        <i class="bi bi-heart"></i>
+                        <span class="wishlist-btn-text">Save to Wishlist</span>
+                    </button>
 
                     <!-- TRUST BADGES -->
                     <div class="trust-row">
@@ -1018,9 +1022,10 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // Init color filter: show only default color's sizes on load
+    // Init color filter and wishlist state
     const defaultColor = document.getElementById("selected-color").innerText.trim();
     if (defaultColor) selectColor(defaultColor);
+    updateWishlistBtnState(defaultColor);
 });
 
 function openZoom(index) {
@@ -1103,6 +1108,37 @@ document.addEventListener("keydown", function (e) {
     if (e.key === "Escape") closeZoom();
 });
 
+// ── WISHLIST COLOR SYNC ────────────────────────────────
+const PRODUCT_ID = {{ product.id }};
+const WISHLIST_COLOR_KEYS = new Set([{% for k in wishlist_color_keys %}"{{ k }}"{% if not forloop.last %},{% endif %}{% endfor %}]);
+
+function getCurrentColor() {
+    const el = document.getElementById("selected-color");
+    return el ? el.innerText.trim() : "";
+}
+
+function updateWishlistBtnState(color) {
+    const btn = document.getElementById("product-wishlist-btn");
+    if (!btn) return;
+    const icon = btn.querySelector("i");
+    const textEl = btn.querySelector(".wishlist-btn-text");
+    const wishlisted = WISHLIST_COLOR_KEYS.has(PRODUCT_ID + "_" + color);
+    btn.classList.toggle("wish-active", wishlisted);
+    if (icon) {
+        icon.classList.toggle("bi-heart-fill", wishlisted);
+        icon.classList.toggle("bi-heart", !wishlisted);
+    }
+    if (textEl) textEl.textContent = wishlisted ? "Saved" : "Save to Wishlist";
+}
+
+// Keep local key set in sync after a toggle
+window.onWishlistToggle = function(productId, status, color) {
+    if (productId != PRODUCT_ID) return;
+    const key = PRODUCT_ID + "_" + color;
+    if (status === "added") WISHLIST_COLOR_KEYS.add(key);
+    else WISHLIST_COLOR_KEYS.delete(key);
+};
+
 // ── ADD TO CART ────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", function () {
     const form = document.getElementById("add-to-cart-form");
@@ -1125,7 +1161,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 const cartCountEl = document.getElementById("cart-count");
                 if (cartCountEl) {
                     cartCountEl.textContent = data.cart_count;
-                    cartCountEl.style.display = "inline-block";
+                    cartCountEl.style.display = "";
                 }
                 updateCartUI(data);
                 const toastEl = document.getElementById("addToCartToast");
@@ -1162,6 +1198,9 @@ function selectColor(color) {
     } else {
         radios.forEach(r => r.checked = false);
     }
+
+    // Sync wishlist heart with this color's state
+    updateWishlistBtnState(color);
 }
 
 // ── PRICE + COLOR SYNC ─────────────────────────────────
