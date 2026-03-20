@@ -2095,10 +2095,10 @@
         overflow: hidden;
     }
 
-    /* Smaller cards on large desktop (6-per-row via col-xl-2) */
+    /* Slightly shorter images on desktop (5-per-row) */
     @media (min-width: 1200px) {
         .product-img-box {
-            aspect-ratio: 2 / 3;
+            aspect-ratio: 3 / 4;
         }
     }
 
@@ -2214,10 +2214,10 @@
         position: absolute;
         bottom: 8px;
         left: 8px;
-        background: rgba(0,0,0,0.55);
+        background: rgba(20,120,40,0.82);
         color: #fff;
-        font-size: 0.7rem;
-        font-weight: 600;
+        font-size: 0.68rem;
+        font-weight: 700;
         padding: 3px 7px;
         border-radius: 20px;
         z-index: 3;
@@ -2225,16 +2225,68 @@
         backdrop-filter: blur(2px);
         line-height: 1.4;
     }
-    .rating-count-card {
-        font-weight: 400;
-        opacity: 0.85;
-    }
+    .rating-badge-card.rating-green  { background: rgba(22,163,74,0.88); }
+    .rating-badge-card.rating-orange { background: rgba(217,119,6,0.88); }
+    .rating-badge-card.rating-red    { background: rgba(220,38,38,0.88); }
+    .rating-count-card { font-weight: 400; opacity: 0.9; }
 
     /* Color label under product name */
-    .color-label-card {
-        color: #888;
-        font-size: 0.75rem;
+    .color-label-card { color: #999; font-size: 0.72rem; margin-top: 1px; }
+
+    /* Brand + product name in card */
+    .card-brand-name {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: #111;
+        margin-top: 8px;
+        line-height: 1.2;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
+    .card-product-name {
+        font-size: 0.73rem;
+        font-weight: 400;
+        color: #777;
+        font-style: italic;
+        margin-top: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* 5-per-row column on XL screens */
+    .col-xl-5th {
+        flex: 0 0 auto;
+        width: 20%;
+    }
+    @media (max-width: 1199px) {
+        .col-xl-5th { width: auto; }
+    }
+
+    /* Smaller offer badge on mobile */
+    @media (max-width: 767px) {
+        .offer-badge-card {
+            font-size: 0.55rem;
+            padding: 2px 6px;
+        }
+    }
+
+    /* Desktop sort pills */
+    .sort-pill {
+        background: #f3f4f6;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 20px;
+        padding: 5px 14px;
+        font-size: 0.78rem;
+        font-weight: 500;
+        color: #555;
+        cursor: pointer;
+        transition: all 0.15s;
+        white-space: nowrap;
+    }
+    .sort-pill:hover { border-color: #111; color: #111; }
+    .sort-pill.active { background: #111; border-color: #111; color: #fff; font-weight: 600; }
 
     /* Active wishlist */
     .wishlist-btn-card.wish-active i {

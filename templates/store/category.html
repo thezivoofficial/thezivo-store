@@ -26,15 +26,14 @@
     <!-- RIGHT COLUMN (SORT + PRODUCTS) -->
     <div class="col-lg-10 col-md-9 ps-3 pe-1">
 
-        <!-- Sort dropdown (desktop only) -->
-        <div class="d-none d-md-flex justify-content-end mb-3">
-            <select id="desktopSortSelect"
-                    class="form-select w-auto"
-                    onchange="ajaxSortProducts(this.value)">
-                <option value="">Recommended</option>
-                <option value="low">Price: Low to High</option>
-                <option value="high">Price: High to Low</option>
-            </select>
+        <!-- Sort pills (desktop only) -->
+        <div class="d-none d-md-flex align-items-center gap-2 mb-3 flex-wrap">
+            <span style="font-size:0.8rem;color:#888;font-weight:500;white-space:nowrap;">Sort:</span>
+            {% for sv, sl in sort_options %}
+            <button class="sort-pill {% if current_sort == sv %}active{% endif %}"
+                    data-sort="{{ sv }}"
+                    onclick="ajaxSortProducts('{{ sv }}')">{{ sl }}</button>
+            {% endfor %}
         </div>
 
         <!-- Title + count (mobile only) -->
@@ -238,14 +237,23 @@
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
     </div>
     <div class="offcanvas-body p-0 pb-3">
-        <div class="sort-option" data-sort="" onclick="mobileSortSelect(this)">
+        <div class="sort-option {% if current_sort == '' %}active{% endif %}" data-sort="" onclick="mobileSortSelect(this)">
             <span>Recommended</span><i class="bi bi-check2 sort-check"></i>
         </div>
-        <div class="sort-option" data-sort="low" onclick="mobileSortSelect(this)">
+        <div class="sort-option {% if current_sort == 'new' %}active{% endif %}" data-sort="new" onclick="mobileSortSelect(this)">
+            <span>What's New</span><i class="bi bi-check2 sort-check"></i>
+        </div>
+        <div class="sort-option {% if current_sort == 'low' %}active{% endif %}" data-sort="low" onclick="mobileSortSelect(this)">
             <span>Price: Low to High</span><i class="bi bi-check2 sort-check"></i>
         </div>
-        <div class="sort-option" data-sort="high" onclick="mobileSortSelect(this)">
+        <div class="sort-option {% if current_sort == 'high' %}active{% endif %}" data-sort="high" onclick="mobileSortSelect(this)">
             <span>Price: High to Low</span><i class="bi bi-check2 sort-check"></i>
+        </div>
+        <div class="sort-option {% if current_sort == 'discount' %}active{% endif %}" data-sort="discount" onclick="mobileSortSelect(this)">
+            <span>Better Discount</span><i class="bi bi-check2 sort-check"></i>
+        </div>
+        <div class="sort-option {% if current_sort == 'rating' %}active{% endif %}" data-sort="rating" onclick="mobileSortSelect(this)">
+            <span>Customer Rating</span><i class="bi bi-check2 sort-check"></i>
         </div>
     </div>
 </div>
@@ -282,25 +290,21 @@ function mobileSortSelect(el) {
 <script>
 function ajaxSortProducts(value) {
     const url = new URL(window.location.href);
-
     if (value) {
         url.searchParams.set("sort", value);
     } else {
         url.searchParams.delete("sort");
     }
 
-    fetch(url.toString(), {
-        headers: {
-            "X-Requested-With": "XMLHttpRequest"
-        }
-    })
+    // Update active pill
+    document.querySelectorAll(".sort-pill").forEach(p => {
+        p.classList.toggle("active", p.dataset.sort === value);
+    });
+
+    fetch(url.toString(), { headers: { "X-Requested-With": "XMLHttpRequest" } })
     .then(res => res.json())
     .then(data => {
-        // replace product grid
         document.getElementById("product-grid").innerHTML = data.html;
-
-
-        // update URL without reload
         window.history.pushState({}, "", url.toString());
     })
     .catch(err => console.error("AJAX sort error:", err));

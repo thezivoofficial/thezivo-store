@@ -1,8 +1,8 @@
 {% load cart_extras %}
-<div class="row g-2 mx-0">
+<div class="row g-3 mx-0">
 
 {% for variant in color_variants %}
-    <div class="col-6 col-md-4 col-lg-3 col-xl-2 mb-3">
+    <div class="col-6 col-md-4 col-lg-3 col-xl-5th mb-2">
         <div class="product-card">
 
             <div class="product-img-box"
@@ -36,7 +36,7 @@
 
                 <!-- Rating badge — bottom-left of image -->
                 {% if variant.avg_rating %}
-                <div class="rating-badge-card">
+                <div class="rating-badge-card {% if variant.avg_rating >= 4 %}rating-green{% elif variant.avg_rating >= 3 %}rating-orange{% else %}rating-red{% endif %}">
                     {{ variant.avg_rating }} ★
                     <span class="rating-count-card">| {{ variant.review_count }}</span>
                 </div>
@@ -50,14 +50,14 @@
 
             </div>
 
-            <div class="mt-2 small fw-semibold">
-                {{ variant.product.name }}
-            </div>
+            <!-- Brand name (prominent) -->
+            <div class="card-brand-name">{{ variant.product.brand }}</div>
 
-            <div class="small text-muted d-flex align-items-center gap-1 flex-wrap">
-                <span>{{ variant.product.category|title }}</span>
-                <span class="color-label-card">· {{ variant.color }}</span>
-            </div>
+            <!-- Product name (smaller, muted) -->
+            <div class="card-product-name">"{{ variant.product.name }}"</div>
+
+            <!-- Color -->
+            <div class="color-label-card">{{ variant.color }}</div>
 
             <div class="price-box mt-1">
                 <span class="selling-price">

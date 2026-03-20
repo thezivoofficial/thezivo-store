@@ -1329,6 +1329,21 @@ def category_products(request, gender, category=None):
         color_variants.sort(key=lambda v: v['min_selling_price'])
     elif sort == "high":
         color_variants.sort(key=lambda v: v['min_selling_price'], reverse=True)
+    elif sort == "discount":
+        color_variants.sort(key=lambda v: v['discount_percent'], reverse=True)
+    elif sort == "rating":
+        color_variants.sort(key=lambda v: v['avg_rating'] or 0, reverse=True)
+    # "new" and "" stay as default (-id order from queryset)
+
+    sort_options = [
+        ("",        "Recommended"),
+        ("new",     "What's New"),
+        ("low",     "Price ↑"),
+        ("high",    "Price ↓"),
+        ("discount","Best Discount"),
+        ("rating",  "Top Rated"),
+    ]
+    current_sort = sort or ""
 
     # ✅ AJAX RESPONSE
     if request.headers.get("x-requested-with") == "XMLHttpRequest":
@@ -1359,6 +1374,8 @@ def category_products(request, gender, category=None):
         "max_price_db": price_range["max_price"] or 0,
         "selected_min_price": min_price,
         "selected_max_price": max_price,
+        "sort_options": sort_options,
+        "current_sort": current_sort,
     })
     
 
