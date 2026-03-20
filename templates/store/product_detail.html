@@ -317,12 +317,12 @@
     .btn-notify:hover { border-color: #111; background: #fafafa; }
 
     .btn-wishlist-full {
-        width: 100%;
+        flex: 1;
         background: #fff;
         color: #555;
         border: 1.5px solid #e0e0e0;
         border-radius: 10px;
-        padding: 13px 20px;
+        padding: 14px 20px;
         font-family: 'DM Sans', sans-serif;
         font-weight: 600;
         font-size: 0.88rem;
@@ -333,7 +333,6 @@
         justify-content: center;
         gap: 7px;
         transition: border-color 0.15s, background 0.15s, color 0.15s;
-        margin-top: 10px;
     }
     .btn-wishlist-full:hover { border-color: #e53935; color: #e53935; background: #fff8f8; }
     .btn-wishlist-full.wish-active { border-color: #e53935; color: #e53935; background: #fff5f5; }
@@ -454,7 +453,7 @@
         .product-name { font-size: 1.3rem; }
         .price-selling { font-size: 1.3rem; }
         .action-row { flex-wrap: nowrap; }
-        .btn-add-to-bag, .btn-notify { flex: 1 1 auto; }
+        .btn-add-to-bag, .btn-notify, .btn-wishlist-full { flex: 1 1 auto; }
     }
 
     /* SIZE CHART */
@@ -753,17 +752,16 @@
                             ADD TO BAG
                         </button>
                         {% endif %}
-                    </div>
 
-                    <!-- SAVE TO WISHLIST -->
-                    <button type="button"
-                            id="product-wishlist-btn"
-                            class="btn-wishlist-full"
-                            onclick="toggleWishlist('{{ product.id }}', this, getCurrentColor())"
-                            title="Save to Wishlist">
-                        <i class="bi bi-heart"></i>
-                        <span class="wishlist-btn-text">Save to Wishlist</span>
-                    </button>
+                        <button type="button"
+                                id="product-wishlist-btn"
+                                class="btn-wishlist-full"
+                                onclick="toggleWishlist('{{ product.id }}', this, getCurrentColor())"
+                                title="Save to Wishlist">
+                            <i class="bi bi-heart"></i>
+                            <span class="wishlist-btn-text">Save to Wishlist</span>
+                        </button>
+                    </div>
 
                     <!-- TRUST BADGES -->
                     <div class="trust-row">
