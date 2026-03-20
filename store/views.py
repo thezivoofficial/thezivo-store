@@ -1278,7 +1278,9 @@ def category_products(request, gender, category=None):
             {"products": products},
             request=request
         )
-        return JsonResponse({"html": html})
+        resp = JsonResponse({"html": html})
+        resp["Cache-Control"] = "no-store"
+        return resp
 
 
     return render(request, "store/category.html", {
@@ -1365,7 +1367,9 @@ def search_products(request):
             {"products": products},
             request=request
         )
-        return JsonResponse({"html": html})
+        resp = JsonResponse({"html": html})
+        resp["Cache-Control"] = "no-store"
+        return resp
 
     return render(request, "store/search_results.html", {
         "products": products,
