@@ -271,7 +271,7 @@
     }
 
     .btn-add-to-bag {
-        flex: 1;
+        flex: 1.5;
         background: #111;
         color: #fff;
         border: none;
@@ -454,6 +454,7 @@
         .price-selling { font-size: 1.3rem; }
         .action-row { flex-wrap: nowrap; }
         .btn-add-to-bag, .btn-notify, .btn-wishlist-full { flex: 1 1 auto; }
+        .wish-save-prefix { display: none; }
     }
 
     /* SIZE CHART */
@@ -757,9 +758,10 @@
                                 id="product-wishlist-btn"
                                 class="btn-wishlist-full"
                                 onclick="toggleWishlist('{{ product.id }}', this, getCurrentColor())"
+                                data-inactive-label='<span class="wish-save-prefix">Save to </span>Wishlist'
                                 title="Save to Wishlist">
                             <i class="bi bi-heart"></i>
-                            <span class="wishlist-btn-text">Save to Wishlist</span>
+                            <span class="wishlist-btn-text"><span class="wish-save-prefix">Save to </span>Wishlist</span>
                         </button>
                     </div>
 
@@ -1126,7 +1128,7 @@ function updateWishlistBtnState(color) {
         icon.classList.toggle("bi-heart-fill", wishlisted);
         icon.classList.toggle("bi-heart", !wishlisted);
     }
-    if (textEl) textEl.textContent = wishlisted ? "Saved" : "Save to Wishlist";
+    if (textEl) textEl.innerHTML = wishlisted ? "Saved" : (btn.dataset.inactiveLabel || "Save to Wishlist");
 }
 
 // Keep local key set in sync after a toggle

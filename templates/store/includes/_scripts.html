@@ -745,11 +745,11 @@ function toggleWishlist(productId, btn, color = "") {
         if (data.status === "added") {
             btn.classList.add("wish-active");
             if (icon) icon.classList.replace("bi-heart", "bi-heart-fill");
-            if (textEl) textEl.textContent = "Saved";
+            if (textEl) textEl.innerHTML = "Saved";
         } else {
             btn.classList.remove("wish-active");
             if (icon) icon.classList.replace("bi-heart-fill", "bi-heart");
-            if (textEl) textEl.textContent = "Save to Wishlist";
+            if (textEl) textEl.innerHTML = btn.dataset.inactiveLabel || "Save to Wishlist";
         }
 
         /* ================= COLOR KEY CALLBACK ================= */
