@@ -943,13 +943,16 @@ function updateCartUI(data) {
     /* ================= EMPTY STATE ================= */
 
     const emptyBox = document.getElementById("empty-cart");
+    const cartItemsEl = document.getElementById("cart-items");
     const footer = document.getElementById("cart-footer");
 
     if (data.cart_count > 0) {
         if (emptyBox) emptyBox.classList.add("d-none");
+        if (cartItemsEl) cartItemsEl.classList.remove("d-none");
         if (footer) footer.style.display = "block";
     } else {
         if (emptyBox) emptyBox.classList.remove("d-none");
+        if (cartItemsEl) cartItemsEl.classList.add("d-none");
         if (footer) footer.style.display = "none";
     }
 

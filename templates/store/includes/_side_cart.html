@@ -19,7 +19,7 @@
     <!-- BODY -->
     <div class="offcanvas-body d-flex flex-column" id="cart-body" style="padding:0;">
 
-        <div id="cart-items" class="flex-grow-1" style="overflow-y:auto; padding:16px 20px;">
+        <div id="cart-items" class="flex-grow-1 {% if not items %}d-none{% endif %}" style="overflow-y:auto; padding:16px 20px;">
         {% if items %}
             {% for item in items %}
             <div class="sc-item" id="item-{{ item.sku.id }}">
