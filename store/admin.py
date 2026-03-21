@@ -147,6 +147,12 @@ class ProductAdmin(ModelAdmin):
         ("Categorisation", {
             "fields": ("gender", "category"),
         }),
+        ("Description", {
+            "fields": ("description",),
+        }),
+        ("Material & Care", {
+            "fields": ("material", "care"),
+        }),
         ("Fallback Image", {
             "description": "Used as thumbnail in the admin list and email templates. "
                            "For storefront display, upload color-tagged images in the Product Images section below.",

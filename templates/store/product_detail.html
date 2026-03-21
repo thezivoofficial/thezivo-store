@@ -460,6 +460,80 @@
         .wishlist-btn-text { display: none; }
     }
 
+    /* SHORT DESCRIPTION */
+    .product-short-desc {
+        font-size: 0.88rem;
+        color: #666;
+        line-height: 1.7;
+        margin-bottom: 20px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    .product-short-desc ul, .product-short-desc ol {
+        padding-left: 18px;
+        margin: 6px 0 0;
+    }
+    .product-short-desc li { margin-bottom: 3px; }
+
+    /* PRODUCT DETAILS ACCORDION */
+    .pd-accordion {
+        margin-top: 20px;
+        border-top: 1px solid #f0f0f0;
+    }
+    .pd-item {
+        border-bottom: 1px solid #f0f0f0;
+    }
+    .pd-toggle {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 0;
+        background: none;
+        border: none;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #111;
+        text-transform: uppercase;
+        letter-spacing: 0.7px;
+        cursor: pointer;
+        text-align: left;
+    }
+    .pd-chevron {
+        flex-shrink: 0;
+        transition: transform 0.25s ease;
+        color: #aaa;
+    }
+    .pd-toggle.open .pd-chevron { transform: rotate(180deg); }
+    .pd-body {
+        overflow: hidden;
+        max-height: 0;
+        transition: max-height 0.3s ease;
+    }
+    .pd-content {
+        padding-bottom: 16px;
+        font-size: 0.86rem;
+        color: #555;
+        line-height: 1.75;
+    }
+    .pd-content ul, .pd-content ol {
+        padding-left: 18px;
+        margin: 4px 0 0;
+    }
+    .pd-content li { margin-bottom: 4px; }
+    .pd-row {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 8px;
+    }
+    .pd-label {
+        font-weight: 600;
+        color: #111;
+        min-width: 72px;
+        flex-shrink: 0;
+    }
+
     /* SIZE CHART */
     .size-chart-link {
         display: inline-flex; align-items: center; gap: 5px;
@@ -666,6 +740,11 @@
                     </div>
                     {% endif %}
 
+                    <!-- SHORT DESCRIPTION -->
+                    {% if product.description %}
+                    <div class="product-short-desc">{{ product.description|safe }}</div>
+                    {% endif %}
+
                     <!-- COLOR SWATCHES -->
                     <div style="margin-bottom:20px;">
                         <div class="section-label">
@@ -780,6 +859,50 @@
                             <span class="icon">🔒</span> Secure checkout
                         </div>
                     </div>
+
+                    <!-- PRODUCT DETAILS ACCORDION -->
+                    {% if product.description or product.material or product.care %}
+                    <div class="pd-accordion">
+
+                        {% if product.description %}
+                        <div class="pd-item">
+                            <button class="pd-toggle" onclick="pdToggle(this)">
+                                Product Details
+                                <svg class="pd-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                            </button>
+                            <div class="pd-body">
+                                <div class="pd-content">{{ product.description|safe }}</div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if product.material or product.care %}
+                        <div class="pd-item">
+                            <button class="pd-toggle" onclick="pdToggle(this)">
+                                Material & Care
+                                <svg class="pd-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                            </button>
+                            <div class="pd-body">
+                                <div class="pd-content">
+                                    {% if product.material %}
+                                    <div class="pd-row">
+                                        <span class="pd-label">Material</span>
+                                        <span>{{ product.material }}</span>
+                                    </div>
+                                    {% endif %}
+                                    {% if product.care %}
+                                    <div class="pd-row">
+                                        <span class="pd-label">Care</span>
+                                        <span>{{ product.care }}</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                    </div>
+                    {% endif %}
 
                 </div>
             </div>
@@ -1432,6 +1555,20 @@ function copyLink(which) {
         document.getElementById(ddId).classList.remove("open");
     });
 }
+
+// ── PRODUCT DETAILS ACCORDION ────────────────────────
+function pdToggle(btn) {
+    const body = btn.nextElementSibling;
+    const isOpen = btn.classList.contains("open");
+    btn.classList.toggle("open", !isOpen);
+    body.style.maxHeight = isOpen ? "0" : body.scrollHeight + "px";
+}
+
+// Auto-open first accordion item on load
+document.addEventListener("DOMContentLoaded", function() {
+    const first = document.querySelector(".pd-toggle");
+    if (first) pdToggle(first);
+});
 
 // Close dropdowns when clicking outside
 document.addEventListener("click", function(e) {

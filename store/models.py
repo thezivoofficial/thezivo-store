@@ -77,19 +77,31 @@ class Product(models.Model):
         ("unisex", "Unisex"),
     )
 
-    name     = models.CharField(max_length=200)
-    gender   = models.CharField(max_length=10, choices=GENDER_CHOICES, db_index=True)
-    category = models.ForeignKey(
+    name        = models.CharField(max_length=200)
+    gender      = models.CharField(max_length=10, choices=GENDER_CHOICES, db_index=True)
+    category    = models.ForeignKey(
         "Category",
         on_delete=models.PROTECT,
         related_name="products",
         db_index=True,
         null=True, blank=True,
     )
-    image = models.ImageField(upload_to="products/")
-    active = models.BooleanField(default=True, db_index=True)
+    image       = models.ImageField(upload_to="products/")
+    active      = models.BooleanField(default=True, db_index=True)
     is_trending = models.BooleanField(default=False, db_index=True)
-    brand = models.CharField(max_length=100)
+    brand       = models.CharField(max_length=100)
+    description = models.TextField(
+        blank=True, default="",
+        help_text="Shown on the product page. Supports basic HTML (bold, bullet lists).",
+    )
+    material    = models.CharField(
+        max_length=200, blank=True, default="",
+        help_text='e.g. "100% Cotton" or "60% Cotton, 40% Polyester"',
+    )
+    care        = models.CharField(
+        max_length=300, blank=True, default="",
+        help_text='e.g. "Machine wash cold, do not tumble dry"',
+    )
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
