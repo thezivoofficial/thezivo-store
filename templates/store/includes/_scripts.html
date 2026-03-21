@@ -50,47 +50,51 @@ function animateAmount(from, to, callback) {
 }
 
 function updateFreeDeliveryMessage(remaining) {
-
-    const msg = document.getElementById("freeDeliveryMsg");
+    const msg     = document.getElementById("freeDeliveryMsg");
     if (!msg) return;
+    const textEl  = document.getElementById("fdText");
+    const fillEl  = document.getElementById("fdFill");
+    const truckEl = document.getElementById("fdTruck");
+    const freeMin = Number(msg.dataset.min || 799);
 
-    msg.classList.remove(
-        "free-delivery-pending",
-        "free-delivery-success",
-        "d-none"
-    );
+    function setBar(pct) {
+        const clamped = Math.min(100, Math.max(0, pct));
+        if (fillEl)  fillEl.style.width = clamped + "%";
+        if (truckEl) truckEl.style.left  = clamped + "%";
+    }
 
-    // 🎉 Free delivery unlocked
+    msg.classList.remove("pending", "success");
+
     if (remaining <= 0) {
         if (lastRemainingAmount !== null && lastRemainingAmount > 0) {
-            // animate final countdown to 0
             animateAmount(lastRemainingAmount, 0, (value) => {
-                msg.innerText =
-                    value === 0
-                        ? "🎉 Free delivery unlocked"
-                        : `Add ₹${value} more to get free delivery`;
+                if (textEl) textEl.textContent = value === 0
+                    ? "You've got free delivery!"
+                    : `Add ₹${value} more for free delivery`;
             });
         } else {
-            msg.innerText = "🎉 Free delivery unlocked";
+            if (textEl) textEl.textContent = "You've got free delivery!";
         }
-
-        msg.classList.add("free-delivery-success");
+        msg.classList.add("success");
+        setBar(100);
         lastRemainingAmount = 0;
         return;
     }
 
-
-    msg.classList.add("free-delivery-pending");
-
+    msg.classList.add("pending");
+    const pct  = ((freeMin - remaining) / freeMin) * 100;
     const prev = window.lastRemainingAmount;
 
-    // animate ONLY when moving closer
     if (prev !== null && remaining < prev) {
+        const prevPct = ((freeMin - prev) / freeMin) * 100;
         animateAmount(prev, remaining, (value) => {
-            msg.innerText = `Add ₹${value} more to get free delivery`;
+            if (textEl) textEl.textContent = `Add ₹${value} more for free delivery`;
+            setBar(((freeMin - value) / freeMin) * 100);
         });
+        setBar(prevPct); // start from prev position immediately
     } else {
-        msg.innerText = `Add ₹${remaining} more to get free delivery`;
+        if (textEl) textEl.textContent = `Add ₹${remaining} more for free delivery`;
+        setBar(pct);
     }
 
     window.lastRemainingAmount = remaining;

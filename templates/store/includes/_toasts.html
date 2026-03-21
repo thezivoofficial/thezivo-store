@@ -59,15 +59,25 @@ document.addEventListener("DOMContentLoaded", function () {
         toast.hide();
     });
 
-    // ✅ Free delivery message on initial load
+    // ✅ Free delivery bar on initial load
     const freeMsg = document.getElementById("freeDeliveryMsg");
     if (!freeMsg) return;
     const remaining = Number(freeMsg.dataset.remaining);
-    if (remaining > 0) {
-        freeMsg.innerText = `Add ₹${remaining} more to get free delivery`;
-        freeMsg.classList.remove("d-none");
-    } else {
-        freeMsg.classList.add("d-none");
-    }
+    const freeMin   = Number(freeMsg.dataset.min || 799);
+    const fillEl    = document.getElementById("fdFill");
+    const truckEl   = document.getElementById("fdTruck");
+    const textEl    = document.getElementById("fdText");
+    const pct = remaining > 0
+        ? Math.min(100, Math.max(0, ((freeMin - remaining) / freeMin) * 100))
+        : 100;
+    // slight delay so the CSS transition plays on open
+    setTimeout(() => {
+        if (fillEl)  fillEl.style.width = pct + "%";
+        if (truckEl) truckEl.style.left  = pct + "%";
+    }, 120);
+    if (textEl) textEl.textContent = remaining > 0
+        ? `Add ₹${remaining} more for free delivery`
+        : "You've got free delivery!";
+    window.lastRemainingAmount = remaining;
 });
 </script>

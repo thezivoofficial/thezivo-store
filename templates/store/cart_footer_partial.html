@@ -25,19 +25,24 @@
     </span>
 </div>
 
-{% if free_delivery_remaining > 0 %}
 <div id="freeDeliveryMsg"
-     class="free-delivery-cart pending"
-     data-remaining="{{ free_delivery_remaining }}">
-    Add ₹{{ free_delivery_remaining }} more for free delivery
+     class="fd-bar-wrap {% if free_delivery_remaining > 0 %}pending{% else %}success{% endif %}"
+     data-remaining="{{ free_delivery_remaining }}"
+     data-min="{{ free_delivery_min }}">
+    <div class="fd-bar-outer">
+        <div class="fd-track">
+            <div class="fd-fill" id="fdFill"></div>
+        </div>
+        <span class="fd-truck" id="fdTruck">🚚</span>
+    </div>
+    <div class="fd-bar-text" id="fdText">
+        {% if free_delivery_remaining > 0 %}
+            Add ₹{{ free_delivery_remaining }} more for free delivery
+        {% else %}
+            You've got free delivery!
+        {% endif %}
+    </div>
 </div>
-{% else %}
-<div id="freeDeliveryMsg"
-     class="free-delivery-cart success"
-     data-remaining="0">
-    🎉 You've unlocked free delivery!
-</div>
-{% endif %}
 
 <div style="border-top:1px solid #f0f0f0; margin:12px 0 10px;
             display:flex; justify-content:space-between; padding-top:10px;">
