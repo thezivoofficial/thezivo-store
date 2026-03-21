@@ -1298,6 +1298,21 @@ def category_products(request, gender, category=None):
     ):
         sku_map.setdefault(sku['product_id'], []).append(sku)
 
+    # Build color→image URL map per product: {product_id: {color: url, '': fallback_url}}
+    from django.core.files.storage import default_storage
+    image_map = {}
+    for img in ProductImage.objects.filter(product_id__in=product_ids).values(
+        'product_id', 'color', 'image'
+    ):
+        pid = img['product_id']
+        color = img['color'].strip()
+        url = default_storage.url(img['image'])
+        if pid not in image_map:
+            image_map[pid] = {}
+        # Store first image per color key ('' = shared/fallback)
+        if color not in image_map[pid]:
+            image_map[pid][color] = url
+
     color_variants = []
     for product in products_list:
         product_skus = sku_map.get(product.id, [])
@@ -1315,14 +1330,22 @@ def category_products(request, gender, category=None):
                 color_data[color]['min_mrp'] = min(color_data[color]['min_mrp'], sku['mrp'])
                 color_data[color]['stock'] += sku['stock']
 
+        prod_images = image_map.get(product.id, {})
         all_colors = list(color_data.keys())
         for color, data in color_data.items():
             discount = 0
             if data['min_mrp'] > 0:
                 discount = max(0, int((data['min_mrp'] - data['min_price']) / data['min_mrp'] * 100))
+            # Pick color-tagged image → shared image → product.image
+            main_image = (
+                prod_images.get(color)
+                or prod_images.get('')
+                or (default_storage.url(product.image.name) if product.image else "")
+            )
             color_variants.append({
                 'product': product,
                 'color': color,
+                'main_image': main_image,
                 'wishlist_key': f"{product.id}_{color}",
                 'all_colors': all_colors,
                 'min_selling_price': data['min_price'],

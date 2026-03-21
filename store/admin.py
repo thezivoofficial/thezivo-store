@@ -33,7 +33,7 @@ def _make_qr_b64(url: str) -> str:
 class ProductImageInline(TabularInline):
     model = ProductImage
     extra = 1
-    fields = ("image", "is_primary", "preview")
+    fields = ("image", "color", "is_primary", "preview")
     readonly_fields = ("preview",)
 
     def preview(self, obj):

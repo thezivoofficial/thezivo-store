@@ -127,6 +127,7 @@ class ProductImage(models.Model):
         related_name="images"
     )
     image = models.ImageField(upload_to="products/extra/")
+    color = models.CharField(max_length=100, blank=True, default="", help_text="Tag this image to a color variant (e.g. Red). Leave blank for shared images.")
     is_primary = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):

@@ -12,7 +12,7 @@
                 <a href="{% url 'product_detail' variant.product.id %}?color={{ variant.color|urlencode }}" class="img-link">
 
                     <!-- MAIN IMAGE -->
-                    <img src="{{ variant.product.image.url }}"
+                    <img src="{{ variant.main_image }}"
                         class="product-card-img active">
 
                     <!-- EXTRA IMAGES -->
