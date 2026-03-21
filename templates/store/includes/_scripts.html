@@ -967,6 +967,9 @@ function updateCartUI(data) {
 
     if (footerBox && data.cart_footer) {
         footerBox.innerHTML = data.cart_footer;
+        if (typeof updateFreeDeliveryMessage === "function") {
+            updateFreeDeliveryMessage(data.free_delivery_remaining);
+        }
     }
 
     /* ================= CART PAGE SUMMARY ================= */

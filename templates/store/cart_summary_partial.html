@@ -39,7 +39,7 @@
             <div class="fd-track">
                 <div class="fd-fill" style="width:{% if free_delivery_remaining > 0 %}{{ fd_pct }}%{% else %}100%{% endif %}"></div>
             </div>
-            <span class="fd-truck" style="left:{% if free_delivery_remaining > 0 %}{{ fd_pct }}%{% else %}100%{% endif %}">🚚</span>
+            <span class="fd-truck" style="left:{% if free_delivery_remaining > 0 %}{{ fd_pct }}%{% else %}100%{% endif %}; transform:translateY(-50%) scaleX(-1);">🚚</span>
         </div>
         <div class="fd-bar-text">
             {% if free_delivery_remaining > 0 %}
