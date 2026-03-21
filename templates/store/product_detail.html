@@ -460,21 +460,6 @@
         .wishlist-btn-text { display: none; }
     }
 
-    /* SHORT DESCRIPTION */
-    .product-short-desc {
-        font-size: 0.88rem;
-        color: #666;
-        line-height: 1.7;
-        margin-bottom: 20px;
-        padding-bottom: 20px;
-        border-bottom: 1px solid #f0f0f0;
-    }
-    .product-short-desc ul, .product-short-desc ol {
-        padding-left: 18px;
-        margin: 6px 0 0;
-    }
-    .product-short-desc li { margin-bottom: 3px; }
-
     /* PRODUCT DETAILS ACCORDION */
     .pd-accordion {
         margin-top: 20px;
@@ -740,11 +725,6 @@
                     </div>
                     {% endif %}
 
-                    <!-- SHORT DESCRIPTION -->
-                    {% if product.description %}
-                    <div class="product-short-desc">{{ product.description|safe }}</div>
-                    {% endif %}
-
                     <!-- COLOR SWATCHES -->
                     <div style="margin-bottom:20px;">
                         <div class="section-label">
@@ -850,7 +830,7 @@
                     <!-- TRUST BADGES -->
                     <div class="trust-row">
                         <div class="trust-item">
-                            <span class="icon">🚚</span> Free delivery over ₹799
+                            <span class="icon">🚚</span> Free delivery over ₹{{ free_delivery_min }}
                         </div>
                         <div class="trust-item">
                             <span class="icon">↩️</span> Easy 30-day returns
@@ -871,7 +851,7 @@
                                 <svg class="pd-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
                             </button>
                             <div class="pd-body">
-                                <div class="pd-content">{{ product.description|safe }}</div>
+                                <div class="pd-content">{{ product.description|linebreaks }}</div>
                             </div>
                         </div>
                         {% endif %}

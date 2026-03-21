@@ -38,6 +38,13 @@ def cart_context(request):
     subtotal_after_offers = max(0, subtotal - offer_discount)
     delivery_charge, final_amount, remaining = calculate_delivery_and_final(subtotal_after_offers)
 
+    try:
+        from .models import SiteSettings
+        free_delivery_min = SiteSettings.get().free_delivery_min_order
+    except Exception:
+        from .utils import FREE_DELIVERY_LIMIT
+        free_delivery_min = FREE_DELIVERY_LIMIT
+
     return {
         "items": items,
         "cart_count": total_items,
@@ -47,6 +54,7 @@ def cart_context(request):
         "cart_total": final_amount,
         "delivery_charge": delivery_charge,
         "free_delivery_remaining": remaining,
+        "free_delivery_min": free_delivery_min,
     }
 
 
