@@ -429,6 +429,8 @@ def product_detail(request, product_id):
     except Exception:
         pdata = None
     if pdata is None:
+        import json
+        from collections import defaultdict
         images = list(product.images.all())
         skus = list(SKU.objects.filter(product=product))
         in_stock = any(sku.stock > 0 for sku in skus)
@@ -438,6 +440,14 @@ def product_detail(request, product_id):
         for sku in skus:
             if sku.color not in color_variants:
                 color_variants[sku.color] = sku
+
+        # Build color → [url, ...] map for gallery switching on product detail page
+        _imap = defaultdict(list)
+        for img in images:
+            key = img.color.strip() if img.color else ""
+            _imap[key].append(img.image.url)
+        images_by_color = dict(_imap)
+        images_by_color_json = json.dumps(images_by_color)
 
         related = list(
             Product.objects.filter(category=product.category, gender=product.gender, active=True)
@@ -461,6 +471,7 @@ def product_detail(request, product_id):
         pdata = {
             "images": images, "skus": skus, "in_stock": in_stock,
             "default_sku": default_sku, "color_variants": color_variants,
+            "images_by_color_json": images_by_color_json,
             "related": related, "reviews": reviews, "product_offers": product_offers,
         }
         try:

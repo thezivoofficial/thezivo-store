@@ -36,6 +36,27 @@ class ProductImageInline(TabularInline):
     fields = ("image", "color", "is_primary", "preview")
     readonly_fields = ("preview",)
 
+    def get_formset(self, request, obj=None, **kwargs):
+        """Populate the color field as a dropdown of this product's SKU colors."""
+        formset = super().get_formset(request, obj, **kwargs)
+        if obj:
+            from django import forms as django_forms
+            colors = list(
+                SKU.objects.filter(product=obj)
+                .values_list('color', flat=True)
+                .distinct().order_by('color')
+            )
+            choices = [('', '— Shared (shown for all colors) —')] + [(c, c) for c in colors]
+            formset.form.base_fields['color'].widget = django_forms.Select(
+                choices=choices, attrs={'style': 'min-width:200px'}
+            )
+            formset.form.base_fields['color'].required = False
+            formset.form.base_fields['color'].help_text = (
+                "Pick a color to link this image to that variant, "
+                "or leave as Shared to show it for all colors."
+            )
+        return formset
+
     def preview(self, obj):
         if obj.image:
             return format_html(
@@ -126,7 +147,9 @@ class ProductAdmin(ModelAdmin):
         ("Categorisation", {
             "fields": ("gender", "category"),
         }),
-        ("Main Image", {
+        ("Fallback Image", {
+            "description": "Used as thumbnail in the admin list and email templates. "
+                           "For storefront display, upload color-tagged images in the Product Images section below.",
             "fields": ("image",),
         }),
         ("Visibility", {

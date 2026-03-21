@@ -1001,16 +1001,45 @@
 </div>
 
 <script>
-// ── ZOOM ──────────────────────────────────────────────
-const zoomImages = [
-    {% if images %}
-        {% for img in images %}"{{ img.image.url }}"{% if not forloop.last %},{% endif %}
-        {% endfor %}
-    {% else %}
-        "{{ product.image.url }}"
-    {% endif %}
-];
+// ── IMAGE MAP (color → [url, ...]) ────────────────────
+const IMAGE_MAP = {{ images_by_color_json|safe }};
 
+function getGalleryImages(color) {
+    const colorImgs = IMAGE_MAP[color] || [];
+    const sharedImgs = IMAGE_MAP[""] || [];
+    const seen = new Set();
+    return [...colorImgs, ...sharedImgs].filter(u => seen.has(u) ? false : (seen.add(u), true));
+}
+
+function updateGallery(color) {
+    const imgs = getGalleryImages(color);
+    if (!imgs.length) return;
+
+    // Main image
+    const mainImg = document.getElementById("mainProductImage");
+    if (mainImg) mainImg.src = imgs[0];
+
+    // Thumbnails
+    const thumbRow = document.querySelector(".thumbnail-row");
+    if (thumbRow) {
+        if (imgs.length > 1) {
+            thumbRow.innerHTML = imgs.map((url, i) =>
+                `<img src="${url}" class="thumbnail-img${i === 0 ? ' active' : ''}"
+                      onclick="changeMainImage('${url}', this)" alt="">`
+            ).join("");
+            thumbRow.style.display = "";
+        } else {
+            thumbRow.style.display = "none";
+        }
+    }
+
+    // Zoom
+    zoomImages = imgs.slice();
+    zoomIndex = 0;
+}
+
+// ── ZOOM ──────────────────────────────────────────────
+let zoomImages = [];
 let zoomIndex = 0;
 
 // Make main image clickable
@@ -1025,10 +1054,20 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // Init color filter and wishlist state
+    // Update color swatch thumbnails from IMAGE_MAP
+    document.querySelectorAll(".color-swatch").forEach(s => {
+        const c = s.dataset.color;
+        const img = s.querySelector(".color-swatch-img");
+        if (img) {
+            const url = (IMAGE_MAP[c] && IMAGE_MAP[c][0]) || (IMAGE_MAP[""] && IMAGE_MAP[""][0]);
+            if (url) img.src = url;
+        }
+    });
+
+    // Init gallery + wishlist state for default color
     const defaultColor = document.getElementById("selected-color").innerText.trim();
     if (defaultColor) selectColor(defaultColor);
-    updateWishlistBtnState(defaultColor);
+    else updateWishlistBtnState("");
 });
 
 function openZoom(index) {
@@ -1204,6 +1243,9 @@ function selectColor(color) {
 
     // Sync wishlist heart with this color's state
     updateWishlistBtnState(color);
+
+    // Switch gallery to this color's images
+    updateGallery(color);
 }
 
 // ── PRICE + COLOR SYNC ─────────────────────────────────
