@@ -268,18 +268,9 @@ if (minRange && maxRange && fill) {
 
 
 <script>
-document.addEventListener(“DOMContentLoaded”, function () {
+(function () {
 
-    const input = document.getElementById(“searchInput”);
-    const dropdown = document.getElementById(“searchDropdown”);
-
-    if (!input || !dropdown) return;
-
-    let debounceTimer;
-    let activeIndex = -1;
-    let results = [];
-
-    // ── Recent searches (localStorage) ──────────────────────────────────
+    // ── Shared recent-search helpers (used by both desktop + mobile) ─────
     const RECENT_KEY = “zivo_recent_searches”;
     const MAX_RECENT = 5;
 
@@ -294,245 +285,186 @@ document.addEventListener(“DOMContentLoaded”, function () {
         localStorage.setItem(RECENT_KEY, JSON.stringify(list.slice(0, MAX_RECENT)));
     }
     function removeRecentSearch(term) {
-        let list = getRecentSearches().filter(t => t !== term);
-        localStorage.setItem(RECENT_KEY, JSON.stringify(list));
+        localStorage.setItem(RECENT_KEY, JSON.stringify(
+            getRecentSearches().filter(t => t !== term)
+        ));
     }
 
-    // ── Highlight match ──────────────────────────────────────────────────
-    function highlight(text, query) {
-        const regex = new RegExp(`(${query})`, “ig”);
-        return text.replace(regex, `<span class=”search-highlight”>$1</span>`);
-    }
-
-    // ── Render recent + trending (shown when input is empty/focused) ─────
-    function renderIdle(trending) {
-        const resultsBox = document.getElementById(“searchResults”);
-        const viewAllBox = document.getElementById(“searchViewAll”);
-        resultsBox.innerHTML = “”;
-        viewAllBox.classList.add(“d-none”);
-        activeIndex = -1;
-
-        const recent = getRecentSearches();
-        let hasContent = false;
-
-        if (recent.length) {
-            hasContent = true;
-            const hdr = document.createElement(“div”);
-            hdr.style.cssText = “padding:10px 14px 4px; font-size:0.7rem; font-weight:600; color:#aaa; text-transform:uppercase; letter-spacing:0.5px; display:flex; justify-content:space-between; align-items:center;”;
-            hdr.innerHTML = `<span>Recent</span><span id=”clearAllRecent” style=”cursor:pointer; color:#ccc; font-weight:400;”>Clear all</span>`;
-            resultsBox.appendChild(hdr);
-            hdr.querySelector(“#clearAllRecent”).addEventListener(“click”, (e) => {
-                e.stopPropagation();
-                localStorage.removeItem(RECENT_KEY);
-                renderIdle([]);
-            });
-
-            recent.forEach(term => {
-                const div = document.createElement(“div”);
-                div.className = “search-item”;
-                div.style.cssText = “display:flex; align-items:center; gap:10px;”;
-                div.innerHTML = `
-                    <span style=”color:#bbb; font-size:0.9rem;”>🕐</span>
-                    <span style=”flex:1; font-size:0.86rem;”>${term}</span>
-                    <span class=”recent-remove” data-term=”${term}” style=”color:#ccc; font-size:0.8rem; padding:2px 6px; cursor:pointer;”>✕</span>
-                `;
-                div.querySelector(“.recent-remove”).addEventListener(“click”, (e) => {
-                    e.stopPropagation();
-                    removeRecentSearch(term);
-                    renderIdle(trending);
-                });
-                div.addEventListener(“click”, () => {
-                    input.value = term;
-                    saveRecentSearch(term);
-                    window.location.href = `/search/?q=${encodeURIComponent(term)}`;
-                });
-                resultsBox.appendChild(div);
-            });
-        }
-
-        if (trending && trending.length) {
-            hasContent = true;
-            const hdr = document.createElement(“div”);
-            hdr.style.cssText = “padding:10px 14px 4px; font-size:0.7rem; font-weight:600; color:#aaa; text-transform:uppercase; letter-spacing:0.5px;”;
-            hdr.textContent = “Trending”;
-            resultsBox.appendChild(hdr);
-
-            trending.forEach(term => {
-                const div = document.createElement(“div”);
-                div.className = “search-item”;
-                div.style.cssText = “display:flex; align-items:center; gap:10px;”;
-                div.innerHTML = `
-                    <span style=”color:#bbb; font-size:0.9rem;”>🔥</span>
-                    <span style=”flex:1; font-size:0.86rem;”>${term}</span>
-                `;
-                div.addEventListener(“click”, () => {
-                    input.value = term;
-                    saveRecentSearch(term);
-                    window.location.href = `/search/?q=${encodeURIComponent(term)}`;
-                });
-                resultsBox.appendChild(div);
-            });
-        }
-
-        if (hasContent) {
-            dropdown.classList.remove(“d-none”);
-        } else {
-            dropdown.classList.add(“d-none”);
-        }
-    }
-
-    // ── Render product suggestions (shown while typing) ──────────────────
-    function renderDropdown(query) {
-        const resultsBox = document.getElementById(“searchResults”);
-        const viewAllBox = document.getElementById(“searchViewAll”);
-
-        resultsBox.innerHTML = “”;
-        activeIndex = -1;
-
-        if (!results.length) {
-            dropdown.classList.add(“d-none”);
-            return;
-        }
-
-        results.forEach((item, index) => {
-            const div = document.createElement(“div”);
-            div.className = “search-item”;
-            div.dataset.index = index;
-
-            div.innerHTML = `
-                <img src=”/media/${item.image}”>
-                <div>
-                    <div class=”search-item-name”>
-                        ${highlight(item.name, query)}
-                    </div>
-                    <div class=”search-item-meta”>
-                        ${highlight(item.brand, query)} • ${item.category} • ₹${item.price}
-                    </div>
-                </div>
-            `;
-
-            div.addEventListener(“mouseenter”, () => setActive(index));
-            div.addEventListener(“click”, () => {
-                saveRecentSearch(query);
-                window.location.href = item.url;
-            });
-
-            resultsBox.appendChild(div);
-        });
-
-        viewAllBox.innerHTML = `🔍 View all results for “${query}”`;
-        viewAllBox.classList.remove(“d-none”);
-
-        viewAllBox.onclick = () => {
-            saveRecentSearch(query);
-            window.location.href = `/search/?q=${encodeURIComponent(query)}`;
-        };
-
-        dropdown.classList.remove(“d-none”);
-    }
-
-    function setActive(index) {
-        const items = dropdown.querySelectorAll(“.search-item, .search-view-all”);
-        items.forEach(i => i.classList.remove(“active”));
-        if (index >= 0 && items[index]) {
-            items[index].classList.add(“active”);
-            activeIndex = index;
-            scrollIntoViewIfNeeded(items[index]);
-        }
-    }
-
-    function scrollIntoViewIfNeeded(el) {
-        const container = document.getElementById(“searchResults”);
-        if (!container || !el) return;
-        const containerTop = container.scrollTop;
-        const containerBottom = containerTop + container.clientHeight;
-        const elTop = el.offsetTop;
-        const elBottom = elTop + el.offsetHeight;
-        if (elTop < containerTop) container.scrollTop = elTop;
-        else if (elBottom > containerBottom) container.scrollTop = elBottom - container.clientHeight;
-    }
-
-    // ── Fetch trending and cache it briefly ──────────────────────────────
+    // ── Trending cache (one fetch, shared across instances) ──────────────
     let cachedTrending = null;
     function fetchTrending(cb) {
         if (cachedTrending !== null) { cb(cachedTrending); return; }
         fetch(“/search-suggest/?q=”)
             .then(r => r.json())
             .then(d => { cachedTrending = d.trending || []; cb(cachedTrending); })
-            .catch(() => cb([]));
+            .catch(() => { cachedTrending = []; cb([]); });
     }
 
-    // ── Focus: show idle panel ───────────────────────────────────────────
-    input.addEventListener(“focus”, function () {
-        if (input.value.trim().length < 2) {
-            fetchTrending(t => {
-                if (input.value.trim().length < 2) renderIdle(t);
-            });
-        }
-    });
+    function highlight(text, query) {
+        if (!text) return '';
+        try {
+            const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            return text.replace(new RegExp(`(${escaped})`, “ig”), '<span class=”search-highlight”>$1</span>');
+        } catch(e) { return text; }
+    }
 
-    // ── Input: typing ────────────────────────────────────────────────────
-    input.addEventListener(“input”, function () {
-        const query = input.value.trim();
-        clearTimeout(debounceTimer);
+    // ── Wire up one search input+dropdown pair ───────────────────────────
+    function initSearch(input, dropdown) {
+        if (!input || !dropdown) return;
 
-        if (query.length < 2) {
-            fetchTrending(t => {
-                // Guard: only show idle if user hasn't typed more chars since
-                if (input.value.trim().length < 2) renderIdle(t);
-            });
-            return;
-        }
+        const resultsBox = dropdown.querySelector(“.search-results-box”);
+        const viewAllBox = dropdown.querySelector(“.search-view-all”);
+        let debounceTimer;
+        let activeIndex = -1;
 
-        debounceTimer = setTimeout(() => {
-            fetch(`/search-suggest/?q=${encodeURIComponent(query)}`)
-                .then(res => res.json())
-                .then(data => {
-                    // Guard: only render if query hasn't changed since fetch started
-                    if (input.value.trim() === query) {
-                        results = data.results || [];
-                        renderDropdown(query);
-                    }
+        function renderIdle(trending) {
+            resultsBox.innerHTML = “”;
+            viewAllBox.classList.add(“d-none”);
+            activeIndex = -1;
+
+            const recent = getRecentSearches();
+            let hasContent = false;
+
+            if (recent.length) {
+                hasContent = true;
+                const hdr = document.createElement(“div”);
+                hdr.style.cssText = “padding:10px 14px 4px; font-size:0.7rem; font-weight:600; color:#aaa; text-transform:uppercase; letter-spacing:0.5px; display:flex; justify-content:space-between; align-items:center;”;
+                hdr.innerHTML = '<span>Recent</span><span style=”cursor:pointer;color:#ccc;font-weight:400;” class=”clear-all-recent”>Clear all</span>';
+                hdr.querySelector(“.clear-all-recent”).addEventListener(“click”, e => {
+                    e.stopPropagation();
+                    localStorage.removeItem(RECENT_KEY);
+                    renderIdle(trending);
                 });
-        }, 300);
-    });
+                resultsBox.appendChild(hdr);
 
-    // ── Keyboard navigation ──────────────────────────────────────────────
-    input.addEventListener(“keydown”, function (e) {
-        const items = dropdown.querySelectorAll(“.search-item, .search-view-all”);
-        if (!items.length) return;
+                recent.forEach(term => {
+                    const div = document.createElement(“div”);
+                    div.className = “search-item”;
+                    div.style.cssText = “display:flex;align-items:center;gap:10px;”;
+                    div.innerHTML = `<span style=”color:#bbb;font-size:0.9rem;”>🕐</span><span style=”flex:1;font-size:0.86rem;”>${term}</span><span style=”color:#ccc;font-size:0.8rem;padding:2px 6px;cursor:pointer;” class=”rm-recent”>✕</span>`;
+                    div.querySelector(“.rm-recent”).addEventListener(“click”, e => {
+                        e.stopPropagation(); removeRecentSearch(term); renderIdle(trending);
+                    });
+                    div.addEventListener(“click”, () => {
+                        saveRecentSearch(term);
+                        window.location.href = `/search/?q=${encodeURIComponent(term)}`;
+                    });
+                    resultsBox.appendChild(div);
+                });
+            }
 
-        if (e.key === “ArrowDown”) {
-            e.preventDefault();
-            activeIndex = (activeIndex + 1) % items.length;
-            setActive(activeIndex);
+            if (trending && trending.length) {
+                hasContent = true;
+                const hdr = document.createElement(“div”);
+                hdr.style.cssText = “padding:10px 14px 4px; font-size:0.7rem; font-weight:600; color:#aaa; text-transform:uppercase; letter-spacing:0.5px;”;
+                hdr.textContent = “Trending”;
+                resultsBox.appendChild(hdr);
+                trending.forEach(term => {
+                    const div = document.createElement(“div”);
+                    div.className = “search-item”;
+                    div.style.cssText = “display:flex;align-items:center;gap:10px;”;
+                    div.innerHTML = `<span style=”color:#bbb;font-size:0.9rem;”>🔥</span><span style=”flex:1;font-size:0.86rem;”>${term}</span>`;
+                    div.addEventListener(“click”, () => {
+                        saveRecentSearch(term);
+                        window.location.href = `/search/?q=${encodeURIComponent(term)}`;
+                    });
+                    resultsBox.appendChild(div);
+                });
+            }
+
+            dropdown.classList.toggle(“d-none”, !hasContent);
         }
-        if (e.key === “ArrowUp”) {
-            e.preventDefault();
-            activeIndex = (activeIndex - 1 + items.length) % items.length;
-            setActive(activeIndex);
+
+        function renderResults(results, query) {
+            resultsBox.innerHTML = “”;
+            viewAllBox.classList.add(“d-none”);
+            activeIndex = -1;
+
+            if (!results.length) { dropdown.classList.add(“d-none”); return; }
+
+            results.forEach((item, index) => {
+                const div = document.createElement(“div”);
+                div.className = “search-item”;
+                div.dataset.index = index;
+                div.innerHTML = `
+                    <img src=”/media/${item.image || ''}”>
+                    <div>
+                        <div class=”search-item-name”>${highlight(item.name, query)}</div>
+                        <div class=”search-item-meta”>${highlight(item.brand || '', query)} • ${item.category || ''} • ₹${item.price}</div>
+                    </div>`;
+                div.addEventListener(“mouseenter”, () => setActive(index));
+                div.addEventListener(“click”, () => { saveRecentSearch(query); window.location.href = item.url; });
+                resultsBox.appendChild(div);
+            });
+
+            viewAllBox.textContent = `🔍 View all results for “${query}”`;
+            viewAllBox.classList.remove(“d-none”);
+            viewAllBox.onclick = () => { saveRecentSearch(query); window.location.href = `/search/?q=${encodeURIComponent(query)}`; };
+            dropdown.classList.remove(“d-none”);
         }
-        if (e.key === “Enter”) {
-            if (activeIndex >= 0 && items[activeIndex]) {
-                e.preventDefault();
-                items[activeIndex].click();
-            } else {
-                const q = input.value.trim();
-                if (q) { saveRecentSearch(q); }
+
+        function setActive(index) {
+            const items = dropdown.querySelectorAll(“.search-item, .search-view-all”);
+            items.forEach(i => i.classList.remove(“active”));
+            if (index >= 0 && items[index]) {
+                items[index].classList.add(“active”);
+                activeIndex = index;
+                const c = resultsBox;
+                const el = items[index];
+                if (el.offsetTop < c.scrollTop) c.scrollTop = el.offsetTop;
+                else if (el.offsetTop + el.offsetHeight > c.scrollTop + c.clientHeight)
+                    c.scrollTop = el.offsetTop + el.offsetHeight - c.clientHeight;
             }
         }
-        if (e.key === “Escape”) {
-            dropdown.classList.add(“d-none”);
-        }
+
+        input.addEventListener(“focus”, () => {
+            if (input.value.trim().length < 2) fetchTrending(renderIdle);
+        });
+
+        input.addEventListener(“input”, function () {
+            const query = input.value.trim();
+            clearTimeout(debounceTimer);
+            if (query.length < 2) {
+                renderIdle(cachedTrending || []);
+                return;
+            }
+            debounceTimer = setTimeout(() => {
+                fetch(`/search-suggest/?q=${encodeURIComponent(query)}`)
+                    .then(r => r.json())
+                    .then(d => renderResults(d.results || [], query))
+                    .catch(() => {});
+            }, 300);
+        });
+
+        input.addEventListener(“keydown”, function (e) {
+            const items = dropdown.querySelectorAll(“.search-item, .search-view-all”);
+            if (e.key === “ArrowDown”) { e.preventDefault(); activeIndex = (activeIndex + 1) % items.length; setActive(activeIndex); }
+            if (e.key === “ArrowUp”)   { e.preventDefault(); activeIndex = (activeIndex - 1 + items.length) % items.length; setActive(activeIndex); }
+            if (e.key === “Enter” && activeIndex >= 0 && items[activeIndex]) { e.preventDefault(); items[activeIndex].click(); }
+            else if (e.key === “Enter”) { saveRecentSearch(input.value.trim()); }
+            if (e.key === “Escape”) dropdown.classList.add(“d-none”);
+        });
+
+        document.addEventListener(“click”, e => {
+            if (!e.target.closest(`#${input.id}`) && !dropdown.contains(e.target))
+                dropdown.classList.add(“d-none”);
+        });
+    }
+
+    document.addEventListener(“DOMContentLoaded”, function () {
+        // Desktop
+        initSearch(
+            document.getElementById(“searchInput”),
+            document.getElementById(“searchDropdown”)
+        );
+        // Mobile
+        initSearch(
+            document.getElementById(“mobileSearchInput”),
+            document.getElementById(“mobileSearchDropdown”)
+        );
     });
 
-    document.addEventListener(“click”, function (e) {
-        if (!e.target.closest(“#searchInput”) && !e.target.closest(“#searchDropdown”)) {
-            dropdown.classList.add(“d-none”);
-        }
-    });
-
-});
+})();
 </script>
 
 <script>
