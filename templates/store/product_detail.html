@@ -519,6 +519,29 @@
         flex-shrink: 0;
     }
 
+    /* LOW STOCK WARNING */
+    .stock-warning {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.74rem;
+        font-weight: 600;
+        color: #92400e;
+        background: #fef3c7;
+        border-radius: 99px;
+        padding: 4px 11px;
+        margin-top: 10px;
+        opacity: 0;
+        transform: translateY(4px);
+        transition: opacity 0.22s ease, transform 0.22s ease;
+        pointer-events: none;
+    }
+    .stock-warning.visible {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+    }
+
     /* SIZE CHART */
     .size-chart-link {
         display: inline-flex; align-items: center; gap: 5px;
@@ -768,6 +791,7 @@
                                        data-selling="{{ sku.selling_price }}"
                                        data-discount="{{ sku.discount_percent }}"
                                        data-color="{{ sku.color }}"
+                                       data-stock="{{ sku.stock }}"
                                        onchange="updatePrice(this)"
                                        {% if sku.stock == 0 %}disabled{% endif %}
                                        {% if sku.stock > 0 and forloop.first %}checked{% endif %}>
@@ -778,6 +802,7 @@
                                 {% endfor %}
                             </div>
                         </form>
+                        <div id="stock-warning" class="stock-warning" aria-live="polite"></div>
                     </div>
 
                     <!-- PINCODE CHECK -->
@@ -1351,6 +1376,20 @@ function selectColor(color) {
     updateGallery(color);
 }
 
+// ── LOW STOCK WARNING ──────────────────────────────────
+const LOW_STOCK_THRESHOLD = 5;
+
+function updateStockWarning(stock) {
+    const el = document.getElementById("stock-warning");
+    if (!el) return;
+    if (stock > 0 && stock <= LOW_STOCK_THRESHOLD) {
+        el.textContent = "⚡ Only " + stock + " left in stock";
+        el.classList.add("visible");
+    } else {
+        el.classList.remove("visible");
+    }
+}
+
 // ── PRICE + COLOR SYNC ─────────────────────────────────
 function updatePrice(el) {
     document.getElementById("selling-price").innerText = "₹" + el.dataset.selling;
@@ -1361,6 +1400,8 @@ function updatePrice(el) {
     document.querySelectorAll(".color-swatch").forEach(function(s) {
         s.classList.toggle("active", s.dataset.color === el.dataset.color);
     });
+    // Low stock badge
+    updateStockWarning(parseInt(el.dataset.stock || 0, 10));
 }
 
 function changeMainImage(src, thumb) {
