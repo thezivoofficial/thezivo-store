@@ -240,6 +240,36 @@ def send_new_product_alert(product_id):
     transaction.on_commit(lambda: threading.Thread(target=_send, daemon=False).start())
 
 
+def send_otp_sms(phone, otp):
+    """Send OTP via Fast2SMS. phone should be 10-digit Indian mobile number."""
+    import requests
+    # Strip country code if present
+    phone = phone.strip().replace(" ", "").replace("-", "")
+    if phone.startswith("+91"):
+        phone = phone[3:]
+    elif phone.startswith("91") and len(phone) == 12:
+        phone = phone[2:]
+    try:
+        response = requests.post(
+            "https://www.fast2sms.com/dev/bulkV2",
+            headers={"authorization": settings.FAST2SMS_API_KEY},
+            data={
+                "route": "otp",
+                "variables_values": otp,
+                "flash": "0",
+                "numbers": phone,
+            },
+            timeout=10,
+        )
+        result = response.json()
+        if not result.get("return"):
+            print(f"[SMS ERROR] Fast2SMS rejected: {result}")
+        return result.get("return", False)
+    except Exception as e:
+        print(f"[SMS ERROR] Fast2SMS failed: {e}")
+        return False
+
+
 def _whatsapp_async(phone, message):
     """Run send_whatsapp in a background thread so it never blocks the caller."""
     import threading

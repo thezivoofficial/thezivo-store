@@ -706,6 +706,26 @@ class NewsletterSubscriber(models.Model):
         return self.email
 
 
+class PasswordResetOTP(models.Model):
+    phone      = models.CharField(max_length=15)
+    otp        = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_used    = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Password Reset OTP"
+
+    def is_valid(self):
+        import datetime
+        from django.utils import timezone
+        expiry = self.created_at + datetime.timedelta(minutes=10)
+        return not self.is_used and timezone.now() < expiry
+
+    def __str__(self):
+        return f"OTP for {self.phone}"
+
+
 class SearchTerm(models.Model):
     term         = models.CharField(max_length=200, unique=True)
     count        = models.PositiveIntegerField(default=1)

@@ -1,0 +1,63 @@
+{% extends "store/base.html" %}
+{% block title %}Verify OTP | TheZivo{% endblock %}
+
+{% block content %}
+<div class="container mt-5" style="max-width:420px;">
+    <div class="bg-white p-4 rounded shadow-sm">
+
+        <div style="text-align:center; margin-bottom:24px;">
+            <div style="font-size:2rem; margin-bottom:8px;">📱</div>
+            <h4 style="font-weight:700; margin-bottom:4px;">Enter OTP</h4>
+            <p style="font-size:0.85rem; color:#888; margin:0;">
+                We sent a 6-digit OTP to<br>
+                <strong style="color:#111;">+91 {{ phone|slice:":5" }}XXXXX</strong>
+            </p>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-danger py-2" style="font-size:0.85rem;">
+                {{ message }}
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label" style="font-size:0.8rem; font-weight:600; color:#aaa; text-transform:uppercase; letter-spacing:0.5px;">
+                    6-Digit OTP
+                </label>
+                <input type="text" name="otp" id="otp-input" class="form-control text-center"
+                       placeholder="• • • • • •"
+                       maxlength="6"
+                       inputmode="numeric"
+                       autocomplete="one-time-code"
+                       style="font-size:1.4rem; letter-spacing:10px; font-weight:700;
+                              border-color:#e8e8e8; padding:14px;"
+                       required autofocus>
+            </div>
+
+            <button type="submit" class="btn btn-dark w-100" style="font-weight:600; padding:11px;">
+                Verify OTP
+            </button>
+        </form>
+
+        <div class="text-center mt-3">
+            <small style="color:#aaa;">OTP expires in 10 minutes.</small><br>
+            <small>
+                Wrong number?
+                <a href="{% url 'forgot_password' %}" style="color:#111; font-weight:600;">Go back</a>
+            </small>
+        </div>
+
+    </div>
+</div>
+
+<script>
+// Auto-advance: only allow digits
+document.getElementById('otp-input').addEventListener('input', function () {
+    this.value = this.value.replace(/\D/g, '').slice(0, 6);
+});
+</script>
+{% endblock %}

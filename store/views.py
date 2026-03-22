@@ -2545,3 +2545,109 @@ def validate_upi(request):
         return JsonResponse({"valid": False, "error": f"Unrecognised UPI handle '@{handle}'. Please check and try again."})
 
     return JsonResponse({"valid": True, "name": ""})
+
+
+# ── Forgot Password (OTP via SMS) ─────────────────────────────────────────────
+
+def forgot_password(request):
+    if request.method == "POST":
+        phone = request.POST.get("phone", "").strip().replace(" ", "").replace("-", "")
+        # Normalise: strip +91 prefix if entered
+        if phone.startswith("+91"):
+            phone = phone[3:]
+        elif phone.startswith("91") and len(phone) == 12:
+            phone = phone[2:]
+
+        if not phone.isdigit() or len(phone) != 10:
+            messages.error(request, "Enter a valid 10-digit mobile number.")
+            return render(request, "store/forgot_password.html", {"phone": phone})
+
+        # Check customer exists (search with and without +91)
+        from .models import Customer
+        customer = (
+            Customer.objects.filter(phone=phone).first()
+            or Customer.objects.filter(phone=f"+91{phone}").first()
+        )
+        if not customer:
+            messages.error(request, "No account found with that phone number.")
+            return render(request, "store/forgot_password.html", {"phone": phone})
+
+        # Generate OTP and save
+        import random
+        from .models import PasswordResetOTP
+        otp = str(random.randint(100000, 999999))
+        PasswordResetOTP.objects.create(phone=phone, otp=otp)
+
+        # Send SMS
+        from .utils import send_otp_sms
+        sent = send_otp_sms(phone, otp)
+        if not sent:
+            messages.error(request, "Could not send OTP. Please try again.")
+            return render(request, "store/forgot_password.html", {"phone": phone})
+
+        request.session["otp_phone"] = phone
+        messages.success(request, f"OTP sent to +91 {phone[:5]}XXXXX.")
+        return redirect("verify_otp")
+
+    return render(request, "store/forgot_password.html")
+
+
+def verify_otp(request):
+    phone = request.session.get("otp_phone")
+    if not phone:
+        return redirect("forgot_password")
+
+    if request.method == "POST":
+        entered = request.POST.get("otp", "").strip()
+        from .models import PasswordResetOTP
+        record = (
+            PasswordResetOTP.objects
+            .filter(phone=phone, otp=entered, is_used=False)
+            .order_by("-created_at")
+            .first()
+        )
+        if not record or not record.is_valid():
+            messages.error(request, "Invalid or expired OTP. Please try again.")
+            return render(request, "store/verify_otp.html", {"phone": phone})
+
+        record.is_used = True
+        record.save()
+        request.session["otp_verified_phone"] = phone
+        del request.session["otp_phone"]
+        return redirect("reset_password")
+
+    return render(request, "store/verify_otp.html", {"phone": phone})
+
+
+def reset_password(request):
+    phone = request.session.get("otp_verified_phone")
+    if not phone:
+        return redirect("forgot_password")
+
+    if request.method == "POST":
+        password = request.POST.get("password", "")
+        confirm = request.POST.get("confirm_password", "")
+
+        if len(password) < 6:
+            messages.error(request, "Password must be at least 6 characters.")
+            return render(request, "store/reset_password.html")
+
+        if password != confirm:
+            messages.error(request, "Passwords do not match.")
+            return render(request, "store/reset_password.html")
+
+        from .models import Customer
+        customer = (
+            Customer.objects.filter(phone=phone).first()
+            or Customer.objects.filter(phone=f"+91{phone}").first()
+        )
+        if not customer:
+            return redirect("forgot_password")
+
+        customer.set_password(password)
+        customer.save()
+        del request.session["otp_verified_phone"]
+        messages.success(request, "Password reset successful. Please log in.")
+        return redirect("login")
+
+    return render(request, "store/reset_password.html")
