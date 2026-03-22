@@ -1563,18 +1563,15 @@ def search_products(request):
 
     from .models import Review as _Review
     products = Product.objects.filter(
-        active=True
+        active=True, sku__isnull=False
     ).prefetch_related(
         Prefetch("reviews", queryset=_Review.objects.all()),
-    ).annotate(
-        has_sku=Exists(SKU.objects.filter(product=OuterRef("pk")))
-    ).filter(has_sku=True)
+    ).distinct()
 
     if query:
         products = products.filter(
             Q(name__icontains=query) |
-            Q(brand__icontains=query) |
-            Q(category__name__icontains=query)
+            Q(brand__icontains=query)
         )
         if len(query) >= 2:
             try:
@@ -1678,33 +1675,21 @@ def search_suggest(request):
             trending = []
         return JsonResponse({"results": [], "trending": trending})
 
+    from django.core.files.storage import default_storage
+
     products = (
         Product.objects
-        .filter(active=True)
-        .annotate(
-            has_sku=Exists(
-                SKU.objects.filter(product=OuterRef("pk"))
-            )
-        )
-        .filter(has_sku=True)
+        .filter(active=True, sku__isnull=False)
         .filter(
             Q(name__icontains=query) |
-            Q(brand__icontains=query) |
-            Q(category__name__icontains=query)
+            Q(brand__icontains=query)
         )
+        .distinct()
+        .values("id", "name", "brand", "category__name", "image")
         .annotate(min_price=Min("sku__selling_price"))
-        .values(
-            "id",
-            "name",
-            "brand",
-            "category__name",
-            "image",
-            "min_price"
-        )[:8]
+        .order_by("-id")[:8]
     )
 
-
-    from django.core.files.storage import default_storage
     results = []
     for p in products:
         image_url = ""
