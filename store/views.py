@@ -1675,7 +1675,8 @@ def search_suggest(request):
             trending = []
         return JsonResponse({"results": [], "trending": trending})
 
-    products = (
+    from django.core.files.storage import default_storage
+    products_qs = (
         Product.objects
         .filter(active=True)
         .filter(id__in=SKU.objects.values('product_id'))
@@ -1684,16 +1685,35 @@ def search_suggest(request):
         .annotate(min_price=Min("sku__selling_price"))
         .order_by("-id")[:8]
     )
+    products_list = list(products_qs)
+
+    # Build image map from ProductImage records (same source as product cards)
+    pids = [p.id for p in products_list]
+    image_map = {}
+    for img in ProductImage.objects.filter(product_id__in=pids).values('product_id', 'image', 'is_primary').order_by('-is_primary'):
+        pid = img['product_id']
+        if pid not in image_map:
+            try:
+                image_map[pid] = default_storage.url(img['image'])
+            except Exception:
+                pass
 
     results = []
-    for p in products:
+    for p in products_list:
+        # prefer ProductImage, fall back to Product.image
+        img_url = image_map.get(p.id, "")
+        if not img_url and p.image:
+            try:
+                img_url = default_storage.url(p.image.name)
+            except Exception:
+                img_url = ""
         results.append({
             "id":       p.id,
             "name":     p.name,
             "brand":    p.brand,
             "category": p.category.name if p.category else "",
             "price":    p.min_price,
-            "image":    p.image.url if p.image else "",
+            "image":    img_url,
             "url":      f"/product/{p.id}/"
         })
 
