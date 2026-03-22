@@ -621,10 +621,12 @@
 function reorderItems(url, btn) {
     btn.disabled = true;
     btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Adding...';
+    const csrf = document.cookie.split(";").map(c => c.trim())
+        .find(c => c.startsWith("csrftoken="))?.split("=")[1] || "";
     fetch(url, {
         method: "POST",
         headers: {
-            "X-CSRFToken": getCsrfToken(),
+            "X-CSRFToken": csrf,
             "X-Requested-With": "XMLHttpRequest",
         }
     })
