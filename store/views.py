@@ -544,7 +544,17 @@ def add_to_cart(request):
         quantity = int(request.POST.get("quantity", 1))
 
         cart = get_cart(request)
-        set_cart_item(request, sku_id, cart.get(sku_id, 0) + quantity)
+        current_qty = cart.get(str(sku_id), 0)
+
+        if current_qty >= sku.stock:
+            return JsonResponse({
+                "status": "stock_exceeded",
+                "max_stock": sku.stock,
+                "message": f"Only {sku.stock} item{'s' if sku.stock != 1 else ''} available in this size.",
+            })
+
+        new_qty = min(current_qty + quantity, sku.stock)
+        set_cart_item(request, sku_id, new_qty)
         cart = get_cart(request)
 
         # ✅ AJAX request → return JSON
