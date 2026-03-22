@@ -10,8 +10,8 @@ def send_order_email(order, template_name, subject):
     import threading
     from django.template.loader import render_to_string
 
-    customer = order.customer
-    if not customer or not customer.email:
+    recipient = order.contact_email
+    if not recipient:
         return
 
     items = order.items.select_related('sku__product').all()
@@ -22,7 +22,6 @@ def send_order_email(order, template_name, subject):
         'site_url': settings.SITE_URL,
     })
     order_id = order.id
-    recipient = customer.email
 
     def _send():
         try:

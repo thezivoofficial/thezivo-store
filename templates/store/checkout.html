@@ -575,6 +575,15 @@
                                        value="{{ form_data.name|default:'' }}" required>
                             </div>
 
+                            {% if not request.customer %}
+                            <div class="field-group">
+                                <label class="field-label">Email Address <span style="color:#aaa;font-weight:400;">(for order confirmation)</span></label>
+                                <input type="email" name="email" class="field-input"
+                                       placeholder="you@example.com"
+                                       value="{{ form_data.email|default:'' }}" required>
+                            </div>
+                            {% endif %}
+
                             <div class="field-group">
                                 <label class="field-label">Mobile Number</label>
                                 <div class="phone-group">
@@ -861,7 +870,7 @@ document.addEventListener("DOMContentLoaded", function () {
             prefill: {
                 name: "{{ order.name|escapejs }}",
                 contact: "{{ order.phone|escapejs }}",
-                email: "{{ order.customer.email|default:''|escapejs }}"
+                email: "{{ order.contact_email|escapejs }}"
             },
             handler: function(response) {
                 fetch("{% url 'verify_payment' %}", {

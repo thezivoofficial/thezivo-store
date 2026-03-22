@@ -265,6 +265,7 @@ class Order(models.Model):
     state = models.CharField(max_length=100, blank=True, default="")
     pincode = models.CharField(max_length=10, blank=True, default="")
     delivery_instructions = models.CharField(max_length=500, blank=True, default="")
+    guest_email = models.EmailField(blank=True, default="")
 
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
     shipped_at = models.DateTimeField(null=True, blank=True)
@@ -279,6 +280,11 @@ class Order(models.Model):
     def delivery_charge(self):
         """Delivery charge = total_amount minus items subtotal."""
         return self.total_amount - self.items_subtotal
+
+    @property
+    def contact_email(self):
+        """Email for order communications: guest_email, or customer.email if logged in."""
+        return self.guest_email or (self.customer.email if self.customer else "")
 
     @property
     def invoice_number(self):

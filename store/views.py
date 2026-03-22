@@ -943,6 +943,7 @@ def checkout(request):
         address = request.POST.get("address", "").strip()
         delivery_instructions = request.POST.get("delivery_instructions", "").strip()
         payment_method = request.POST.get("payment_method")
+        email = request.POST.get("email", "").strip().lower()
 
         form_data = {
             "name": name,
@@ -952,12 +953,17 @@ def checkout(request):
             "city": request.POST.get("city", ""),
             "pincode": request.POST.get("pincode", ""),
             "delivery_instructions": delivery_instructions,
-            "payment_method": payment_method
+            "payment_method": payment_method,
+            "email": email,
         }
 
         # ---------- VALIDATIONS ----------
         if not name:
             messages.error(request, "Name is required.")
+            return render(request, "store/checkout.html", {**_ctx, "form_data": form_data})
+
+        if not request.customer and (not email or "@" not in email):
+            messages.error(request, "A valid email address is required to receive your order confirmation.")
             return render(request, "store/checkout.html", {**_ctx, "form_data": form_data})
 
         if not phone.isdigit():
@@ -1003,6 +1009,7 @@ def checkout(request):
             with transaction.atomic():
                 order = Order.objects.create(
                     customer=request.customer or None,
+                    guest_email=email if not request.customer else "",
                     name=name,
                     phone=full_phone,
                     address=address,
@@ -1051,6 +1058,7 @@ def checkout(request):
 
             order = Order.objects.create(
                 customer=request.customer or None,
+                guest_email=email if not request.customer else "",
                 name=name,
                 phone=full_phone,
                 address=address,
