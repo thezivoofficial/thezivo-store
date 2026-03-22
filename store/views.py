@@ -1675,37 +1675,26 @@ def search_suggest(request):
             trending = []
         return JsonResponse({"results": [], "trending": trending})
 
-    from django.core.files.storage import default_storage
-
     products = (
         Product.objects
-        .filter(active=True, sku__isnull=False)
-        .filter(
-            Q(name__icontains=query) |
-            Q(brand__icontains=query)
-        )
-        .distinct()
-        .values("id", "name", "brand", "category__name", "image")
+        .filter(active=True)
+        .filter(id__in=SKU.objects.values('product_id'))
+        .filter(Q(name__icontains=query) | Q(brand__icontains=query))
+        .select_related('category')
         .annotate(min_price=Min("sku__selling_price"))
         .order_by("-id")[:8]
     )
 
     results = []
     for p in products:
-        image_url = ""
-        if p["image"]:
-            try:
-                image_url = default_storage.url(p["image"])
-            except Exception:
-                image_url = "/media/" + p["image"]
         results.append({
-            "id":       p["id"],
-            "name":     p["name"],
-            "brand":    p["brand"],
-            "category": p["category__name"] or "",
-            "price":    p["min_price"],
-            "image":    image_url,
-            "url":      f"/product/{p['id']}/"
+            "id":       p.id,
+            "name":     p.name,
+            "brand":    p.brand,
+            "category": p.category.name if p.category else "",
+            "price":    p.min_price,
+            "image":    p.image.url if p.image else "",
+            "url":      f"/product/{p.id}/"
         })
 
     return JsonResponse({"results": results})
