@@ -268,10 +268,10 @@ if (minRange && maxRange && fill) {
 
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener(“DOMContentLoaded”, function () {
 
-    const input = document.getElementById("searchInput");
-    const dropdown = document.getElementById("searchDropdown");
+    const input = document.getElementById(“searchInput”);
+    const dropdown = document.getElementById(“searchDropdown”);
 
     if (!input || !dropdown) return;
 
@@ -279,109 +279,205 @@ document.addEventListener("DOMContentLoaded", function () {
     let activeIndex = -1;
     let results = [];
 
-    function highlight(text, query) {
-        const regex = new RegExp(`(${query})`, "ig");
-        return text.replace(regex, `<span class="search-highlight">$1</span>`);
+    // ── Recent searches (localStorage) ──────────────────────────────────
+    const RECENT_KEY = “zivo_recent_searches”;
+    const MAX_RECENT = 5;
+
+    function getRecentSearches() {
+        try { return JSON.parse(localStorage.getItem(RECENT_KEY)) || []; }
+        catch(e) { return []; }
+    }
+    function saveRecentSearch(term) {
+        if (!term || term.length < 2) return;
+        let list = getRecentSearches().filter(t => t.toLowerCase() !== term.toLowerCase());
+        list.unshift(term);
+        localStorage.setItem(RECENT_KEY, JSON.stringify(list.slice(0, MAX_RECENT)));
+    }
+    function removeRecentSearch(term) {
+        let list = getRecentSearches().filter(t => t !== term);
+        localStorage.setItem(RECENT_KEY, JSON.stringify(list));
     }
 
-    function renderDropdown(query) {
-        const resultsBox = document.getElementById("searchResults");
-        const viewAllBox = document.getElementById("searchViewAll");
+    // ── Highlight match ──────────────────────────────────────────────────
+    function highlight(text, query) {
+        const regex = new RegExp(`(${query})`, “ig”);
+        return text.replace(regex, `<span class=”search-highlight”>$1</span>`);
+    }
 
-        resultsBox.innerHTML = "";
+    // ── Render recent + trending (shown when input is empty/focused) ─────
+    function renderIdle(trending) {
+        const resultsBox = document.getElementById(“searchResults”);
+        const viewAllBox = document.getElementById(“searchViewAll”);
+        resultsBox.innerHTML = “”;
+        viewAllBox.classList.add(“d-none”);
+        activeIndex = -1;
+
+        const recent = getRecentSearches();
+        let hasContent = false;
+
+        if (recent.length) {
+            hasContent = true;
+            const hdr = document.createElement(“div”);
+            hdr.style.cssText = “padding:10px 14px 4px; font-size:0.7rem; font-weight:600; color:#aaa; text-transform:uppercase; letter-spacing:0.5px; display:flex; justify-content:space-between; align-items:center;”;
+            hdr.innerHTML = `<span>Recent</span><span id=”clearAllRecent” style=”cursor:pointer; color:#ccc; font-weight:400;”>Clear all</span>`;
+            resultsBox.appendChild(hdr);
+            hdr.querySelector(“#clearAllRecent”).addEventListener(“click”, (e) => {
+                e.stopPropagation();
+                localStorage.removeItem(RECENT_KEY);
+                renderIdle([]);
+            });
+
+            recent.forEach(term => {
+                const div = document.createElement(“div”);
+                div.className = “search-item”;
+                div.style.cssText = “display:flex; align-items:center; gap:10px;”;
+                div.innerHTML = `
+                    <span style=”color:#bbb; font-size:0.9rem;”>🕐</span>
+                    <span style=”flex:1; font-size:0.86rem;”>${term}</span>
+                    <span class=”recent-remove” data-term=”${term}” style=”color:#ccc; font-size:0.8rem; padding:2px 6px; cursor:pointer;”>✕</span>
+                `;
+                div.querySelector(“.recent-remove”).addEventListener(“click”, (e) => {
+                    e.stopPropagation();
+                    removeRecentSearch(term);
+                    renderIdle(trending);
+                });
+                div.addEventListener(“click”, () => {
+                    input.value = term;
+                    saveRecentSearch(term);
+                    window.location.href = `/search/?q=${encodeURIComponent(term)}`;
+                });
+                resultsBox.appendChild(div);
+            });
+        }
+
+        if (trending && trending.length) {
+            hasContent = true;
+            const hdr = document.createElement(“div”);
+            hdr.style.cssText = “padding:10px 14px 4px; font-size:0.7rem; font-weight:600; color:#aaa; text-transform:uppercase; letter-spacing:0.5px;”;
+            hdr.textContent = “Trending”;
+            resultsBox.appendChild(hdr);
+
+            trending.forEach(term => {
+                const div = document.createElement(“div”);
+                div.className = “search-item”;
+                div.style.cssText = “display:flex; align-items:center; gap:10px;”;
+                div.innerHTML = `
+                    <span style=”color:#bbb; font-size:0.9rem;”>🔥</span>
+                    <span style=”flex:1; font-size:0.86rem;”>${term}</span>
+                `;
+                div.addEventListener(“click”, () => {
+                    input.value = term;
+                    saveRecentSearch(term);
+                    window.location.href = `/search/?q=${encodeURIComponent(term)}`;
+                });
+                resultsBox.appendChild(div);
+            });
+        }
+
+        if (hasContent) {
+            dropdown.classList.remove(“d-none”);
+        } else {
+            dropdown.classList.add(“d-none”);
+        }
+    }
+
+    // ── Render product suggestions (shown while typing) ──────────────────
+    function renderDropdown(query) {
+        const resultsBox = document.getElementById(“searchResults”);
+        const viewAllBox = document.getElementById(“searchViewAll”);
+
+        resultsBox.innerHTML = “”;
         activeIndex = -1;
 
         if (!results.length) {
-            dropdown.classList.add("d-none");
+            dropdown.classList.add(“d-none”);
             return;
         }
 
-        // render product results
         results.forEach((item, index) => {
-            const div = document.createElement("div");
-            div.className = "search-item";
+            const div = document.createElement(“div”);
+            div.className = “search-item”;
             div.dataset.index = index;
 
             div.innerHTML = `
-                <img src="/media/${item.image}">
+                <img src=”/media/${item.image}”>
                 <div>
-                    <div class="search-item-name">
+                    <div class=”search-item-name”>
                         ${highlight(item.name, query)}
                     </div>
-                    <div class="search-item-meta">
+                    <div class=”search-item-meta”>
                         ${highlight(item.brand, query)} • ${item.category} • ₹${item.price}
                     </div>
                 </div>
             `;
 
-            div.addEventListener("mouseenter", () => setActive(index));
-            div.addEventListener("click", () => {
+            div.addEventListener(“mouseenter”, () => setActive(index));
+            div.addEventListener(“click”, () => {
+                saveRecentSearch(query);
                 window.location.href = item.url;
             });
 
             resultsBox.appendChild(div);
         });
 
-        // sticky view all
         viewAllBox.innerHTML = `🔍 View all results for “${query}”`;
-        viewAllBox.classList.remove("d-none");
+        viewAllBox.classList.remove(“d-none”);
 
         viewAllBox.onclick = () => {
+            saveRecentSearch(query);
             window.location.href = `/search/?q=${encodeURIComponent(query)}`;
         };
 
-        dropdown.classList.remove("d-none");
+        dropdown.classList.remove(“d-none”);
     }
-
 
     function setActive(index) {
-            const items = dropdown.querySelectorAll(".search-item, .search-view-all");
-            items.forEach(i => i.classList.remove("active"));
-
-            if (index >= 0 && items[index]) {
-                items[index].classList.add("active");
-                activeIndex = index;
-
-                // 🔽 AUTO-SCROLL FIX
-                scrollIntoViewIfNeeded(items[index]);
-            }
-        }
-
-
-    function scrollIntoViewIfNeeded(el) {
-        const container = document.getElementById("searchResults");
-        if (!container || !el) return;
-
-        const containerTop = container.scrollTop;
-        const containerBottom = containerTop + container.clientHeight;
-
-        const elTop = el.offsetTop;
-        const elBottom = elTop + el.offsetHeight;
-
-        if (elTop < containerTop) {
-            container.scrollTop = elTop;
-        } else if (elBottom > containerBottom) {
-            container.scrollTop = elBottom - container.clientHeight;
+        const items = dropdown.querySelectorAll(“.search-item, .search-view-all”);
+        items.forEach(i => i.classList.remove(“active”));
+        if (index >= 0 && items[index]) {
+            items[index].classList.add(“active”);
+            activeIndex = index;
+            scrollIntoViewIfNeeded(items[index]);
         }
     }
 
+    function scrollIntoViewIfNeeded(el) {
+        const container = document.getElementById(“searchResults”);
+        if (!container || !el) return;
+        const containerTop = container.scrollTop;
+        const containerBottom = containerTop + container.clientHeight;
+        const elTop = el.offsetTop;
+        const elBottom = elTop + el.offsetHeight;
+        if (elTop < containerTop) container.scrollTop = elTop;
+        else if (elBottom > containerBottom) container.scrollTop = elBottom - container.clientHeight;
+    }
 
+    // ── Fetch trending and cache it briefly ──────────────────────────────
+    let cachedTrending = null;
+    function fetchTrending(cb) {
+        if (cachedTrending !== null) { cb(cachedTrending); return; }
+        fetch(“/search-suggest/?q=”)
+            .then(r => r.json())
+            .then(d => { cachedTrending = d.trending || []; cb(cachedTrending); })
+            .catch(() => cb([]));
+    }
 
-    input.addEventListener("input", function () {
+    // ── Focus: show idle panel ───────────────────────────────────────────
+    input.addEventListener(“focus”, function () {
+        if (input.value.trim().length < 2) {
+            fetchTrending(t => renderIdle(t));
+        }
+    });
+
+    // ── Input: typing ────────────────────────────────────────────────────
+    input.addEventListener(“input”, function () {
         const query = input.value.trim();
-
         clearTimeout(debounceTimer);
 
         if (query.length < 2) {
-            dropdown.classList.add("d-none");
-
-            // clear only results, NOT structure
-            document.getElementById("searchResults").innerHTML = "";
-            document.getElementById("searchViewAll").classList.add("d-none");
-
+            fetchTrending(t => renderIdle(t));
             return;
         }
-
 
         debounceTimer = setTimeout(() => {
             fetch(`/search-suggest/?q=${encodeURIComponent(query)}`)
@@ -393,39 +489,38 @@ document.addEventListener("DOMContentLoaded", function () {
         }, 300);
     });
 
-    input.addEventListener("keydown", function (e) {
-        const items = dropdown.querySelectorAll(".search-item, .search-view-all");
-
+    // ── Keyboard navigation ──────────────────────────────────────────────
+    input.addEventListener(“keydown”, function (e) {
+        const items = dropdown.querySelectorAll(“.search-item, .search-view-all”);
         if (!items.length) return;
 
-        if (e.key === "ArrowDown") {
+        if (e.key === “ArrowDown”) {
             e.preventDefault();
             activeIndex = (activeIndex + 1) % items.length;
             setActive(activeIndex);
         }
-
-        if (e.key === "ArrowUp") {
+        if (e.key === “ArrowUp”) {
             e.preventDefault();
-            activeIndex =
-                (activeIndex - 1 + items.length) % items.length;
+            activeIndex = (activeIndex - 1 + items.length) % items.length;
             setActive(activeIndex);
         }
-
-        if (e.key === "Enter") {
+        if (e.key === “Enter”) {
             if (activeIndex >= 0 && items[activeIndex]) {
                 e.preventDefault();
                 items[activeIndex].click();
+            } else {
+                const q = input.value.trim();
+                if (q) { saveRecentSearch(q); }
             }
         }
-
-        if (e.key === "Escape") {
-            dropdown.classList.add("d-none");
+        if (e.key === “Escape”) {
+            dropdown.classList.add(“d-none”);
         }
     });
 
-    document.addEventListener("click", function (e) {
-        if (!e.target.closest("#searchInput")) {
-            dropdown.classList.add("d-none");
+    document.addEventListener(“click”, function (e) {
+        if (!e.target.closest(“#searchInput”) && !e.target.closest(“#searchDropdown”)) {
+            dropdown.classList.add(“d-none”);
         }
     });
 

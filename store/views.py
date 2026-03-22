@@ -67,6 +67,55 @@ def clear_cart(request):
         request.session.modified = True
 
 
+# ─────────────────────────── Abandoned cart tracker ─────────────────────
+
+def _track_abandoned_cart(request):
+    """Update (or create) the AbandonedCart record for a logged-in customer.
+    Snapshots current cart items so the email can list them later.
+    Silently no-ops for guest sessions."""
+    if not request.customer:
+        return
+    try:
+        from .models import AbandonedCart
+        cart = get_cart(request)
+        if not cart:
+            AbandonedCart.objects.filter(customer=request.customer).delete()
+            return
+        snapshot = []
+        for sku_id, qty in cart.items():
+            try:
+                sku = SKU.objects.select_related('product').get(id=sku_id)
+                snapshot.append({
+                    "product_id":   sku.product_id,
+                    "product_name": sku.product.name,
+                    "sku_id":       sku.id,
+                    "size":         sku.size,
+                    "color":        sku.color,
+                    "price":        str(sku.selling_price),
+                    "quantity":     qty,
+                    "image":        sku.product.image.name if sku.product.image else "",
+                })
+            except SKU.DoesNotExist:
+                pass
+        AbandonedCart.objects.update_or_create(
+            customer=request.customer,
+            defaults={"items_snapshot": snapshot, "email_sent": False},
+        )
+    except Exception:
+        pass
+
+
+def _clear_abandoned_cart(request):
+    """Remove the AbandonedCart record once an order is placed."""
+    if not request.customer:
+        return
+    try:
+        from .models import AbandonedCart
+        AbandonedCart.objects.filter(customer=request.customer).delete()
+    except Exception:
+        pass
+
+
 # ─────────────────────────── Wishlist helpers ───────────────────────────
 
 def get_wishlist(request):
@@ -556,6 +605,7 @@ def add_to_cart(request):
         new_qty = min(current_qty + quantity, sku.stock)
         set_cart_item(request, sku_id, new_qty)
         cart = get_cart(request)
+        _track_abandoned_cart(request)
 
         # ✅ AJAX request → return JSON
         if request.headers.get("x-requested-with") == "XMLHttpRequest":
@@ -725,6 +775,7 @@ def update_cart(request):
         remove_cart_item(request, sku_id)
 
     cart = get_cart(request)
+    _track_abandoned_cart(request)
 
     # ---------------- RECALCULATE ----------------
     items = []
@@ -983,6 +1034,7 @@ def checkout(request):
 
             request.session.pop('coupon', None)
             clear_cart(request)
+            _clear_abandoned_cart(request)
             from .utils import send_order_email, whatsapp_new_order_admin
             send_order_email(order, 'order_confirmation.html', f'Order Confirmed – #{order.id}')
             whatsapp_new_order_admin(order)
@@ -1153,6 +1205,7 @@ def verify_payment(request):
     # ✅ CLEAR CART HERE (CRITICAL)
     clear_cart(request)
 
+    _clear_abandoned_cart(request)
     from .utils import send_order_email, whatsapp_new_order_admin
     send_order_email(order, 'order_confirmation.html', f'Order Confirmed – #{order.id}')
     whatsapp_new_order_admin(order)
@@ -1227,6 +1280,9 @@ def razorpay_webhook(request):
                 Coupon.objects.filter(pk=order.coupon_id).update(used_count=F('used_count') + 1)
 
             from .utils import send_order_email, whatsapp_new_order_admin
+            from .models import AbandonedCart
+            if order.customer_id:
+                AbandonedCart.objects.filter(customer_id=order.customer_id).delete()
             send_order_email(order, 'order_confirmation.html', f'Order Confirmed – #{order.id}')
             whatsapp_new_order_admin(order)
 
@@ -1521,6 +1577,16 @@ def search_products(request):
             Q(brand__icontains=query) |
             Q(category__name__icontains=query)
         )
+        if len(query) >= 2:
+            try:
+                from .models import SearchTerm
+                SearchTerm.objects.update_or_create(
+                    term=query.lower(),
+                    defaults={},
+                )
+                SearchTerm.objects.filter(term=query.lower()).update(count=F('count') + 1)
+            except Exception:
+                pass
 
     # same annotations used in category listing
     products = products.annotate(
@@ -1556,7 +1622,14 @@ def search_suggest(request):
     query = request.GET.get("q", "").strip()
 
     if len(query) < 2:
-        return JsonResponse({"results": []})
+        try:
+            from .models import SearchTerm
+            trending = list(
+                SearchTerm.objects.filter(count__gte=2).order_by('-count').values_list('term', flat=True)[:6]
+            )
+        except Exception:
+            trending = []
+        return JsonResponse({"results": [], "trending": trending})
 
     products = (
         Product.objects

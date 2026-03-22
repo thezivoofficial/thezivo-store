@@ -698,3 +698,29 @@ class NewsletterSubscriber(models.Model):
 
     def __str__(self):
         return self.email
+
+
+class SearchTerm(models.Model):
+    term         = models.CharField(max_length=200, unique=True)
+    count        = models.PositiveIntegerField(default=1)
+    last_searched = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-count"]
+        verbose_name = "Search Term"
+
+    def __str__(self):
+        return f"{self.term} ({self.count})"
+
+
+class AbandonedCart(models.Model):
+    customer       = models.OneToOneField("Customer", on_delete=models.CASCADE, related_name="abandoned_cart")
+    updated_at     = models.DateTimeField(auto_now=True)
+    email_sent     = models.BooleanField(default=False)
+    items_snapshot = models.JSONField(default=list)
+
+    class Meta:
+        verbose_name = "Abandoned Cart"
+
+    def __str__(self):
+        return f"Cart – {self.customer} ({self.updated_at:%Y-%m-%d %H:%M})"
