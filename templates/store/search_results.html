@@ -23,7 +23,7 @@
         {% include "store/product_grid.html" %}
     </div>
 
-    {% if not products %}
+    {% if not color_variants %}
         <div class="text-center py-5">
             <h5 class="text-muted">No products found for "{{ query }}"</h5>
             <a href="{% url 'home' %}" class="btn btn-outline-dark mt-3">

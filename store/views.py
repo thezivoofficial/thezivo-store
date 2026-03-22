@@ -1557,19 +1557,18 @@ def get_counts(request):
 
 
 def search_products(request):
+    from django.core.files.storage import default_storage
     query = request.GET.get("q", "").strip()
+    sort  = request.GET.get("sort", "")
 
+    from .models import Review as _Review
     products = Product.objects.filter(
         active=True
     ).prefetch_related(
-        Prefetch("images", queryset=ProductImage.objects.all())
+        Prefetch("reviews", queryset=_Review.objects.all()),
     ).annotate(
-
-        has_sku=Exists(
-            SKU.objects.filter(product=OuterRef("pk"))
-        )
+        has_sku=Exists(SKU.objects.filter(product=OuterRef("pk")))
     ).filter(has_sku=True)
-
 
     if query:
         products = products.filter(
@@ -1580,31 +1579,79 @@ def search_products(request):
         if len(query) >= 2:
             try:
                 from .models import SearchTerm
-                SearchTerm.objects.update_or_create(
-                    term=query.lower(),
-                    defaults={},
-                )
+                SearchTerm.objects.update_or_create(term=query.lower(), defaults={})
                 SearchTerm.objects.filter(term=query.lower()).update(count=F('count') + 1)
             except Exception:
                 pass
 
-    # same annotations used in category listing
-    products = products.annotate(
-        min_selling_price=Min("sku__selling_price"),
-        min_mrp=Min("sku__mrp"),
-        total_stock=Sum("sku__stock"),
-    ).annotate(
-        discount_percent=ExpressionWrapper(
-            (F("min_mrp") - F("min_selling_price")) * 100 / F("min_mrp"),
-            output_field=IntegerField()
-        )
-    ).order_by("-id")
+    products_list = list(products.order_by("-id"))
+    product_ids   = [p.id for p in products_list]
 
-    # AJAX support (future-proof)
+    sku_map = {}
+    for sku in SKU.objects.filter(product_id__in=product_ids).values(
+        'product_id', 'color', 'selling_price', 'mrp', 'stock'
+    ):
+        sku_map.setdefault(sku['product_id'], []).append(sku)
+
+    image_map = {}
+    for img in ProductImage.objects.filter(product_id__in=product_ids).values(
+        'product_id', 'color', 'image'
+    ):
+        pid   = img['product_id']
+        color = img['color'].strip()
+        url   = default_storage.url(img['image'])
+        image_map.setdefault(pid, {})
+        if color not in image_map[pid]:
+            image_map[pid][color] = url
+
+    color_variants = []
+    for product in products_list:
+        product_skus = sku_map.get(product.id, [])
+        reviews      = list(product.reviews.all())
+        avg_rating   = round(sum(r.rating for r in reviews) / len(reviews), 1) if reviews else None
+        review_count = len(reviews)
+
+        color_data = {}
+        for sku in product_skus:
+            color = sku['color'].strip()
+            if color not in color_data:
+                color_data[color] = {'min_price': sku['selling_price'], 'min_mrp': sku['mrp'], 'stock': sku['stock']}
+            else:
+                color_data[color]['min_price'] = min(color_data[color]['min_price'], sku['selling_price'])
+                color_data[color]['min_mrp']   = min(color_data[color]['min_mrp'],   sku['mrp'])
+                color_data[color]['stock']     += sku['stock']
+
+        prod_images = image_map.get(product.id, {})
+        all_colors  = list(color_data.keys())
+        for color, data in color_data.items():
+            discount = max(0, int((data['min_mrp'] - data['min_price']) / data['min_mrp'] * 100)) if data['min_mrp'] > 0 else 0
+            main_image = (
+                prod_images.get(color) or prod_images.get('')
+                or (default_storage.url(product.image.name) if product.image else "")
+            )
+            color_variants.append({
+                'product':          product,
+                'color':            color,
+                'main_image':       main_image,
+                'wishlist_key':     f"{product.id}_{color}",
+                'all_colors':       all_colors,
+                'min_selling_price': data['min_price'],
+                'min_mrp':          data['min_mrp'],
+                'total_stock':      data['stock'],
+                'discount_percent': discount,
+                'avg_rating':       avg_rating,
+                'review_count':     review_count,
+            })
+
+    if sort == "low":
+        color_variants.sort(key=lambda v: v['min_selling_price'])
+    elif sort == "high":
+        color_variants.sort(key=lambda v: v['min_selling_price'], reverse=True)
+
     if request.headers.get("x-requested-with") == "XMLHttpRequest":
         html = render_to_string(
             "store/product_grid.html",
-            {"products": products},
+            {"color_variants": color_variants},
             request=request
         )
         resp = JsonResponse({"html": html})
@@ -1612,9 +1659,9 @@ def search_products(request):
         return resp
 
     return render(request, "store/search_results.html", {
-        "products": products,
-        "query": query,
-        "title": f"Search results for '{query}'"
+        "color_variants": color_variants,
+        "query":  query,
+        "title":  f"Search results for '{query}'" if query else "All Products",
     })
 
 
@@ -1657,16 +1704,23 @@ def search_suggest(request):
     )
 
 
+    from django.core.files.storage import default_storage
     results = []
     for p in products:
+        image_url = ""
+        if p["image"]:
+            try:
+                image_url = default_storage.url(p["image"])
+            except Exception:
+                image_url = "/media/" + p["image"]
         results.append({
-            "id": p["id"],
-            "name": p["name"],
-            "brand": p["brand"],
+            "id":       p["id"],
+            "name":     p["name"],
+            "brand":    p["brand"],
             "category": p["category__name"] or "",
-            "price": p["min_price"],
-            "image": p["image"],
-            "url": f"/product/{p['id']}/"
+            "price":    p["min_price"],
+            "image":    image_url,
+            "url":      f"/product/{p['id']}/"
         })
 
     return JsonResponse({"results": results})
