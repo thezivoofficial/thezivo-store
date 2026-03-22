@@ -251,7 +251,7 @@ def send_otp_sms(phone, otp):
         phone = phone[2:]
     try:
         response = requests.get(
-            f"https://2factor.in/API/V1/{settings.TWO_FACTOR_API_KEY}/SMS/{phone}/{otp}/AUTOGEN",
+            f"https://2factor.in/API/V1/{settings.TWO_FACTOR_API_KEY}/SMS/{phone}/{otp}",
             timeout=10,
         )
         result = response.json()
