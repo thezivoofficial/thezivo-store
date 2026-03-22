@@ -268,95 +268,89 @@ if (minRange && maxRange && fill) {
 
 
 <script>
-(function () {
-    var input    = document.getElementById(“searchInput”);
-    var dropdown = document.getElementById(“searchDropdown”);
-    var resultsBox = document.getElementById(“searchResults”);
-    var viewAllBox = document.getElementById(“searchViewAll”);
+function initSearchBox(inputId, dropdownId) {
+    var input    = document.getElementById(inputId);
+    var dropdown = document.getElementById(dropdownId);
+    if (!input || !dropdown) return;
 
-    if (!input || !dropdown || !resultsBox || !viewAllBox) return;
+    /* desktop uses IDs; mobile uses class-based inner divs */
+    var resultsBox = dropdown.querySelector('.search-results-box') || document.getElementById('searchResults');
+    var viewAllBox = dropdown.querySelector('.search-view-all')    || document.getElementById('searchViewAll');
+    if (!resultsBox || !viewAllBox) return;
 
-    var debounceTimer = null;
+    var timer = null;
 
-    function escapeHtml(s) {
+    function esc(s) {
         return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     }
 
-    function highlight(text, query) {
-        if (!text || !query) return escapeHtml(text);
-        var safe = escapeHtml(text);
+    function hl(text, q) {
+        var safe = esc(text);
+        if (!q) return safe;
         try {
-            var esc = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            return safe.replace(new RegExp('(' + esc + ')', 'gi'),
+            return safe.replace(new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi'),
                 '<span class=”search-highlight”>$1</span>');
         } catch(e) { return safe; }
     }
 
-    function show(results, query) {
+    function render(results, query) {
         resultsBox.innerHTML = '';
         viewAllBox.classList.add('d-none');
 
         if (!results.length) {
-            dropdown.classList.add('d-none');
+            resultsBox.innerHTML = '<div style=”padding:14px 12px;color:#888;font-size:13px;”>No products found for &ldquo;' + esc(query) + '&rdquo;</div>';
+            dropdown.classList.remove('d-none');
             return;
         }
 
         results.forEach(function(item) {
-            var div = document.createElement('div');
-            div.className = 'search-item';
-            var imgSrc = item.image || '';
-            div.innerHTML =
-                '<img src=”' + imgSrc + '” onerror=”this.style.display=\'none\'”>' +
+            var d = document.createElement('div');
+            d.className = 'search-item';
+            d.innerHTML =
+                (item.image ? '<img src=”' + esc(item.image) + '” onerror=”this.style.display=\'none\'”>' : '') +
                 '<div>' +
-                  '<div class=”search-item-name”>' + highlight(item.name, query) + '</div>' +
-                  '<div class=”search-item-meta”>' +
-                    escapeHtml(item.brand || '') + ' &bull; ' +
-                    escapeHtml(item.category || '') + ' &bull; &#8377;' +
-                    escapeHtml(String(item.price || '')) +
-                  '</div>' +
+                  '<div class=”search-item-name”>' + hl(item.name, query) + '</div>' +
+                  '<div class=”search-item-meta”>' + esc(item.brand || '') + ' &bull; &#8377;' + esc(String(item.price || '')) + '</div>' +
                 '</div>';
-            div.addEventListener('click', function() {
-                window.location.href = item.url;
-            });
-            resultsBox.appendChild(div);
+            d.addEventListener('click', function() { window.location.href = item.url; });
+            resultsBox.appendChild(d);
         });
 
         viewAllBox.textContent = 'View all results for “' + query + '”';
         viewAllBox.classList.remove('d-none');
-        viewAllBox.onclick = function() {
-            window.location.href = '/search/?q=' + encodeURIComponent(query);
-        };
+        viewAllBox.onclick = function() { window.location.href = '/search/?q=' + encodeURIComponent(query); };
         dropdown.classList.remove('d-none');
     }
 
-    function hide() {
-        dropdown.classList.add('d-none');
-    }
+    function hide() { dropdown.classList.add('d-none'); }
 
     function doSearch(query) {
         fetch('/search-suggest/?q=' + encodeURIComponent(query))
             .then(function(r) { return r.json(); })
-            .then(function(data) { show(data.results || [], query); })
-            .catch(function(err) { console.error('[Search] fetch error:', err); });
+            .then(function(d) { render(d.results || [], query); })
+            .catch(function(e) { console.error('[Search] error:', e); });
     }
 
-    input.addEventListener('input', function() {
-        var query = input.value.trim();
-        clearTimeout(debounceTimer);
-        if (query.length < 2) { hide(); return; }
-        debounceTimer = setTimeout(function() { doSearch(query); }, 300);
-    });
+    function onType() {
+        var q = input.value.trim();
+        clearTimeout(timer);
+        if (q.length < 2) { hide(); return; }
+        timer = setTimeout(function() { doSearch(q); }, 250);
+    }
 
-    input.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') { hide(); }
-    });
+    input.addEventListener('input', onType);
+    input.addEventListener('keyup',  onType);
+    input.addEventListener('keydown', function(e) { if (e.key === 'Escape') hide(); });
 
     document.addEventListener('click', function(e) {
-        if (!input.contains(e.target) && !dropdown.contains(e.target)) {
-            hide();
-        }
+        if (e.target !== input && !dropdown.contains(e.target)) hide();
     });
-})();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    initSearchBox('searchInput',       'searchDropdown');
+    initSearchBox('mobileSearchInput', 'mobileSearchDropdown');
+});
 </script>
 
 <script>
