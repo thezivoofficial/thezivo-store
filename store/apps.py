@@ -7,3 +7,9 @@ class StoreConfig(AppConfig):
 
     def ready(self):
         import store.security  # noqa: F401 — registers login alert signal
+
+        import sys
+        # Only start scheduler in the main process (not during migrations, tests, etc.)
+        if "migrate" not in sys.argv and "makemigrations" not in sys.argv and "test" not in sys.argv:
+            from store.scheduler import start
+            start()
