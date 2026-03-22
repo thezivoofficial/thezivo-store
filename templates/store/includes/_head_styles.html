@@ -2561,6 +2561,13 @@ No size-change dropdown — editing lives on the main cart page.
 .offer-card-headline { font-size:1.3rem; font-weight:900; color:#fff; line-height:1.1; margin-bottom:8px; font-family:'Playfair Display',serif; }
 .offer-card-subdesc { font-size:0.75rem; color:rgba(255,255,255,.5); line-height:1.4; flex:1; margin-bottom:16px; }
 .offer-card-cta { display:inline-block; font-size:0.7rem; font-weight:700; color:#111; background:#fff; padding:6px 14px; border-radius:20px; letter-spacing:0.5px; align-self:flex-start; }
+.offer-card-countdown { display:flex; align-items:center; gap:6px; margin-top:10px; }
+.offer-card-countdown-label { font-size:0.65rem; color:rgba(255,255,255,0.4); letter-spacing:0.3px; }
+.offer-card-countdown-value { font-size:0.82rem; font-weight:700; color:rgba(255,255,255,0.85); font-variant-numeric:tabular-nums; letter-spacing:1px; }
+.offer-card-countdown.ending-soon .offer-card-countdown-value,
+.offer-page-countdown.ending-soon .offer-card-countdown-value { color:#ff3f6c; animation:countdown-pulse 1s ease-in-out infinite; }
+@keyframes countdown-pulse { 0%,100%{opacity:1} 50%{opacity:0.55} }
+.offer-page-countdown { display:inline-flex; align-items:center; gap:4px; background:rgba(255,107,53,0.15); color:#ff9a6c; font-size:0.72rem; font-weight:700; padding:5px 12px; border-radius:20px; border:1px solid rgba(255,107,53,0.3); }
 
 /* ── Offer badge on product cards ───────────────────────────────────────── */
 .offer-badge-card { position:absolute; top:8px; left:8px; background:#16a34a; color:#fff; font-size:0.65rem; font-weight:700; padding:3px 8px; border-radius:20px; letter-spacing:.3px; pointer-events:none; z-index:2; }

@@ -1183,4 +1183,38 @@ function submitReview(productId) {
 }
 </script>
 
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var timers = document.querySelectorAll('[data-end].offer-card-countdown, [data-end].offer-page-countdown');
+    if (!timers.length) return;
+
+    function pad(n) { return String(n).padStart(2, '0'); }
+
+    function tick() {
+        var now = new Date();
+        timers.forEach(function (el) {
+            var end = new Date(el.dataset.end + 'T23:59:59');
+            var diff = end - now;
+            var val = el.querySelector('.offer-card-countdown-value');
+            if (!val) return;
+            if (diff <= 0) {
+                val.textContent = 'Ended';
+                return;
+            }
+            var days  = Math.floor(diff / 86400000);
+            var hours = Math.floor((diff % 86400000) / 3600000);
+            var mins  = Math.floor((diff % 3600000)  / 60000);
+            var secs  = Math.floor((diff % 60000)    / 1000);
+            val.textContent = days > 0
+                ? days + 'd ' + pad(hours) + ':' + pad(mins) + ':' + pad(secs)
+                : pad(hours) + ':' + pad(mins) + ':' + pad(secs);
+            if (diff < 86400000) el.classList.add('ending-soon');
+        });
+    }
+
+    tick();
+    setInterval(tick, 1000);
+});
+</script>
+
 </body>

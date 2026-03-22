@@ -52,6 +52,11 @@
             <span style="font-size:0.72rem; color:rgba(255,255,255,0.3);">
                 {{ products|length }} item{{ products|length|pluralize }} on offer
             </span>
+            {% if offer.valid_to %}
+            <span class="offer-page-countdown" data-end="{{ offer.valid_to|date:'Y-m-d' }}">
+                ⏰&nbsp;Ends in&nbsp;<span class="offer-card-countdown-value">--:--:--</span>
+            </span>
+            {% endif %}
         </div>
 
     </div>

@@ -131,6 +131,12 @@
                 </div>
                 <div class="offer-card-subdesc">{{ offer.name }}{% if offer.description %} — {{ offer.description }}{% endif %}</div>
                 <div class="offer-card-cta">Shop Now →</div>
+                {% if offer.valid_to %}
+                <div class="offer-card-countdown" data-end="{{ offer.valid_to|date:'Y-m-d' }}">
+                    <span class="offer-card-countdown-label">⏰ Ends in</span>
+                    <span class="offer-card-countdown-value">--:--:--</span>
+                </div>
+                {% endif %}
             </div>
         </a>
         {% endfor %}
