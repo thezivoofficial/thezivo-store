@@ -428,6 +428,7 @@ class OrderAdmin(ModelAdmin):
                 from django.utils import timezone
                 order.delivered_at = timezone.now()
                 order.save()
+                send_order_email(order, 'order_delivered.html', f'Your Order #{order.id} Has Been Delivered!')
             else:
                 order.save()
             messages.success(request, f"Order #{order_id} marked as {new_status}.")
@@ -501,6 +502,7 @@ class OrderAdmin(ModelAdmin):
                     from django.utils import timezone
                     order.delivered_at = timezone.now()
                     order.save()
+                    send_order_email(order, 'order_delivered.html', f'Your Order #{order.id} Has Been Delivered!')
                 else:
                     order.save()
                 messages.success(request, f"Order #{order_id} marked as {new_status}.")
@@ -587,7 +589,11 @@ class OrderAdmin(ModelAdmin):
     def display_emails(self, obj):
         conf = '✅' if obj.confirmation_email_sent else '❌'
         ship = '✅' if obj.shipped_email_sent else '—'
-        return format_html('<span title="Confirmation">📧{}</span> <span title="Shipped">🚚{}</span>', conf, ship)
+        delv = '✅' if obj.delivered_email_sent else '—'
+        return format_html(
+            '<span title="Confirmation">📧{}</span> <span title="Shipped">🚚{}</span> <span title="Delivered">📦{}</span>',
+            conf, ship, delv,
+        )
     display_emails.short_description = "Emails"
 
     # ── CSV export ───────────────────────────────────────────────────────────
@@ -636,6 +642,7 @@ class OrderAdmin(ModelAdmin):
         for order in queryset.filter(status="SHIPPED"):
             order.status = "DELIVERED"
             order.save()
+            send_order_email(order, 'order_delivered.html', f'Your Order #{order.id} Has Been Delivered!')
             n += 1
         self.message_user(request, f"{n} order(s) marked as Delivered.")
 

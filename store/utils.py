@@ -19,6 +19,7 @@ def send_order_email(order, template_name, subject):
         'order': order,
         'items': items,
         'store_name': 'Zivo',
+        'site_url': settings.SITE_URL,
     })
     order_id = order.id
     recipient = customer.email
@@ -35,7 +36,12 @@ def send_order_email(order, template_name, subject):
                 subject=subject,
                 html_content=html,
             )
-            flag = 'confirmation_email_sent' if 'confirmation' in template_name else 'shipped_email_sent'
+            if 'confirmation' in template_name:
+                flag = 'confirmation_email_sent'
+            elif 'shipped' in template_name:
+                flag = 'shipped_email_sent'
+            else:
+                flag = 'delivered_email_sent'
             from .models import Order
             Order.objects.filter(id=order_id).update(**{flag: True})
         except Exception as e:

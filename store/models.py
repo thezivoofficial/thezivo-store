@@ -326,6 +326,7 @@ class Order(models.Model):
 
     confirmation_email_sent = models.BooleanField(default=False)
     shipped_email_sent      = models.BooleanField(default=False)
+    delivered_email_sent    = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
     
