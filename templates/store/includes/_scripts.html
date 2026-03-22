@@ -1193,7 +1193,8 @@ document.addEventListener('DOMContentLoaded', function () {
     function tick() {
         var now = new Date();
         timers.forEach(function (el) {
-            var end = new Date(el.dataset.end + 'T23:59:59');
+            var p = el.dataset.end.split('-');
+            var end = new Date(+p[0], +p[1] - 1, +p[2], 23, 59, 59);
             var diff = end - now;
             var val = el.querySelector('.offer-card-countdown-value');
             if (!val) return;

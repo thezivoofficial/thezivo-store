@@ -121,7 +121,14 @@
         <a href="{% url 'offer_products' offer.id %}" class="offer-card">
             <div class="offer-card-accent offer-card-accent-{{ offer.offer_type|lower }}"></div>
             <div class="offer-card-body">
-                <div class="offer-card-eyebrow">Exclusive Offer</div>
+                <div class="offer-card-eyebrow-row">
+                    <div class="offer-card-eyebrow">Exclusive Offer</div>
+                    {% if offer.valid_to %}
+                    <div class="offer-card-countdown" data-end="{{ offer.valid_to|date:'Y-m-d' }}">
+                        ⏰&thinsp;<span class="offer-card-countdown-value">--:--:--</span>
+                    </div>
+                    {% endif %}
+                </div>
                 <div class="offer-card-headline">
                     {% if offer.offer_type == 'BOGO' %}Buy 1<br>Get 1 Free
                     {% elif offer.offer_type == 'PERCENTAGE' %}{{ offer.discount_percent }}%<br>Off
@@ -131,11 +138,6 @@
                 </div>
                 <div class="offer-card-subdesc">{{ offer.name }}{% if offer.description %} — {{ offer.description }}{% endif %}</div>
                 <div class="offer-card-cta">Shop Now →</div>
-                {% if offer.valid_to %}
-                <div class="offer-card-countdown" data-end="{{ offer.valid_to|date:'Y-m-d' }}">
-                    ⏰&thinsp;<span class="offer-card-countdown-value">--:--:--</span>
-                </div>
-                {% endif %}
             </div>
         </a>
         {% endfor %}
