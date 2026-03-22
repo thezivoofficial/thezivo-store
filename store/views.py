@@ -983,8 +983,9 @@ def checkout(request):
 
             request.session.pop('coupon', None)
             clear_cart(request)
-            from .utils import send_order_email
+            from .utils import send_order_email, whatsapp_new_order_admin
             send_order_email(order, 'order_confirmation.html', f'Order Confirmed – #{order.id}')
+            whatsapp_new_order_admin(order)
             return redirect("order_success", order_id=order.id)
 
         # ---------- ONLINE ----------
@@ -1152,8 +1153,9 @@ def verify_payment(request):
     # ✅ CLEAR CART HERE (CRITICAL)
     clear_cart(request)
 
-    from .utils import send_order_email
+    from .utils import send_order_email, whatsapp_new_order_admin
     send_order_email(order, 'order_confirmation.html', f'Order Confirmed – #{order.id}')
+    whatsapp_new_order_admin(order)
 
     return JsonResponse({
         "status": "success",
@@ -1224,8 +1226,9 @@ def razorpay_webhook(request):
             if order.coupon_id:
                 Coupon.objects.filter(pk=order.coupon_id).update(used_count=F('used_count') + 1)
 
-            from .utils import send_order_email
+            from .utils import send_order_email, whatsapp_new_order_admin
             send_order_email(order, 'order_confirmation.html', f'Order Confirmed – #{order.id}')
+            whatsapp_new_order_admin(order)
 
     return HttpResponse(status=200)
 

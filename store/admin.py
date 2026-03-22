@@ -12,7 +12,7 @@ from django.urls import path, reverse
 from django.utils.html import format_html
 from unfold.admin import ModelAdmin, TabularInline
 from .models import Product, SKU, Order, OrderItem, StockNotification, ProductImage, Address, Customer, SiteSettings, Coupon, Review, Announcement, Category, Offer, NewsletterSubscriber, ReturnRequest, ReturnItem
-from .utils import send_whatsapp, send_order_email, send_new_product_alert
+from .utils import send_whatsapp, send_order_email, send_new_product_alert, whatsapp_order_shipped, whatsapp_order_delivered
 from django.conf import settings
 
 
@@ -424,11 +424,13 @@ class OrderAdmin(ModelAdmin):
                 order.shipped_at = timezone.now()
                 order.save()
                 send_order_email(order, 'order_shipped.html', f'Your Order #{order.id} Has Been Shipped!')
+                whatsapp_order_shipped(order)
             elif new_status == "DELIVERED":
                 from django.utils import timezone
                 order.delivered_at = timezone.now()
                 order.save()
                 send_order_email(order, 'order_delivered.html', f'Your Order #{order.id} Has Been Delivered!')
+                whatsapp_order_delivered(order)
             else:
                 order.save()
             messages.success(request, f"Order #{order_id} marked as {new_status}.")
@@ -498,11 +500,13 @@ class OrderAdmin(ModelAdmin):
                     order.shipped_at = timezone.now()
                     order.save()
                     send_order_email(order, 'order_shipped.html', f'Your Order #{order.id} Has Been Shipped!')
+                    whatsapp_order_shipped(order)
                 elif new_status == "DELIVERED":
                     from django.utils import timezone
                     order.delivered_at = timezone.now()
                     order.save()
                     send_order_email(order, 'order_delivered.html', f'Your Order #{order.id} Has Been Delivered!')
+                    whatsapp_order_delivered(order)
                 else:
                     order.save()
                 messages.success(request, f"Order #{order_id} marked as {new_status}.")
@@ -633,6 +637,7 @@ class OrderAdmin(ModelAdmin):
             order.status = "SHIPPED"
             order.save()
             send_order_email(order, 'order_shipped.html', f'Your Order #{order.id} Has Been Shipped!')
+            whatsapp_order_shipped(order)
             n += 1
         self.message_user(request, f"{n} order(s) marked as Shipped.")
 
@@ -643,6 +648,7 @@ class OrderAdmin(ModelAdmin):
             order.status = "DELIVERED"
             order.save()
             send_order_email(order, 'order_delivered.html', f'Your Order #{order.id} Has Been Delivered!')
+            whatsapp_order_delivered(order)
             n += 1
         self.message_user(request, f"{n} order(s) marked as Delivered.")
 

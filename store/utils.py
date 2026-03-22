@@ -241,6 +241,59 @@ def send_new_product_alert(product_id):
     transaction.on_commit(lambda: threading.Thread(target=_send, daemon=False).start())
 
 
+def _whatsapp_async(phone, message):
+    """Run send_whatsapp in a background thread so it never blocks the caller."""
+    import threading
+    threading.Thread(target=send_whatsapp, args=(phone, message), daemon=False).start()
+
+
+def whatsapp_new_order_admin(order):
+    """Alert the store admin on every new confirmed/placed order."""
+    admin_phone = getattr(settings, 'ADMIN_ALERT_PHONE', '')
+    if not admin_phone:
+        return
+    try:
+        items_count = order.items.count()
+    except Exception:
+        items_count = '?'
+    msg = (
+        f"🛒 *New Order #{order.id}*\n"
+        f"👤 {order.name} · {order.phone}\n"
+        f"💰 ₹{order.total_amount} · {order.get_payment_method_display()}\n"
+        f"📦 {items_count} item(s)\n"
+        f"🔗 {settings.SITE_URL}/admin/store/order/{order.id}/change/"
+    )
+    _whatsapp_async(admin_phone, msg)
+
+
+def whatsapp_order_shipped(order):
+    """Notify the customer that their order has been shipped."""
+    if not order.phone:
+        return
+    msg = (
+        f"📦 *Your order has been shipped!*\n\n"
+        f"Hi {order.name}, your *Zivo* order *#{order.id}* is on its way! 🚚\n\n"
+        f"Expected delivery in 3–5 business days.\n\n"
+        f"View your order: {settings.SITE_URL}/orders/{order.id}/\n"
+        f"Questions? Email: support@thezivo.com"
+    )
+    _whatsapp_async(order.phone, msg)
+
+
+def whatsapp_order_delivered(order):
+    """Notify the customer that their order has been delivered."""
+    if not order.phone:
+        return
+    msg = (
+        f"✅ *Order Delivered!*\n\n"
+        f"Hi {order.name}, your *Zivo* order *#{order.id}* has been delivered. 🎉\n\n"
+        f"We hope you love your purchase!\n"
+        f"Rate your order: {settings.SITE_URL}/orders/{order.id}/\n\n"
+        f"Need help? Email: support@thezivo.com"
+    )
+    _whatsapp_async(order.phone, msg)
+
+
 def send_whatsapp(phone, message):
     if not phone:
         return
