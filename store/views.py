@@ -2645,9 +2645,10 @@ def reset_password(request):
             return redirect("forgot_password")
 
         customer.set_password(password)
-        customer.save()
+        customer.save(update_fields=["password"])
         del request.session["otp_verified_phone"]
-        messages.success(request, "Password reset successful. Please log in.")
-        return redirect("login")
+        customer_login(request, customer)
+        messages.success(request, "Password reset successful. Welcome back!")
+        return redirect("home")
 
     return render(request, "store/reset_password.html")
