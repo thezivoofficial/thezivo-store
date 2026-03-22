@@ -364,8 +364,8 @@ ADMIN_ALERT_PHONE = config('ADMIN_ALERT_PHONE', default='')
 BREVO_API_KEY      = config('BREVO_API_KEY', default='')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='support@thezivo.com')
 
-# ── SMS (Fast2SMS) ────────────────────────────────────────────────────────────
-FAST2SMS_API_KEY   = config('FAST2SMS_API_KEY', default='')
+# ── SMS (2Factor.in OTP) ──────────────────────────────────────────────────────
+TWO_FACTOR_API_KEY = config('TWO_FACTOR_API_KEY', default='')
 
 # ── Security headers ────────────────────────────────────────────────────────
 SECURE_CONTENT_TYPE_NOSNIFF = True

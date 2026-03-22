@@ -241,7 +241,7 @@ def send_new_product_alert(product_id):
 
 
 def send_otp_sms(phone, otp):
-    """Send OTP via Fast2SMS Quick route. phone should be 10-digit Indian mobile number."""
+    """Send OTP via 2Factor.in. phone should be 10-digit Indian mobile number."""
     import requests
     # Strip country code if present
     phone = phone.strip().replace(" ", "").replace("-", "")
@@ -250,23 +250,17 @@ def send_otp_sms(phone, otp):
     elif phone.startswith("91") and len(phone) == 12:
         phone = phone[2:]
     try:
-        response = requests.post(
-            "https://www.fast2sms.com/dev/bulkV2",
-            headers={"authorization": settings.FAST2SMS_API_KEY},
-            data={
-                "route": "q",
-                "message": f"{otp} is your Zivo password reset OTP. Valid for 10 minutes. Do not share with anyone.",
-                "flash": "0",
-                "numbers": phone,
-            },
+        response = requests.get(
+            f"https://2factor.in/API/V1/{settings.TWO_FACTOR_API_KEY}/SMS/{phone}/{otp}/AUTOGEN",
             timeout=10,
         )
         result = response.json()
-        if not result.get("return"):
-            print(f"[SMS ERROR] Fast2SMS rejected: {result}")
-        return result.get("return", False)
+        if result.get("Status") != "Success":
+            print(f"[SMS ERROR] 2Factor rejected: {result}")
+            return False
+        return True
     except Exception as e:
-        print(f"[SMS ERROR] Fast2SMS failed: {e}")
+        print(f"[SMS ERROR] 2Factor failed: {e}")
         return False
 
 
