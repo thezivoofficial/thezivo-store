@@ -465,7 +465,9 @@ document.addEventListener(“DOMContentLoaded”, function () {
     // ── Focus: show idle panel ───────────────────────────────────────────
     input.addEventListener(“focus”, function () {
         if (input.value.trim().length < 2) {
-            fetchTrending(t => renderIdle(t));
+            fetchTrending(t => {
+                if (input.value.trim().length < 2) renderIdle(t);
+            });
         }
     });
 
@@ -475,7 +477,10 @@ document.addEventListener(“DOMContentLoaded”, function () {
         clearTimeout(debounceTimer);
 
         if (query.length < 2) {
-            fetchTrending(t => renderIdle(t));
+            fetchTrending(t => {
+                // Guard: only show idle if user hasn't typed more chars since
+                if (input.value.trim().length < 2) renderIdle(t);
+            });
             return;
         }
 
@@ -483,8 +488,11 @@ document.addEventListener(“DOMContentLoaded”, function () {
             fetch(`/search-suggest/?q=${encodeURIComponent(query)}`)
                 .then(res => res.json())
                 .then(data => {
-                    results = data.results || [];
-                    renderDropdown(query);
+                    // Guard: only render if query hasn't changed since fetch started
+                    if (input.value.trim() === query) {
+                        results = data.results || [];
+                        renderDropdown(query);
+                    }
                 });
         }, 300);
     });
