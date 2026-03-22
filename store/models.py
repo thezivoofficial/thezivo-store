@@ -264,7 +264,8 @@ class Order(models.Model):
     city = models.CharField(max_length=100, blank=True, default="")
     state = models.CharField(max_length=100, blank=True, default="")
     pincode = models.CharField(max_length=10, blank=True, default="")
-    
+    delivery_instructions = models.CharField(max_length=500, blank=True, default="")
+
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
     shipped_at = models.DateTimeField(null=True, blank=True)
     delivered_at = models.DateTimeField(null=True, blank=True)

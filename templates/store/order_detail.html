@@ -542,6 +542,13 @@
                     {% if order.pincode %} - {{ order.pincode }}{% endif %}
                 </div>
                 <div class="address-phone">📞 {{ order.phone }}</div>
+                {% if order.delivery_instructions %}
+                <div style="margin-top:8px; font-size:0.83rem; color:#666;
+                            background:#f9f9f9; border-radius:6px; padding:7px 10px;
+                            border-left:3px solid #ddd;">
+                    📝 {{ order.delivery_instructions }}
+                </div>
+                {% endif %}
             </div>
         </div>
 

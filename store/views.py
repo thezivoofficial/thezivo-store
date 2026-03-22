@@ -790,6 +790,23 @@ def calculate_cart_total(cart):
     return total
     
     
+def _estimated_delivery_dates():
+    """Return (start_date, end_date) strings for 3-5 business days from today."""
+    from datetime import date, timedelta
+    today = date.today()
+    def add_business_days(d, n):
+        count = 0
+        while count < n:
+            d += timedelta(days=1)
+            if d.weekday() < 5:  # Mon–Fri
+                count += 1
+        return d
+    start = add_business_days(today, 3)
+    end = add_business_days(today, 5)
+    fmt = "%d %b"  # e.g. "25 Mar"
+    return start.strftime(fmt), end.strftime(fmt)
+
+
 def checkout(request):
     cart = get_cart(request)
 
@@ -848,6 +865,8 @@ def checkout(request):
     from .models import SiteSettings
     cod_enabled = SiteSettings.get().cod_enabled
 
+    est_delivery_start, est_delivery_end = _estimated_delivery_dates()
+
     # Base context reused across all render calls in this view
     _ctx = {
         "items": items,
@@ -860,6 +879,8 @@ def checkout(request):
         "coupon_code_applied": coupon_code_applied,
         "offer_discount": offer_discount,
         "offer_lines": offer_lines,
+        "est_delivery_start": est_delivery_start,
+        "est_delivery_end": est_delivery_end,
     }
 
     # ---------- POST ----------
@@ -869,6 +890,7 @@ def checkout(request):
         phone = request.POST.get("phone", "").strip()
         country_code = request.POST.get("country_code", "+91").strip()
         address = request.POST.get("address", "").strip()
+        delivery_instructions = request.POST.get("delivery_instructions", "").strip()
         payment_method = request.POST.get("payment_method")
 
         form_data = {
@@ -878,6 +900,7 @@ def checkout(request):
             "address": address,
             "city": request.POST.get("city", ""),
             "pincode": request.POST.get("pincode", ""),
+            "delivery_instructions": delivery_instructions,
             "payment_method": payment_method
         }
 
@@ -935,6 +958,7 @@ def checkout(request):
                     city=request.POST.get("city", ""),
                     state=request.POST.get("state", ""),
                     pincode=request.POST.get("pincode", ""),
+                    delivery_instructions=delivery_instructions,
                     total_amount=final_amount,
                     payment_status="PENDING",
                     payment_method="COD",
@@ -980,6 +1004,7 @@ def checkout(request):
                 city=request.POST.get("city", ""),
                 state=request.POST.get("state", ""),
                 pincode=request.POST.get("pincode", ""),
+                delivery_instructions=delivery_instructions,
                 total_amount=final_amount,
                 payment_method="ONLINE",
                 payment_status="PENDING",

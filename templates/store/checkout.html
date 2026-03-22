@@ -620,6 +620,14 @@
                                 </div>
                             </div>
 
+                            <div class="field-group">
+                                <label class="field-label">Delivery Instructions <span style="color:#aaa;font-weight:400;">(Optional)</span></label>
+                                <textarea name="delivery_instructions" class="field-input"
+                                          placeholder="e.g. Leave at door, Ring bell, Call on arrival…"
+                                          rows="2"
+                                          style="resize:vertical;">{{ form_data.delivery_instructions|default:'' }}</textarea>
+                            </div>
+
                         </div>
                     </div>
 
@@ -654,6 +662,19 @@
                                 </div>
                             </label>
 
+                        </div>
+                    </div>
+
+                    <!-- ESTIMATED DELIVERY -->
+                    <div style="display:flex; align-items:center; gap:10px; padding:14px 16px;
+                                background:#f8faf8; border:1.5px solid #d4edda; border-radius:10px;
+                                margin-bottom:16px;">
+                        <span style="font-size:1.3rem;">📦</span>
+                        <div>
+                            <div style="font-size:0.78rem; color:#888; font-weight:500; text-transform:uppercase; letter-spacing:0.4px;">Estimated Delivery</div>
+                            <div style="font-size:0.9rem; font-weight:700; color:#1a7f2e;">
+                                {{ est_delivery_start }} – {{ est_delivery_end }}
+                            </div>
                         </div>
                     </div>
 
