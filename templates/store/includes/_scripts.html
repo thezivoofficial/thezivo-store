@@ -306,12 +306,19 @@ function initSearchBox(inputId, dropdownId) {
         results.forEach(function(item) {
             var d = document.createElement('div');
             d.className = 'search-item';
-            d.innerHTML =
-                (item.image ? '<img src=”' + esc(item.image) + '” onerror=”this.style.display=\'none\'”>' : '') +
-                '<div>' +
-                  '<div class=”search-item-name”>' + hl(item.name, query) + '</div>' +
-                  '<div class=”search-item-meta”>' + esc(item.brand || '') + ' &bull; &#8377;' + esc(String(item.price || '')) + '</div>' +
-                '</div>';
+
+            if (item.image) {
+                var img = document.createElement('img');
+                img.src = item.image;
+                d.appendChild(img);
+            }
+
+            var info = document.createElement('div');
+            info.innerHTML =
+                '<div class=”search-item-name”>' + hl(item.name, query) + '</div>' +
+                '<div class=”search-item-meta”>' + esc(item.brand || '') + ' &bull; &#8377;' + esc(String(item.price || '')) + '</div>';
+            d.appendChild(info);
+
             d.addEventListener('click', function() { window.location.href = item.url; });
             resultsBox.appendChild(d);
         });
