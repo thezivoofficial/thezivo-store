@@ -1917,6 +1917,36 @@ def download_invoice(request, order_id):
 
 
 @customer_login_required
+def reorder(request, order_id):
+    if request.method != "POST":
+        return JsonResponse({"status": "error"}, status=405)
+    order = get_object_or_404(Order, id=order_id, customer=request.customer)
+    added, skipped = 0, 0
+    for item in order.items.select_related("sku").all():
+        sku = item.sku
+        if sku.stock <= 0:
+            skipped += 1
+            continue
+        cart = get_cart(request)
+        current_qty = cart.get(str(sku.id), 0)
+        new_qty = min(current_qty + item.quantity, sku.stock)
+        if new_qty > current_qty:
+            set_cart_item(request, str(sku.id), new_qty)
+            added += 1
+        else:
+            skipped += 1
+    if added == 0:
+        return JsonResponse({
+            "status": "error",
+            "message": "All items from this order are currently out of stock.",
+        })
+    msg = f"{added} item{'s' if added != 1 else ''} added to your bag."
+    if skipped:
+        msg += f" {skipped} out-of-stock item{'s' if skipped != 1 else ''} skipped."
+    return JsonResponse({"status": "success", "message": msg})
+
+
+@customer_login_required
 def cancel_order(request, order_id):
     if request.method != "POST":
         return redirect("my_orders")

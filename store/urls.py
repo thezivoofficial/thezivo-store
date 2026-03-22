@@ -34,6 +34,7 @@ urlpatterns = [
     path("get-product-skus/<int:product_id>/", views.get_product_skus),
     path("change-cart-size/", views.change_cart_size, name="change_cart_size"),
     path("orders/<int:order_id>/", views.order_detail, name="order_detail"),
+    path("orders/<int:order_id>/reorder/", views.reorder, name="reorder"),
     path("orders/<int:order_id>/cancel/", views.cancel_order, name="cancel_order"),
     path("orders/<int:order_id>/return/", views.submit_return, name="submit_return"),
     path("validate-upi/", views.validate_upi, name="validate_upi"),

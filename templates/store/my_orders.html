@@ -550,6 +550,12 @@
                                 View Details
                             {% endif %}
                         </a>
+                        {% if order.status == "DELIVERED" or order.status == "CANCELLED" %}
+                        <button class="oc-btn-secondary"
+                                onclick="reorderItems('{% url 'reorder' order.id %}', this)">
+                            <i class="bi bi-arrow-repeat"></i> Reorder
+                        </button>
+                        {% endif %}
                         <a href="{% url 'download_invoice' order.id %}" class="oc-btn-secondary">
                             <i class="bi bi-download"></i> Invoice
                         </a>
@@ -610,5 +616,46 @@
 
     </div>
 </div>
+
+<script>
+function reorderItems(url, btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Adding...';
+    fetch(url, {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": getCsrfToken(),
+            "X-Requested-With": "XMLHttpRequest",
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.status === "success") {
+            btn.innerHTML = '<i class="bi bi-check"></i> Added!';
+            btn.style.color = "#2e7d32";
+            btn.style.borderColor = "#2e7d32";
+            const cartEl = document.getElementById("sideCart");
+            if (cartEl) {
+                bootstrap.Offcanvas.getOrCreateInstance(cartEl).show();
+                if (typeof syncSideCartOnOpen === "function") syncSideCartOnOpen();
+            }
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-arrow-repeat"></i> Reorder';
+                btn.style.color = "";
+                btn.style.borderColor = "";
+            }, 3000);
+        } else {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-arrow-repeat"></i> Reorder';
+            alert(data.message || "Could not reorder. Please try again.");
+        }
+    })
+    .catch(() => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-arrow-repeat"></i> Reorder';
+    });
+}
+</script>
 
 {% endblock %}
