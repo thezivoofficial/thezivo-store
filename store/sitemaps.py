@@ -6,6 +6,7 @@ from .models import Product, Category
 class ProductSitemap(Sitemap):
     changefreq = "weekly"
     priority = 0.8
+    protocol = "https"
 
     def items(self):
         return Product.objects.filter(active=True)
@@ -17,6 +18,7 @@ class ProductSitemap(Sitemap):
 class CategorySitemap(Sitemap):
     changefreq = "weekly"
     priority = 0.7
+    protocol = "https"
 
     def items(self):
         return Category.objects.filter(is_active=True, gender__in=["men", "women"])
@@ -28,6 +30,7 @@ class CategorySitemap(Sitemap):
 class StaticSitemap(Sitemap):
     changefreq = "monthly"
     priority = 0.5
+    protocol = "https"
 
     def items(self):
         return ["home", "men", "women"]
