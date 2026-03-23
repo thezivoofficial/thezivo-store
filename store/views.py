@@ -25,7 +25,8 @@ def get_cart(request):
     if request.customer:
         return {str(item.sku_id): item.quantity
                 for item in CartItem.objects.filter(customer=request.customer)}
-    return request.session.get("cart", {})
+    raw = request.session.get("cart", {})
+    return {str(k): v for k, v in raw.items()}
 
 
 def set_cart_item(request, sku_id, qty):
@@ -1033,8 +1034,9 @@ def checkout(request):
                         quantity=item["quantity"],
                         price=item["sku"].selling_price
                     )
-                    item["sku"].stock -= item["quantity"]
-                    item["sku"].save()
+                    SKU.objects.select_for_update().filter(pk=item["sku"].pk).update(
+                        stock=F("stock") - item["quantity"]
+                    )
 
                 if coupon_obj:
                     Coupon.objects.filter(pk=coupon_obj.pk).update(used_count=F('used_count') + 1)
@@ -1201,10 +1203,11 @@ def verify_payment(request):
         order.status = "PLACED"
         order.save()
 
-        # 🔴 Reduce stock
-        for item in OrderItem.objects.filter(order=order):
-            item.sku.stock -= item.quantity
-            item.sku.save()
+        # Reduce stock (select_for_update prevents oversell on concurrent requests)
+        for item in OrderItem.objects.filter(order=order).select_related("sku"):
+            SKU.objects.select_for_update().filter(pk=item.sku_id).update(
+                stock=F("stock") - item.quantity
+            )
 
         if order.coupon_id:
             Coupon.objects.filter(pk=order.coupon_id).update(used_count=F('used_count') + 1)
@@ -1280,9 +1283,10 @@ def razorpay_webhook(request):
             order.status = 'PLACED'
             order.save()
 
-            for item in OrderItem.objects.filter(order=order):
-                item.sku.stock -= item.quantity
-                item.sku.save()
+            for item in OrderItem.objects.filter(order=order).select_related("sku"):
+                SKU.objects.select_for_update().filter(pk=item.sku_id).update(
+                    stock=F("stock") - item.quantity
+                )
 
             if order.coupon_id:
                 Coupon.objects.filter(pk=order.coupon_id).update(used_count=F('used_count') + 1)
@@ -2628,8 +2632,8 @@ def reset_password(request):
         password = request.POST.get("password", "")
         confirm = request.POST.get("confirm_password", "")
 
-        if len(password) < 6:
-            messages.error(request, "Password must be at least 6 characters.")
+        if len(password) < 8:
+            messages.error(request, "Password must be at least 8 characters.")
             return render(request, "store/reset_password.html")
 
         if password != confirm:
