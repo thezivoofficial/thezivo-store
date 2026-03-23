@@ -46,6 +46,7 @@ def send_order_email(order, template_name, subject):
         except Exception as e:
             print(f"[EMAIL ERROR] Failed to send {template_name} for order {order_id}: {e}")
 
+    # daemon=False: order emails are critical — let this thread finish even during shutdown
     threading.Thread(target=_send, daemon=False).start()
 
 
@@ -237,7 +238,8 @@ def send_new_product_alert(product_id):
         except Exception as e:
             print(f"[EMAIL ERROR] New product alert failed for product {product_id}: {e}")
 
-    transaction.on_commit(lambda: threading.Thread(target=_send, daemon=False).start())
+    # daemon=True: bulk newsletter — don't block server shutdown waiting for all sends
+    transaction.on_commit(lambda: threading.Thread(target=_send, daemon=True).start())
 
 
 def send_otp_sms(phone, otp):
@@ -267,7 +269,8 @@ def send_otp_sms(phone, otp):
 def _whatsapp_async(phone, message):
     """Run send_whatsapp in a background thread so it never blocks the caller."""
     import threading
-    threading.Thread(target=send_whatsapp, args=(phone, message), daemon=False).start()
+    # daemon=True: WhatsApp alerts are non-critical — don't block server shutdown
+    threading.Thread(target=send_whatsapp, args=(phone, message), daemon=True).start()
 
 
 def whatsapp_new_order_admin(order):
