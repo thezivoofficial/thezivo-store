@@ -15,6 +15,8 @@ from .customer_auth import customer_login, customer_logout, customer_login_requi
 from .utils import calculate_delivery_and_final, calculate_offer_discounts
 from django.db.models import Exists, OuterRef, Prefetch
 from django.views.decorators.http import require_POST
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.core.cache import cache
 
 
 
@@ -191,8 +193,10 @@ def add_address(request):
             is_default=is_default
         )
         messages.success(request, "Address saved successfully.")
-        next_url = request.POST.get("next", "manage_addresses")
-        return redirect(next_url)
+        next_url = request.POST.get("next", "")
+        if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+            return redirect(next_url)
+        return redirect("manage_addresses")
 
     return render(request, "store/address_form.html", {"action": "Add"})
 
@@ -200,7 +204,10 @@ def add_address(request):
 @customer_login_required
 def edit_address(request, address_id):
     address = get_object_or_404(Address, id=address_id, customer=request.customer)
-    next_url = request.GET.get("next") or request.POST.get("next", "manage_addresses")
+    _raw_next = request.GET.get("next") or request.POST.get("next", "")
+    next_url = _raw_next if _raw_next and url_has_allowed_host_and_scheme(
+        _raw_next, allowed_hosts={request.get_host()}
+    ) else "manage_addresses"
 
     if request.method == "POST":
         address.name = request.POST.get("name", "").strip()
@@ -1302,7 +1309,13 @@ def razorpay_webhook(request):
 
 
 def order_success(request, order_id):
-    order = get_object_or_404(Order, id=order_id)
+    if request.customer:
+        order = get_object_or_404(Order, id=order_id, customer=request.customer)
+    else:
+        order = get_object_or_404(Order, id=order_id)
+        # Block logged-in customer orders from being viewed by guests
+        if order.customer_id:
+            return redirect("home")
 
     return render(
         request,
@@ -2565,6 +2578,14 @@ def forgot_password(request):
         if not phone.isdigit() or len(phone) != 10:
             messages.error(request, "Enter a valid 10-digit mobile number.")
             return render(request, "store/forgot_password.html", {"phone": phone})
+
+        # Rate limit: max 3 OTP requests per phone per 10 minutes
+        rate_key = f"otp_rate_{phone}"
+        attempts = cache.get(rate_key, 0)
+        if attempts >= 3:
+            messages.error(request, "Too many OTP requests. Please wait 10 minutes before trying again.")
+            return render(request, "store/forgot_password.html", {"phone": phone})
+        cache.set(rate_key, attempts + 1, 600)
 
         # Check customer exists (search with and without +91)
         from .models import Customer
