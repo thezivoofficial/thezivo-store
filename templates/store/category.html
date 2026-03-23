@@ -1,5 +1,9 @@
 {% extends "store/base.html" %}
 
+{% block title %}{% if category %}{{ category.name }} for {{ gender|title }} | TheZivo{% elif gender %}Shop {{ gender|title }}'s Fashion | TheZivo{% else %}Shop | TheZivo{% endif %}{% endblock %}
+{% block meta_description %}{% if category %}Buy {{ category.name }} for {{ gender|title }} online at TheZivo. Shop latest styles, premium quality at best prices.{% elif gender %}Shop {{ gender|title }}'s fashion at TheZivo — T-shirts, shirts, jeans, kurtis and more. Free delivery above ₹{{ free_delivery_min }}.{% else %}Shop premium fashion at TheZivo.{% endif %}{% endblock %}
+{% block canonical %}{{ request.scheme }}://{{ request.get_host }}{{ request.path }}{% endblock %}
+
 {% block content %}
 
 <div class="row">

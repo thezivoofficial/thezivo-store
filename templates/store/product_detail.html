@@ -9,6 +9,7 @@
 {% block twitter_title %}{{ product.name }} | TheZivo{% endblock %}
 {% block twitter_description %}Buy {{ product.name }} online at TheZivo.{% endblock %}
 {% block twitter_image %}{% with img=images.first %}{% if img %}{{ request.scheme }}://{{ request.get_host }}{{ img.image.url }}{% else %}{{ STATIC_URL }}store/img/og-default.jpg{% endif %}{% endwith %}{% endblock %}
+{% block canonical %}{{ request.scheme }}://{{ request.get_host }}/product/{{ product.id }}/{% endblock %}
 
 {% block content %}
 
@@ -1635,6 +1636,31 @@ document.addEventListener("click", function(e) {
         });
     });
 })();
+</script>
+
+<!-- JSON-LD: Product structured data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": "{{ product.name|escapejs }}",
+  "description": "{{ product.description|striptags|truncatechars:200|escapejs }}",
+  "brand": { "@type": "Brand", "name": "{{ product.brand|escapejs }}" },
+  "image": [{% with img=images.first %}{% if img %}"{{ request.scheme }}://{{ request.get_host }}{{ img.image.url }}"{% else %}"{{ request.scheme }}://{{ request.get_host }}{{ product.image.url }}"{% endif %}{% endwith %}],
+  "url": "{{ request.scheme }}://{{ request.get_host }}/product/{{ product.id }}/",
+  "offers": {
+    "@type": "Offer",
+    "priceCurrency": "INR",
+    "price": "{{ default_sku.selling_price|default:'' }}",
+    "availability": "{% if in_stock %}https://schema.org/InStock{% else %}https://schema.org/OutOfStock{% endif %}",
+    "seller": { "@type": "Organization", "name": "TheZivo" }
+  }{% if product.avg_rating %},
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "{{ product.avg_rating }}",
+    "reviewCount": "{{ product.review_count }}"
+  }{% endif %}
+}
 </script>
 
 {% endblock %}

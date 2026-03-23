@@ -1,0 +1,21 @@
+User-agent: *
+Disallow: /zivo-manage/
+Disallow: /cart/
+Disallow: /checkout/
+Disallow: /login/
+Disallow: /signup/
+Disallow: /profile/
+Disallow: /my-orders/
+Disallow: /orders/
+Disallow: /wishlist/
+Disallow: /addresses/
+Disallow: /forgot-password/
+Disallow: /verify-otp/
+Disallow: /reset-password/
+Disallow: /apply-coupon/
+Disallow: /remove-coupon/
+Disallow: /search-suggest/
+Disallow: /api/
+Allow: /
+
+Sitemap: https://thezivo.com/sitemap.xml
