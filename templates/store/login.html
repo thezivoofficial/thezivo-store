@@ -191,6 +191,8 @@
                        placeholder="9876543210 or you@example.com"
                        autocomplete="off"
                        value="{{ form_data.identifier|default:'' }}"
+                       readonly
+                       onfocus="this.removeAttribute('readonly')"
                        required autofocus>
             </div>
 
@@ -202,7 +204,9 @@
                            name="password"
                            class="field-input"
                            placeholder="Enter your password"
-                           autocomplete="current-password"
+                           autocomplete="new-password"
+                           readonly
+                           onfocus="this.removeAttribute('readonly')"
                            required>
                     <button type="button" class="eye-btn" onclick="togglePwd('login-password','eye1')" tabindex="-1">
                         <i id="eye1" class="bi bi-eye"></i>

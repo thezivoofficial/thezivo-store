@@ -28,7 +28,7 @@
         </div>
     {% endif %}
 
-    <form action="{{ app_path }}" method="post" id="login-form">
+    <form action="{{ app_path }}" method="post" id="login-form" autocomplete="off">
         {% csrf_token %}
         {% include "unfold/helpers/field.html" with field=form.username %}
         {% include "unfold/helpers/field.html" with field=form.password %}
@@ -76,6 +76,15 @@
         document.addEventListener('submit', function(e) {
             if (e.target && e.target.id === 'login-form') syncCsrf();
         }, true);
+
+        /* Prevent browser autofill */
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('#login-form input').forEach(function (inp) {
+                inp.setAttribute('readonly', true);
+                inp.setAttribute('autocomplete', 'off');
+                inp.addEventListener('focus', function () { this.removeAttribute('readonly'); }, { once: true });
+            });
+        });
     })();
     </script>
 {% endblock %}
