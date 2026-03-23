@@ -1,76 +1,231 @@
 {% extends "store/base.html" %}
-
 {% block title %}Login | TheZivo{% endblock %}
 
 {% block content %}
-<div class="container mt-5" style="max-width: 420px;">
-    <div class="bg-white p-4 rounded shadow-sm">
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=DM+Sans:wght@300;400;500;600&display=swap');
 
-        <h4 class="mb-4 text-center">Login</h4>
+    .auth-page {
+        background: #f8f7f5;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 16px;
+        font-family: 'DM Sans', sans-serif;
+    }
+
+    .auth-card {
+        background: #fff;
+        border-radius: 20px;
+        border: 1px solid #ececec;
+        padding: 40px 36px;
+        width: 100%;
+        max-width: 420px;
+        animation: fadeUp 0.3s ease both;
+    }
+
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(12px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .auth-logo {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #111;
+        text-align: center;
+        letter-spacing: -0.3px;
+        margin-bottom: 6px;
+    }
+
+    .auth-subtitle {
+        text-align: center;
+        font-size: 0.85rem;
+        color: #999;
+        font-weight: 300;
+        margin-bottom: 32px;
+    }
+
+    .auth-error {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 8px;
+        padding: 10px 14px;
+        font-size: 0.83rem;
+        color: #b91c1c;
+        margin-bottom: 20px;
+    }
+
+    .field-group { margin-bottom: 18px; }
+
+    .field-label {
+        display: block;
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: #aaa;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        margin-bottom: 6px;
+    }
+
+    .field-input {
+        width: 100%;
+        border: 1.5px solid #e8e8e8;
+        border-radius: 8px;
+        padding: 11px 14px;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.9rem;
+        color: #111;
+        background: #fff;
+        transition: border-color 0.15s;
+        outline: none;
+        box-sizing: border-box;
+    }
+
+    .field-input:focus { border-color: #111; }
+
+    .field-input-wrap { position: relative; }
+
+    .field-input-wrap .field-input { padding-right: 42px; }
+
+    .eye-btn {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #aaa;
+        font-size: 1rem;
+        padding: 0;
+        line-height: 1;
+        transition: color 0.15s;
+    }
+
+    .eye-btn:hover { color: #555; }
+
+    .auth-btn {
+        width: 100%;
+        background: #111;
+        color: #fff;
+        border: none;
+        padding: 13px;
+        border-radius: 10px;
+        font-family: 'DM Sans', sans-serif;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: background 0.2s, transform 0.15s;
+        letter-spacing: 0.2px;
+        margin-top: 4px;
+    }
+
+    .auth-btn:hover { background: #333; transform: translateY(-1px); }
+
+    .auth-divider {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 22px 0;
+        color: #ddd;
+        font-size: 0.75rem;
+    }
+
+    .auth-divider::before,
+    .auth-divider::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: #f0f0f0;
+    }
+
+    .auth-links {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.82rem;
+        margin-top: 20px;
+    }
+
+    .auth-links a {
+        color: #555;
+        text-decoration: none;
+        transition: color 0.15s;
+    }
+
+    .auth-links a:hover { color: #111; }
+
+    .auth-links .primary-link {
+        color: #111;
+        font-weight: 600;
+    }
+
+    @media (max-width: 480px) {
+        .auth-card { padding: 28px 20px; }
+    }
+</style>
+
+<div class="auth-page">
+    <div class="auth-card">
+
+        <div class="auth-logo">Zivo</div>
+        <div class="auth-subtitle">Sign in to your account</div>
 
         {% if messages %}
             {% for message in messages %}
-                <div class="alert alert-danger">
-                    {{ message }}
-                </div>
+            <div class="auth-error">{{ message }}</div>
             {% endfor %}
         {% endif %}
 
         <form method="post">
             {% csrf_token %}
 
-            <div class="mb-3">
-                <label class="form-label">Phone Number or Email</label>
+            <div class="field-group">
+                <label class="field-label">Phone or Email</label>
                 <input type="text"
                        name="identifier"
-                       class="form-control"
-                       placeholder="Phone or email address"
+                       class="field-input"
+                       placeholder="9876543210 or you@example.com"
                        autocomplete="off"
-                       value="{{ form_data.identifier }}"
-                       required>
+                       value="{{ form_data.identifier|default:'' }}"
+                       required autofocus>
             </div>
 
-            <div class="mb-3">
-                <label class="form-label">Password</label>
-                <div class="position-relative">
+            <div class="field-group">
+                <label class="field-label">Password</label>
+                <div class="field-input-wrap">
                     <input type="password"
                            id="login-password"
                            name="password"
-                           class="form-control"
-                           autocomplete="new-password"
+                           class="field-input"
+                           placeholder="Enter your password"
+                           autocomplete="current-password"
                            required>
-                    <button type="button" onclick="toggleLoginPwd()" tabindex="-1"
-                        style="position:absolute;right:10px;top:50%;transform:translateY(-50%);
-                               background:none;border:none;cursor:pointer;color:#6b7280;font-size:1rem;padding:0;">
-                        <i id="login-pwd-eye" class="bi bi-eye"></i>
+                    <button type="button" class="eye-btn" onclick="togglePwd('login-password','eye1')" tabindex="-1">
+                        <i id="eye1" class="bi bi-eye"></i>
                     </button>
                 </div>
             </div>
 
-            <button type="submit" class="btn btn-dark w-100">
-                Login
-            </button>
+            <button type="submit" class="auth-btn">Sign In</button>
         </form>
 
-        <div class="text-center mt-2">
-            <small>
-                <a href="{% url 'forgot_password' %}" style="color:#555;">Forgot password?</a>
-            </small>
-        </div>
-
-        <div class="text-center mt-2">
-            <small>
-                Don't have an account?
-                <a href="{% url 'signup' %}">Sign up</a>
-            </small>
+        <div class="auth-links">
+            <a href="{% url 'forgot_password' %}">Forgot password?</a>
+            <span style="color:#ddd;">|</span>
+            <a href="{% url 'signup' %}" class="primary-link">Create account →</a>
         </div>
 
     </div>
 </div>
+
 <script>
-function toggleLoginPwd() {
-    const inp = document.getElementById('login-password');
-    const eye = document.getElementById('login-pwd-eye');
+function togglePwd(inputId, eyeId) {
+    var inp = document.getElementById(inputId);
+    var eye = document.getElementById(eyeId);
     if (inp.type === 'password') { inp.type = 'text'; eye.className = 'bi bi-eye-slash'; }
     else { inp.type = 'password'; eye.className = 'bi bi-eye'; }
 }

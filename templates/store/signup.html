@@ -1,138 +1,318 @@
 {% extends "store/base.html" %}
-
 {% block title %}Sign Up | TheZivo{% endblock %}
 
 {% block content %}
-<div class="container mt-5" style="max-width: 420px;">
-    <div class="bg-white p-4 rounded shadow-sm">
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=DM+Sans:wght@300;400;500;600&display=swap');
 
-        <h4 class="mb-4 text-center">Create Account</h4>
+    .auth-page {
+        background: #f8f7f5;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 16px;
+        font-family: 'DM Sans', sans-serif;
+    }
+
+    .auth-card {
+        background: #fff;
+        border-radius: 20px;
+        border: 1px solid #ececec;
+        padding: 40px 36px;
+        width: 100%;
+        max-width: 420px;
+        animation: fadeUp 0.3s ease both;
+    }
+
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(12px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .auth-logo {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #111;
+        text-align: center;
+        letter-spacing: -0.3px;
+        margin-bottom: 6px;
+    }
+
+    .auth-subtitle {
+        text-align: center;
+        font-size: 0.85rem;
+        color: #999;
+        font-weight: 300;
+        margin-bottom: 32px;
+    }
+
+    .auth-error {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 8px;
+        padding: 10px 14px;
+        font-size: 0.83rem;
+        color: #b91c1c;
+        margin-bottom: 20px;
+    }
+
+    .field-group { margin-bottom: 18px; }
+
+    .field-label {
+        display: block;
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: #aaa;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        margin-bottom: 6px;
+    }
+
+    .field-label .optional {
+        font-weight: 400;
+        text-transform: none;
+        letter-spacing: 0;
+        color: #ccc;
+        font-size: 0.7rem;
+    }
+
+    .field-input {
+        width: 100%;
+        border: 1.5px solid #e8e8e8;
+        border-radius: 8px;
+        padding: 11px 14px;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.9rem;
+        color: #111;
+        background: #fff;
+        transition: border-color 0.15s;
+        outline: none;
+        box-sizing: border-box;
+    }
+
+    .field-input:focus { border-color: #111; }
+
+    .field-hint {
+        font-size: 0.72rem;
+        color: #bbb;
+        margin-top: 5px;
+    }
+
+    .field-input-wrap { position: relative; }
+    .field-input-wrap .field-input { padding-right: 42px; }
+
+    .eye-btn {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #aaa;
+        font-size: 1rem;
+        padding: 0;
+        line-height: 1;
+        transition: color 0.15s;
+    }
+
+    .eye-btn:hover { color: #555; }
+
+    .strength-bar {
+        height: 4px;
+        border-radius: 2px;
+        margin-top: 8px;
+        background: #f0f0f0;
+        overflow: hidden;
+    }
+
+    .strength-fill {
+        height: 100%;
+        width: 0;
+        transition: width 0.3s, background 0.3s;
+        border-radius: 2px;
+    }
+
+    .strength-msg {
+        font-size: 0.72rem;
+        margin-top: 4px;
+        color: #bbb;
+        min-height: 1em;
+    }
+
+    .pwd-rules {
+        list-style: none;
+        padding: 0;
+        margin: 8px 0 0;
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .pwd-rules li {
+        font-size: 0.72rem;
+        color: #bbb;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        transition: color 0.2s;
+    }
+
+    .pwd-rules li.ok { color: #10b981; font-weight: 600; }
+
+    .auth-btn {
+        width: 100%;
+        background: #111;
+        color: #fff;
+        border: none;
+        padding: 13px;
+        border-radius: 10px;
+        font-family: 'DM Sans', sans-serif;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: background 0.2s, transform 0.15s;
+        letter-spacing: 0.2px;
+        margin-top: 4px;
+    }
+
+    .auth-btn:hover { background: #333; transform: translateY(-1px); }
+
+    .auth-links {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.82rem;
+        margin-top: 20px;
+        color: #999;
+    }
+
+    .auth-links a {
+        color: #111;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    @media (max-width: 480px) {
+        .auth-card { padding: 28px 20px; }
+    }
+</style>
+
+<div class="auth-page">
+    <div class="auth-card">
+
+        <div class="auth-logo">Zivo</div>
+        <div class="auth-subtitle">Create your account</div>
 
         {% if messages %}
             {% for message in messages %}
-                <div class="alert alert-danger">
-                    {{ message }}
-                </div>
+            <div class="auth-error">{{ message }}</div>
             {% endfor %}
         {% endif %}
 
         <form method="post">
             {% csrf_token %}
 
-            <div class="mb-3">
-                <label class="form-label">Full Name</label>
+            <div class="field-group">
+                <label class="field-label">Full Name</label>
                 <input type="text"
-                    name="name"
-                    class="form-control"
-                    autocomplete="off"
-                    value="{{ form_data.name }}"
-                    required>
+                       name="name"
+                       class="field-input"
+                       placeholder="John Doe"
+                       autocomplete="off"
+                       value="{{ form_data.name|default:'' }}"
+                       required autofocus>
             </div>
 
-            <div class="mb-3">
-                <label class="form-label">Phone Number</label>
+            <div class="field-group">
+                <label class="field-label">Mobile Number</label>
                 <input type="tel"
-                    name="phone"
-                    class="form-control"
-                    autocomplete="off"
-                    placeholder="9876543210 or +919876543210"
-                    value="{{ form_data.phone }}"
-                    pattern="[6-9][0-9]{9}|\+91[6-9][0-9]{9}|\+(?!91)[1-9][0-9]{6,12}"
-                    title="Enter a 10-digit Indian number (e.g. 9876543210) or with country code (+919876543210)"
-                    required>
-                <div class="form-text" style="font-size:0.76rem;">10-digit number or with country code (e.g. +91)</div>
+                       name="phone"
+                       class="field-input"
+                       placeholder="9876543210"
+                       autocomplete="off"
+                       value="{{ form_data.phone|default:'' }}"
+                       pattern="[6-9][0-9]{9}|\+91[6-9][0-9]{9}|\+(?!91)[1-9][0-9]{6,12}"
+                       required>
+                <div class="field-hint">10-digit number, or with country code (+91…)</div>
             </div>
 
-            <div class="mb-3">
-                <label class="form-label">Email <small class="text-muted">(optional)</small></label>
+            <div class="field-group">
+                <label class="field-label">Email <span class="optional">(optional)</span></label>
                 <input type="email"
-                    name="email"
-                    class="form-control"
-                    autocomplete="off"
-                    placeholder="you@example.com"
-                    value="{{ form_data.email }}">
+                       name="email"
+                       class="field-input"
+                       placeholder="you@example.com"
+                       autocomplete="off"
+                       value="{{ form_data.email|default:'' }}">
             </div>
 
-            <div class="mb-3">
-                <label class="form-label">Password</label>
-                <div class="position-relative">
+            <div class="field-group">
+                <label class="field-label">Password</label>
+                <div class="field-input-wrap">
                     <input type="password"
-                        id="signup-password"
-                        name="password"
-                        class="form-control"
-                        autocomplete="new-password"
-                        minlength="8"
-                        required>
-                    <button type="button" onclick="togglePwd()" tabindex="-1"
-                        style="position:absolute;right:10px;top:50%;transform:translateY(-50%);
-                               background:none;border:none;cursor:pointer;color:#6b7280;font-size:1rem;padding:0;">
-                        <i id="pwd-eye" class="bi bi-eye"></i>
+                           id="signup-password"
+                           name="password"
+                           class="field-input"
+                           placeholder="Min. 8 characters"
+                           autocomplete="new-password"
+                           minlength="8"
+                           required>
+                    <button type="button" class="eye-btn" onclick="togglePwd('signup-password','eye1')" tabindex="-1">
+                        <i id="eye1" class="bi bi-eye"></i>
                     </button>
                 </div>
-                <div id="pwd-strength-bar" style="height:4px;border-radius:2px;margin-top:6px;background:#e5e7eb;overflow:hidden;">
-                    <div id="pwd-strength-fill" style="height:100%;width:0;transition:width .3s,background .3s;"></div>
-                </div>
-                <div id="pwd-strength-msg" style="font-size:0.76rem;margin-top:4px;color:#6b7280;min-height:1em;"></div>
-                <ul style="font-size:0.76rem;color:#6b7280;margin:6px 0 0 16px;padding:0;">
-                    <li id="rule-len">At least 8 characters</li>
-                    <li id="rule-letter">At least one letter</li>
-                    <li id="rule-num">At least one number</li>
+                <div class="strength-bar"><div class="strength-fill" id="strength-fill"></div></div>
+                <div class="strength-msg" id="strength-msg"></div>
+                <ul class="pwd-rules">
+                    <li id="rule-len">✓ 8 characters</li>
+                    <li id="rule-letter">✓ One letter</li>
+                    <li id="rule-num">✓ One number</li>
                 </ul>
             </div>
 
-            <button type="submit" class="btn btn-dark w-100">
-                Sign Up
-            </button>
-
-<script>
-function togglePwd() {
-    const inp = document.getElementById('signup-password');
-    const eye = document.getElementById('pwd-eye');
-    if (inp.type === 'password') {
-        inp.type = 'text';
-        eye.className = 'bi bi-eye-slash';
-    } else {
-        inp.type = 'password';
-        eye.className = 'bi bi-eye';
-    }
-}
-
-document.getElementById('signup-password').addEventListener('input', function() {
-    const val = this.value;
-    const hasLen    = val.length >= 8;
-    const hasLetter = /[A-Za-z]/.test(val);
-    const hasNum    = /\d/.test(val);
-
-    const setRule = (id, ok) => {
-        const el = document.getElementById(id);
-        el.style.color = ok ? '#10b981' : '#6b7280';
-        el.style.fontWeight = ok ? '600' : '';
-    };
-    setRule('rule-len',    hasLen);
-    setRule('rule-letter', hasLetter);
-    setRule('rule-num',    hasNum);
-
-    const score = (hasLen ? 1 : 0) + (hasLetter ? 1 : 0) + (hasNum ? 1 : 0)
-                + (val.length >= 12 ? 1 : 0)
-                + (/[^A-Za-z0-9]/.test(val) ? 1 : 0);
-
-    const fill = document.getElementById('pwd-strength-fill');
-    const msg  = document.getElementById('pwd-strength-msg');
-    if (!val) { fill.style.width = '0'; msg.textContent = ''; return; }
-    if (score <= 2)      { fill.style.width = '33%'; fill.style.background = '#ef4444'; msg.textContent = 'Weak'; msg.style.color = '#ef4444'; }
-    else if (score <= 3) { fill.style.width = '66%'; fill.style.background = '#f59e0b'; msg.textContent = 'Fair'; msg.style.color = '#f59e0b'; }
-    else                 { fill.style.width = '100%'; fill.style.background = '#10b981'; msg.textContent = 'Strong'; msg.style.color = '#10b981'; }
-});
-</script>
+            <button type="submit" class="auth-btn">Create Account</button>
         </form>
 
-        <div class="text-center mt-3">
-            <small>
-                Already have an account?
-                <a href="{% url 'login' %}">Login</a>
-            </small>
+        <div class="auth-links">
+            <span>Already have an account?</span>
+            <a href="{% url 'login' %}">Sign in →</a>
         </div>
 
     </div>
 </div>
+
+<script>
+function togglePwd(inputId, eyeId) {
+    var inp = document.getElementById(inputId);
+    var eye = document.getElementById(eyeId);
+    if (inp.type === 'password') { inp.type = 'text'; eye.className = 'bi bi-eye-slash'; }
+    else { inp.type = 'password'; eye.className = 'bi bi-eye'; }
+}
+
+document.getElementById('signup-password').addEventListener('input', function () {
+    var val = this.value;
+    var hasLen    = val.length >= 8;
+    var hasLetter = /[A-Za-z]/.test(val);
+    var hasNum    = /\d/.test(val);
+
+    document.getElementById('rule-len').className    = hasLen    ? 'ok' : '';
+    document.getElementById('rule-letter').className = hasLetter ? 'ok' : '';
+    document.getElementById('rule-num').className    = hasNum    ? 'ok' : '';
+
+    var score = (hasLen ? 1 : 0) + (hasLetter ? 1 : 0) + (hasNum ? 1 : 0)
+              + (val.length >= 12 ? 1 : 0)
+              + (/[^A-Za-z0-9]/.test(val) ? 1 : 0);
+
+    var fill = document.getElementById('strength-fill');
+    var msg  = document.getElementById('strength-msg');
+    if (!val) { fill.style.width = '0'; msg.textContent = ''; return; }
+    if (score <= 2)      { fill.style.width = '33%'; fill.style.background = '#ef4444'; msg.textContent = 'Weak';   msg.style.color = '#ef4444'; }
+    else if (score <= 3) { fill.style.width = '66%'; fill.style.background = '#f59e0b'; msg.textContent = 'Fair';   msg.style.color = '#f59e0b'; }
+    else                 { fill.style.width = '100%'; fill.style.background = '#10b981'; msg.textContent = 'Strong'; msg.style.color = '#10b981'; }
+});
+</script>
 {% endblock %}
