@@ -17,7 +17,7 @@
 
         <!-- Title -->
         <h5 class="mb-3 ps-2">
-            {{ title }} ({{ color_variants|length }} items)
+            {{ title }} ({{ total_count }} items)
         </h5>
 
         <!-- FILTERS -->
@@ -43,12 +43,17 @@
         <!-- Title + count (mobile only) -->
         <div class="d-md-none mb-3">
             <div class="small text-muted">Home / {{ title }}</div>
-            <h6 class="mb-0 mt-1">{{ title }} <span class="text-muted fw-normal">({{ color_variants|length }} items)</span></h6>
+            <h6 class="mb-0 mt-1">{{ title }} <span class="text-muted fw-normal" id="total-count-mobile">({{ total_count }} items)</span></h6>
         </div>
 
         <!-- PRODUCT GRID -->
-        <div id="product-grid" style="padding-bottom: 60px;">
+        <div id="product-grid">
             {% include "store/product_grid.html" %}
+        </div>
+
+        <!-- PAGINATION -->
+        <div id="pagination-container">
+            {% include "store/includes/_pagination.html" %}
         </div>
 
     </div>
@@ -292,26 +297,43 @@ function mobileSortSelect(el) {
 </script>
 
 <script>
+function _updateGrid(url) {
+    fetch(url.toString(), { headers: { "X-Requested-With": "XMLHttpRequest" } })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("product-grid").innerHTML = data.html;
+        document.getElementById("pagination-container").innerHTML = data.pagination_html || "";
+        // update item counts
+        if (data.total !== undefined) {
+            document.querySelectorAll("#total-count-mobile").forEach(el => {
+                el.textContent = `(${data.total} items)`;
+            });
+        }
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    })
+    .catch(err => console.error("AJAX error:", err));
+}
+
 function ajaxSortProducts(value) {
     const url = new URL(window.location.href);
+    url.searchParams.delete("page");
     if (value) {
         url.searchParams.set("sort", value);
     } else {
         url.searchParams.delete("sort");
     }
-
-    // Update active pill
     document.querySelectorAll(".sort-pill").forEach(p => {
         p.classList.toggle("active", p.dataset.sort === value);
     });
+    window.history.pushState({}, "", url.toString());
+    _updateGrid(url);
+}
 
-    fetch(url.toString(), { headers: { "X-Requested-With": "XMLHttpRequest" } })
-    .then(res => res.json())
-    .then(data => {
-        document.getElementById("product-grid").innerHTML = data.html;
-        window.history.pushState({}, "", url.toString());
-    })
-    .catch(err => console.error("AJAX sort error:", err));
+function goToPage(num) {
+    const url = new URL(window.location.href);
+    url.searchParams.set("page", num);
+    window.history.pushState({}, "", url.toString());
+    _updateGrid(url);
 }
 </script>
 
@@ -373,6 +395,9 @@ document.addEventListener("DOMContentLoaded", function () {
             if (minRange.value !== minRange.min) params.append("min_price", minRange.value);
             if (maxRange.value !== maxRange.max) params.append("max_price", maxRange.value);
         }
+        // preserve sort, drop page (filters reset to page 1)
+        const currentSort = new URLSearchParams(window.location.search).get("sort");
+        if (currentSort) params.set("sort", currentSort);
         const url = params.toString()
             ? `${window.location.pathname}?${params.toString()}`
             : window.location.pathname;
@@ -381,7 +406,14 @@ document.addEventListener("DOMContentLoaded", function () {
         .then(res => res.json())
         .then(data => {
             document.getElementById("product-grid").innerHTML = data.html;
+            document.getElementById("pagination-container").innerHTML = data.pagination_html || "";
+            if (data.total !== undefined) {
+                document.querySelectorAll("#total-count-mobile").forEach(el => {
+                    el.textContent = `(${data.total} items)`;
+                });
+            }
             window.history.replaceState({}, "", url);
+            window.scrollTo({ top: 0, behavior: "smooth" });
             updateClearAll();
             updateMfBadges();
         });

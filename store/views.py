@@ -1542,19 +1542,35 @@ def category_products(request, gender, category=None):
     ]
     current_sort = sort or ""
 
+    # Paginate color_variants (16 per page)
+    from django.core.paginator import Paginator
+    paginator = Paginator(color_variants, 16)
+    page_obj = paginator.get_page(request.GET.get("page", 1))
+
     # ✅ AJAX RESPONSE
     if request.headers.get("x-requested-with") == "XMLHttpRequest":
         html = render_to_string(
             "store/product_grid.html",
-            {"color_variants": color_variants},
+            {"color_variants": page_obj},
             request=request
         )
-        resp = JsonResponse({"html": html})
+        pagination_html = render_to_string(
+            "store/includes/_pagination.html",
+            {"page_obj": page_obj},
+            request=request
+        )
+        resp = JsonResponse({
+            "html": html,
+            "pagination_html": pagination_html,
+            "total": paginator.count,
+        })
         resp["Cache-Control"] = "no-store"
         return resp
 
     return render(request, "store/category.html", {
-        "color_variants": color_variants,
+        "color_variants": page_obj,
+        "total_count": paginator.count,
+        "page_obj": page_obj,
         "title": title,
         "brands": brands,
         "sizes": sizes,
