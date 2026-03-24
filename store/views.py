@@ -1049,6 +1049,11 @@ def checkout(request):
                     Coupon.objects.filter(pk=coupon_obj.pk).update(used_count=F('used_count') + 1)
 
             request.session.pop('coupon', None)
+            # Allow guest to view their own order_success page
+            placed = request.session.get("placed_order_ids", [])
+            placed.append(order.id)
+            request.session["placed_order_ids"] = placed
+            request.session.modified = True
             clear_cart(request)
             _clear_abandoned_cart(request)
             from .utils import send_order_email, whatsapp_new_order_admin
@@ -1091,6 +1096,10 @@ def checkout(request):
                     quantity=item["quantity"],
                     price=item["sku"].selling_price
                 )
+
+            # Store for guest ownership check in create_razorpay_order
+            request.session["pending_online_order_id"] = order.id
+            request.session.modified = True
 
             return render(request, "store/checkout.html", {
                 **_ctx, "order": order, "online_payment": True
@@ -1143,14 +1152,26 @@ def checkout(request):
 def create_razorpay_order(request):
     if request.method == "POST":
 
-        order_id = request.POST.get("order_id")
-        if not order_id:
-            return JsonResponse(
-                {"error": "Order ID missing"},
-                status=400
-            )
+        try:
+            order_id = int(request.POST.get("order_id", 0))
+            if order_id <= 0:
+                raise ValueError
+        except (ValueError, TypeError):
+            return JsonResponse({"error": "Invalid order ID"}, status=400)
 
-        order = Order.objects.get(id=order_id)
+        try:
+            order = Order.objects.get(id=order_id)
+        except Order.DoesNotExist:
+            return JsonResponse({"error": "Order not found"}, status=404)
+
+        # Ownership check — prevent one customer from initiating payment on another's order
+        if request.customer:
+            if order.customer_id != request.customer.id:
+                return JsonResponse({"error": "Unauthorized"}, status=403)
+        else:
+            # Guest: must match the order created in this checkout session
+            if request.session.get("pending_online_order_id") != order.id:
+                return JsonResponse({"error": "Unauthorized"}, status=403)
 
         amount = int(order.total_amount * 100)  # paise
 
@@ -1200,9 +1221,12 @@ def verify_payment(request):
         return JsonResponse({"status": "failed"})
 
     with transaction.atomic():
-        order = Order.objects.select_for_update().get(
-            razorpay_order_id=razorpay_order_id
-        )
+        try:
+            order = Order.objects.select_for_update().get(
+                razorpay_order_id=razorpay_order_id
+            )
+        except Order.DoesNotExist:
+            return JsonResponse({"status": "failed", "message": "Order not found"}, status=400)
 
         order.razorpay_payment_id = razorpay_payment_id
         order.razorpay_signature = razorpay_signature
@@ -1222,6 +1246,12 @@ def verify_payment(request):
     request.session.pop('coupon', None)
     # ✅ CLEAR CART HERE (CRITICAL)
     clear_cart(request)
+
+    # Allow guest to view their own order_success page
+    placed = request.session.get("placed_order_ids", [])
+    placed.append(order.id)
+    request.session["placed_order_ids"] = placed
+    request.session.modified = True
 
     _clear_abandoned_cart(request)
     from .utils import send_order_email, whatsapp_new_order_admin
@@ -1313,8 +1343,9 @@ def order_success(request, order_id):
         order = get_object_or_404(Order, id=order_id, customer=request.customer)
     else:
         order = get_object_or_404(Order, id=order_id)
-        # Block logged-in customer orders from being viewed by guests
-        if order.customer_id:
+        # Guests may only view orders they placed in this session
+        placed = request.session.get("placed_order_ids", [])
+        if order.customer_id or order.id not in placed:
             return redirect("home")
 
     return render(
