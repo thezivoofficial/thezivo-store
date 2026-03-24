@@ -168,6 +168,10 @@ document.addEventListener("click", function (e) {
 })
     .catch(err => {
         console.error("Cart error:", err);
+        const msg = document.getElementById("stockLimitMsg");
+        if (msg) msg.textContent = "Something went wrong. Please try again.";
+        const toastEl = document.getElementById("stockLimitToast");
+        if (toastEl) bootstrap.Toast.getOrCreateInstance(toastEl).show();
     })
     .finally(() => {
         btn.disabled = false;

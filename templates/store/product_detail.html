@@ -1129,9 +1129,10 @@
     "></div>
 </div>
 
+{{ images_by_color|json_script:"image-map-data" }}
 <script>
 // ── IMAGE MAP (color → [url, ...]) ────────────────────
-const IMAGE_MAP = {{ images_by_color_json|safe }};
+const IMAGE_MAP = JSON.parse(document.getElementById('image-map-data').textContent);
 
 function getGalleryImages(color) {
     const colorImgs = IMAGE_MAP[color] || [];

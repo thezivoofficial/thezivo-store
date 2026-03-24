@@ -504,7 +504,6 @@ def product_detail(request, product_id):
             key = img.color.strip() if img.color else ""
             _imap[key].append(img.image.url)
         images_by_color = dict(_imap)
-        images_by_color_json = json.dumps(images_by_color)
 
         related = list(
             Product.objects.filter(category=product.category, gender=product.gender, active=True)
@@ -528,7 +527,7 @@ def product_detail(request, product_id):
         pdata = {
             "images": images, "skus": skus, "in_stock": in_stock,
             "default_sku": default_sku, "color_variants": color_variants,
-            "images_by_color_json": images_by_color_json,
+            "images_by_color": images_by_color,
             "related": related, "reviews": reviews, "product_offers": product_offers,
         }
         try:
@@ -598,7 +597,12 @@ def add_to_cart(request):
                 "message": "Product is unavailable."
             }, status=404)
 
-        quantity = int(request.POST.get("quantity", 1))
+        try:
+            quantity = int(request.POST.get("quantity", 1))
+            if quantity < 1 or quantity > 20:
+                return JsonResponse({"status": "error", "message": "Invalid quantity."}, status=400)
+        except (ValueError, TypeError):
+            return JsonResponse({"status": "error", "message": "Invalid quantity."}, status=400)
 
         cart = get_cart(request)
         current_qty = cart.get(str(sku_id), 0)
@@ -1148,58 +1152,54 @@ def checkout(request):
     })
 
     
-@csrf_exempt
+@require_POST
 def create_razorpay_order(request):
-    if request.method == "POST":
+    try:
+        order_id = int(request.POST.get("order_id", 0))
+        if order_id <= 0:
+            raise ValueError
+    except (ValueError, TypeError):
+        return JsonResponse({"error": "Invalid order ID"}, status=400)
 
-        try:
-            order_id = int(request.POST.get("order_id", 0))
-            if order_id <= 0:
-                raise ValueError
-        except (ValueError, TypeError):
-            return JsonResponse({"error": "Invalid order ID"}, status=400)
+    try:
+        order = Order.objects.get(id=order_id)
+    except Order.DoesNotExist:
+        return JsonResponse({"error": "Order not found"}, status=404)
 
-        try:
-            order = Order.objects.get(id=order_id)
-        except Order.DoesNotExist:
-            return JsonResponse({"error": "Order not found"}, status=404)
+    # Ownership check — prevent one customer from initiating payment on another's order
+    if request.customer:
+        if order.customer_id != request.customer.id:
+            return JsonResponse({"error": "Unauthorized"}, status=403)
+    else:
+        # Guest: must match the order created in this checkout session
+        if request.session.get("pending_online_order_id") != order.id:
+            return JsonResponse({"error": "Unauthorized"}, status=403)
 
-        # Ownership check — prevent one customer from initiating payment on another's order
-        if request.customer:
-            if order.customer_id != request.customer.id:
-                return JsonResponse({"error": "Unauthorized"}, status=403)
-        else:
-            # Guest: must match the order created in this checkout session
-            if request.session.get("pending_online_order_id") != order.id:
-                return JsonResponse({"error": "Unauthorized"}, status=403)
+    amount = int(order.total_amount * 100)  # paise
 
-        amount = int(order.total_amount * 100)  # paise
+    client = razorpay.Client(
+        auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET)
+    )
 
-        client = razorpay.Client(
-            auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET)
-        )
+    razorpay_order = client.order.create({
+        "amount": amount,
+        "currency": "INR",
+        "receipt": f"order_{order.id}",
+        "payment_capture": 1
+    })
 
-        razorpay_order = client.order.create({
-            "amount": amount,
-            "currency": "INR",
-            "receipt": f"order_{order.id}",
-            "payment_capture": 1
-        })
+    order.razorpay_order_id = razorpay_order["id"]
+    order.save()
 
-        order.razorpay_order_id = razorpay_order["id"]
-        order.save()
-
-        return JsonResponse({
-            "razorpay_order_id": razorpay_order["id"],
-            "key": settings.RAZORPAY_KEY_ID,
-            "amount": amount,
-        })
+    return JsonResponse({
+        "razorpay_order_id": razorpay_order["id"],
+        "key": settings.RAZORPAY_KEY_ID,
+        "amount": amount,
+    })
 
         
-@csrf_exempt
+@require_POST
 def verify_payment(request):
-    if request.method != "POST":
-        return JsonResponse({"status": "invalid"}, status=400)
 
     data = request.POST
 

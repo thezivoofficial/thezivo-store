@@ -1,4 +1,7 @@
+import logging
 from django.conf import settings
+
+logger = logging.getLogger("store")
 
 # Fallback defaults used if DB is unavailable (e.g. during migrations)
 FREE_DELIVERY_LIMIT = 799
@@ -44,7 +47,7 @@ def send_order_email(order, template_name, subject):
             from .models import Order
             Order.objects.filter(id=order_id).update(**{flag: True})
         except Exception as e:
-            print(f"[EMAIL ERROR] Failed to send {template_name} for order {order_id}: {e}")
+            logger.error(f"Email send failed — {template_name} for order {order_id}: {e}", exc_info=True)
 
     # daemon=False: order emails are critical — let this thread finish even during shutdown
     threading.Thread(target=_send, daemon=False).start()
@@ -234,9 +237,9 @@ def send_new_product_alert(product_id):
                         html_content=html,
                     )
                 except Exception as e:
-                    print(f"[EMAIL ERROR] Failed to send to {email}: {e}")
+                    logger.error(f"Product alert email failed for {email} (product {product_id}): {e}", exc_info=True)
         except Exception as e:
-            print(f"[EMAIL ERROR] New product alert failed for product {product_id}: {e}")
+            logger.error(f"Product alert batch failed for product {product_id}: {e}", exc_info=True)
 
     # daemon=True: bulk newsletter — don't block server shutdown waiting for all sends
     transaction.on_commit(lambda: threading.Thread(target=_send, daemon=True).start())
@@ -258,11 +261,11 @@ def send_otp_sms(phone, otp):
         )
         result = response.json()
         if result.get("Status") != "Success":
-            print(f"[SMS ERROR] 2Factor rejected: {result}")
+            logger.error(f"2Factor SMS rejected for {phone}: {result}")
             return False
         return True
     except Exception as e:
-        print(f"[SMS ERROR] 2Factor failed: {e}")
+        logger.error(f"2Factor SMS failed for {phone}: {e}", exc_info=True)
         return False
 
 
@@ -332,7 +335,7 @@ def send_whatsapp(phone, message):
         if len(phone) == 10 and phone.isdigit():
             phone = "+91" + phone
         else:
-            print("Cannot normalize phone, skipping WhatsApp:", phone)
+            logger.warning(f"Cannot normalize phone for WhatsApp, skipping: {phone}")
             return
 
     try:
@@ -346,6 +349,6 @@ def send_whatsapp(phone, message):
             to=f"whatsapp:{phone}",
             body=message
         )
-        print("WhatsApp sent to:", phone)
+        logger.info(f"WhatsApp sent to {phone}")
     except Exception as e:
-        print("WhatsApp send failed:", e)
+        logger.error(f"WhatsApp send failed for {phone}: {e}", exc_info=True)
