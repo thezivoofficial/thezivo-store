@@ -359,6 +359,16 @@ def login_view(request):
         return redirect("home")
     if request.method == "POST":
         import re
+        ip = (
+            request.META.get("HTTP_X_FORWARDED_FOR", "").split(",")[0].strip()
+            or request.META.get("REMOTE_ADDR", "unknown")
+        )
+        rate_key = f"login_attempts_{ip}"
+        attempts = cache.get(rate_key, 0)
+        if attempts >= 10:
+            messages.error(request, "Too many failed attempts. Please try again in 15 minutes.")
+            return render(request, "store/login.html")
+
         identifier = request.POST.get("identifier", "").strip()
         password   = request.POST.get("password", "")
         # Normalise bare 10-digit Indian number → +91xxxxxxxxxx for lookup
@@ -368,9 +378,11 @@ def login_view(request):
             or Customer.objects.filter(email__iexact=identifier, is_active=True).first()
         )
         if customer and customer.check_password(password):
+            cache.delete(rate_key)
             customer_login(request, customer)
             return redirect("home")
         else:
+            cache.set(rate_key, attempts + 1, 900)  # 15 minutes
             messages.error(request, "Invalid phone/email or password.")
             return render(request, "store/login.html", {"form_data": {"identifier": identifier}})
     return render(request, "store/login.html")

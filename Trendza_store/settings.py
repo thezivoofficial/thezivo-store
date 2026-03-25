@@ -235,6 +235,7 @@ MIDDLEWARE = [
     'axes.middleware.AxesMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'store.middleware.PermissionsPolicyMiddleware',
 ]
 
 ROOT_URLCONF = 'Trendza_store.urls'
@@ -374,6 +375,12 @@ TWO_FACTOR_API_KEY = config('TWO_FACTOR_API_KEY', default='')
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"
 SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+SESSION_COOKIE_HTTPONLY = True   # JS cannot access session cookie
+CSRF_COOKIE_HTTPONLY    = False  # Must stay False — JS reads CSRF token for AJAX
+PERMISSIONS_POLICY = (
+    "camera=(), microphone=(), geolocation=(), "
+    "payment=self, usb=(), fullscreen=(self)"
+)
 # HTTPS / SSL (auto-enabled in production)
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
