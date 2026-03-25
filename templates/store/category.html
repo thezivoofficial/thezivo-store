@@ -778,10 +778,16 @@ document.getElementById("mobileFilters")?.addEventListener("show.bs.offcanvas", 
 /* ── FILTER SCROLL: cap max-height to product column height ── */
 function adjustFilterMaxHeight() {
     const stickyFilter = document.querySelector('.sticky-filters');
+    const leftCol = stickyFilter ? stickyFilter.closest('[class*="col-lg-2"]') : null;
     const rightCol = document.querySelector('.col-lg-10');
-    if (!stickyFilter || !rightCol) return;
+    if (!stickyFilter || !leftCol || !rightCol) return;
 
-    /* sum heights of elements above sticky-filters in the left column */
+    /* Break flex-stretch temporarily so rightCol reports its own natural height */
+    leftCol.style.alignSelf = 'flex-start';
+    const productHeight = rightCol.offsetHeight;
+    leftCol.style.alignSelf = '';
+
+    /* Sum heights of elements above sticky-filters in the left column */
     let aboveHeight = 0;
     let el = stickyFilter.previousElementSibling;
     while (el) {
@@ -790,7 +796,7 @@ function adjustFilterMaxHeight() {
         el = el.previousElementSibling;
     }
 
-    const available = rightCol.offsetHeight - aboveHeight;
+    const available = productHeight - aboveHeight;
     stickyFilter.style.maxHeight = Math.max(available, 100) + 'px';
 }
 
