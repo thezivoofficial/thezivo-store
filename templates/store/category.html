@@ -797,7 +797,7 @@ function adjustFilterMaxHeight() {
         el = el.previousElementSibling;
     }
 
-    const available = Math.min(window.innerHeight - 90, productHeight) - aboveHeight;
+    const available = Math.min(window.innerHeight - 120, productHeight) - aboveHeight;
     stickyFilter.style.maxHeight = Math.max(available, 100) + 'px';
 }
 
