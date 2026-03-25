@@ -310,6 +310,7 @@ function _updateGrid(url) {
             });
         }
         window.scrollTo({ top: 0, behavior: "smooth" });
+        setTimeout(adjustFilterMaxHeight, 50);
     })
     .catch(err => console.error("AJAX error:", err));
 }
@@ -773,5 +774,23 @@ document.getElementById("mobileFilters")?.addEventListener("show.bs.offcanvas", 
 });
 </script>
 
+<script>
+/* ── FILTER SCROLL: cap max-height to product column height ── */
+function adjustFilterMaxHeight() {
+    const stickyFilter = document.querySelector('.sticky-filters');
+    const leftCol = stickyFilter ? stickyFilter.closest('[class*="col-lg-2"]') : null;
+    const rightCol = document.querySelector('.col-lg-10');
+    if (!stickyFilter || !leftCol || !rightCol) return;
+
+    const colHeight = leftCol.offsetHeight;
+    const filterTop = stickyFilter.offsetTop; /* height of breadcrumb + title above filter */
+    const available = colHeight - filterTop;
+
+    stickyFilter.style.maxHeight = available + 'px';
+}
+
+document.addEventListener('DOMContentLoaded', adjustFilterMaxHeight);
+window.addEventListener('resize', adjustFilterMaxHeight);
+</script>
 
 {% endblock %}
