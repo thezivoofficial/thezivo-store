@@ -24,6 +24,24 @@
     <meta name="twitter:description" content="{% block twitter_description %}Shop premium fashion for men and women at TheZivo.{% endblock %}">
     <meta name="twitter:image" content="{% block twitter_image %}{{ STATIC_URL }}store/img/og-default.jpg{% endblock %}">
 
+    <!-- Organization structured data (Google logo in search results) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "TheZivo",
+      "alternateName": "Zivo",
+      "url": "{{ SITE_URL }}",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "{{ SITE_URL }}{% static 'images/thezivo-logo.png' %}",
+        "width": 400,
+        "height": 400
+      },
+      "sameAs": []
+    }
+    </script>
+
     <!-- Favicons -->
     <link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
     <link rel="icon" type="image/png" sizes="32x32" href="{% static 'images/favicon-32x32.png' %}">
