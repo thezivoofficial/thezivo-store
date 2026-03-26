@@ -325,7 +325,7 @@ def home(request):
 
         trending = list(base_qs.filter(is_trending=True))
         has_trending = bool(trending)
-        products = trending if has_trending else list(base_qs[:8])
+        products = trending[:10] if has_trending else list(base_qs[:10])
 
         from .utils import _get_active_offers
         try:
