@@ -60,6 +60,12 @@ UNFOLD = {
     "SITE_HEADER": "Zivo Store",
     "SITE_URL": "/",
     "SITE_SYMBOL": "storefront",
+    "SITE_FAVICONS": [
+        {"rel": "icon", "type": "image/x-icon",  "href": lambda _: "/static/images/favicon.ico"},
+        {"rel": "icon", "type": "image/png", "sizes": "32x32", "href": lambda _: "/static/images/favicon-32x32.png"},
+        {"rel": "icon", "type": "image/png", "sizes": "16x16", "href": lambda _: "/static/images/favicon-16x16.png"},
+        {"rel": "apple-touch-icon", "sizes": "180x180", "href": lambda _: "/static/images/apple-touch-icon.png"},
+    ],
     "DASHBOARD_CALLBACK": "store.dashboard.dashboard_callback",
     "COLORS": {
         "font": {
