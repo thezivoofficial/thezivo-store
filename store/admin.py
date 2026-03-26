@@ -853,6 +853,12 @@ class SiteSettingsAdmin(ModelAdmin):
                 "Set the flat delivery fee and the cart total above which delivery becomes free."
             ),
         }),
+        ("Returns & Refunds", {
+            "fields": ("return_window_days",),
+            "description": (
+                "Number of days after delivery within which a customer can raise a return request."
+            ),
+        }),
         ("Store Identity", {
             "fields": ("store_name", "store_phone", "store_address"),
             "description": (
