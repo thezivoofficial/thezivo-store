@@ -10,26 +10,113 @@
     </div>
     <h5 style="font-family:'Playfair Display',serif; font-size:1.1rem; font-weight:700; color:#111; margin:0;">
         Trending Now
-        <span style="font-size:0.78rem; font-weight:400; color:#888; margin-left:8px;">{{ products|length }} item{{ products|length|pluralize }}</span>
+        <span id="trend-count" style="font-size:0.78rem; font-weight:400; color:#888; margin-left:8px;">{{ products|length }} item{{ products|length|pluralize }}</span>
     </h5>
 </div>
 
-<div style="padding:12px 16px 80px;">
-    {% if products %}
-    <div class="row g-3">
+{% if products %}
+
+<!-- Gender tabs -->
+<div style="padding:0 16px 12px;">
+    <div class="trend-tabs">
+        <button class="trend-tab active" data-filter="all">All</button>
+        {% for product in products %}{% if product.gender == 'men' %}
+        <button class="trend-tab" data-filter="men">Men</button>
+        {% endif %}{% endfor %}
+        {% for product in products %}{% if product.gender == 'women' %}
+        <button class="trend-tab" data-filter="women">Women</button>
+        {% endif %}{% endfor %}
+    </div>
+</div>
+
+<div style="padding:0 16px 80px;">
+    <div class="row g-3" id="trend-grid">
         {% for product in products %}
-        <div class="col-6 col-md-3 col-lg-2">
+        <div class="col-6 col-md-3 col-lg-2 trend-card" data-gender="{{ product.gender }}">
             {% include "store/product_card.html" %}
         </div>
         {% endfor %}
     </div>
-    {% else %}
-    <div style="text-align:center; padding:60px 20px; color:#888;">
-        <div style="font-size:2rem; margin-bottom:12px;">🔥</div>
-        <p style="font-size:0.9rem;">No trending products right now. Check back soon!</p>
-        <a href="{% url 'home' %}" style="font-size:0.85rem; color:#111; font-weight:600;">← Back to Home</a>
+    <div id="trend-empty" style="display:none; text-align:center; padding:60px 20px; color:#888;">
+        <p style="font-size:0.9rem;">No trending products in this category.</p>
     </div>
-    {% endif %}
 </div>
+
+{% else %}
+<div style="text-align:center; padding:60px 20px; color:#888;">
+    <div style="font-size:2rem; margin-bottom:12px;">🔥</div>
+    <p style="font-size:0.9rem;">No trending products right now. Check back soon!</p>
+    <a href="{% url 'home' %}" style="font-size:0.85rem; color:#111; font-weight:600;">← Back to Home</a>
+</div>
+{% endif %}
+
+<style>
+.trend-tabs {
+    display: flex;
+    gap: 8px;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 0;
+}
+.trend-tab {
+    background: none;
+    border: none;
+    padding: 8px 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #888;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: color 0.15s, border-color 0.15s;
+}
+.trend-tab.active {
+    color: #111;
+    border-bottom-color: #111;
+}
+.trend-tab:hover:not(.active) {
+    color: #444;
+}
+</style>
+
+<script>
+(function () {
+    /* Remove duplicate tab buttons — keep only first occurrence of each filter */
+    const seen = new Set();
+    document.querySelectorAll('.trend-tab').forEach(btn => {
+        const f = btn.dataset.filter;
+        if (seen.has(f)) { btn.remove(); return; }
+        seen.add(f);
+    });
+
+    /* Hide gender tabs that have no cards */
+    ['men','women'].forEach(g => {
+        const hasCards = document.querySelector(`.trend-card[data-gender="${g}"]`);
+        if (!hasCards) {
+            const tab = document.querySelector(`.trend-tab[data-filter="${g}"]`);
+            if (tab) tab.remove();
+        }
+    });
+
+    document.querySelectorAll('.trend-tab').forEach(btn => {
+        btn.addEventListener('click', function () {
+            document.querySelectorAll('.trend-tab').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+
+            const filter = this.dataset.filter;
+            let visible = 0;
+            document.querySelectorAll('.trend-card').forEach(card => {
+                const show = filter === 'all' || card.dataset.gender === filter;
+                card.style.display = show ? '' : 'none';
+                if (show) visible++;
+            });
+
+            document.getElementById('trend-count').textContent =
+                visible + ' item' + (visible !== 1 ? 's' : '');
+            document.getElementById('trend-empty').style.display = visible ? 'none' : 'block';
+            document.getElementById('trend-grid').style.display  = visible ? '' : 'none';
+        });
+    });
+})();
+</script>
 
 {% endblock %}
