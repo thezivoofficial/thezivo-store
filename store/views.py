@@ -2404,7 +2404,11 @@ def contact_us(request):
 
 
 def shipping_policy(request):
-    return render(request, 'store/shipping_policy.html')
+    store = SiteSettings.get()
+    return render(request, 'store/shipping_policy.html', {
+        'free_delivery_min': store.free_delivery_min_order,
+        'delivery_charge':   store.delivery_charge,
+    })
 
 
 def cancellations_refunds(request):
