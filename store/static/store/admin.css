@@ -79,13 +79,19 @@ html, body {
 
 /* 6. Quick action button — dedicated hover (scale + glow) */
 @media (min-width: 769px) {
+  /* Unfold sets overflow:hidden on every td — must undo it here so
+     the scaled button and shadow are not clipped */
+  #result_list td.field-quick_status_btn {
+    overflow: visible !important;
+  }
   #result_list .field-quick_status_btn a {
+    display: inline-block !important;
     transition: filter .15s, transform .15s, box-shadow .15s !important;
   }
   #result_list .field-quick_status_btn a:hover {
     filter: brightness(1.15) !important;
     transform: scale(1.05) !important;
-    box-shadow: 0 2px 8px rgba(0,0,0,.18) !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,.22) !important;
   }
 }
 
