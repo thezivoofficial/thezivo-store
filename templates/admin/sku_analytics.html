@@ -20,9 +20,10 @@
 
 <div style="margin-bottom:24px;overflow:hidden;">
 
-  <h2 style="font-size:15px;font-weight:700;color:#111827;margin:0 0 16px;">
-    📊 Top 10 SKUs by Units Sold
+  <h2 style="font-size:15px;font-weight:700;margin:0 0 4px;color:inherit;">
+    📊 {% if analytics_title %}{{ analytics_title }}{% else %}Top 10 SKUs by Units Sold{% endif %}
   </h2>
+  <p style="font-size:12px;color:#9ca3af;margin:0 0 14px;">Based on current filter / all time if no filter applied</p>
 
   <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -16px;padding:0 16px;">
   <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:440px;">

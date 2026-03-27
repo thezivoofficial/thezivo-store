@@ -362,7 +362,31 @@ class SKUAdmin(ModelAdmin):
     def changelist_view(self, request, extra_context=None):
         extra_context = extra_context or {}
         extra_context["bulk_stock_url"] = reverse("admin:store_sku_bulk_stock")
-        return super().changelist_view(request, extra_context)
+        extra_context["analytics_title"] = "SKU Analytics — Top 10 SKUs by Units Sold"
+        response = super().changelist_view(request, extra_context)
+        try:
+            qs = response.context_data["cl"].queryset
+        except (AttributeError, KeyError):
+            return response
+        from django.db.models import Sum, Count, F, ExpressionWrapper, DecimalField
+        analytics = (
+            OrderItem.objects
+            .filter(sku__in=qs)
+            .values("sku__sku_code", "sku__product__name")
+            .annotate(
+                total_qty=Sum("quantity"),
+                total_orders=Count("order", distinct=True),
+                revenue=Sum(
+                    ExpressionWrapper(
+                        F("quantity") * F("sku__selling_price"),
+                        output_field=DecimalField(),
+                    )
+                ),
+            )
+            .order_by("-total_qty")[:10]
+        )
+        response.context_data["analytics"] = analytics
+        return response
 
 
 # ── Order ─────────────────────────────────────────────────────────────────────
@@ -719,6 +743,7 @@ class OrderItemAdmin(ModelAdmin):
             .order_by("-total_qty")[:10]
         )
         response.context_data["analytics"] = analytics
+        response.context_data["analytics_title"] = "Sales Analytics — Top 10 SKUs by Units Sold"
         return response
 
 

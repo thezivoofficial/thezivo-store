@@ -76,26 +76,42 @@
 </style>
 
 <!-- ── Revenue cards ──────────────────────────────────────────────────── -->
+<style>
+  .tz-card-link { text-decoration:none; color:inherit; display:block; }
+  .tz-card-link:hover .tz-card { box-shadow:0 4px 14px rgba(139,92,246,.18); border-color:#8b5cf6; transform:translateY(-1px); transition:all .15s; }
+  .tz-card { transition: box-shadow .15s, transform .15s; }
+  .tz-section-link { text-decoration:none; color:inherit; }
+  .tz-section-link:hover .tz-section-title { color:#8b5cf6; }
+  .tz-section-link:hover .tz-section-title::after { content:" →"; font-size:13px; color:#8b5cf6; }
+</style>
+
 <div class="tz-grid tz-4col">
 
+  <a href="{% url 'admin:store_order_changelist' %}" class="tz-card-link">
   <div class="tz-card tz-accent-green">
     <div class="tz-stat-label">Today's Revenue</div>
     <div class="tz-stat-value">₹{{ revenue_today|floatformat:0 }}</div>
     <div class="tz-stat-sub">{{ orders_today }} order{{ orders_today|pluralize }} today</div>
   </div>
+  </a>
 
+  <a href="{% url 'admin:store_order_changelist' %}" class="tz-card-link">
   <div class="tz-card tz-accent-blue">
     <div class="tz-stat-label">This Week</div>
     <div class="tz-stat-value">₹{{ revenue_week|floatformat:0 }}</div>
     <div class="tz-stat-sub">Last 7 days — paid orders</div>
   </div>
+  </a>
 
+  <a href="{% url 'admin:store_order_changelist' %}" class="tz-card-link">
   <div class="tz-card tz-accent-purple">
     <div class="tz-stat-label">This Month</div>
     <div class="tz-stat-value">₹{{ revenue_month|floatformat:0 }}</div>
     <div class="tz-stat-sub">Since 1st of this month</div>
   </div>
+  </a>
 
+  <a href="{% url 'admin:store_order_changelist' %}" class="tz-card-link">
   <div class="tz-card tz-accent-orange">
     <div class="tz-stat-label">All-Time Revenue</div>
     <div class="tz-stat-value">₹{{ revenue_total|floatformat:0 }}</div>
@@ -103,6 +119,7 @@
       {{ orders_placed }} pending&nbsp;·&nbsp;{{ orders_shipped }} shipped
     </div>
   </div>
+  </a>
 
 </div>
 
@@ -110,14 +127,18 @@
 <div class="tz-grid tz-2col">
 
   <div class="tz-card">
-    <div class="tz-section-title">Revenue — Last 30 Days</div>
+    <a href="{% url 'admin:store_order_changelist' %}" class="tz-section-link">
+      <div class="tz-section-title">Revenue — Last 30 Days</div>
+    </a>
     <div class="tz-chart-wrap">
       <canvas id="revenueChart"></canvas>
     </div>
   </div>
 
   <div class="tz-card">
-    <div class="tz-section-title">Orders by Status</div>
+    <a href="{% url 'admin:store_order_changelist' %}" class="tz-section-link">
+      <div class="tz-section-title">Orders by Status</div>
+    </a>
     <div class="tz-chart-wrap" style="height:220px;display:flex;align-items:center;justify-content:center;">
       <canvas id="statusChart" style="max-height:200px;max-width:200px;"></canvas>
     </div>
@@ -129,7 +150,9 @@
 <div class="tz-grid tz-2col">
 
   <div class="tz-card">
-    <div class="tz-section-title">Top 5 Selling Products</div>
+    <a href="{% url 'admin:store_orderitem_changelist' %}" class="tz-section-link">
+      <div class="tz-section-title">Top 5 Selling Products</div>
+    </a>
     {% if top_product_names %}
       <div class="tz-chart-wrap">
         <canvas id="topProductsChart"></canvas>
@@ -140,7 +163,9 @@
   </div>
 
   <div class="tz-card">
-    <div class="tz-section-title">⚠ Low Stock Alerts (≤ 5)</div>
+    <a href="{% url 'admin:store_sku_changelist' %}" class="tz-section-link">
+      <div class="tz-section-title">⚠ Low Stock Alerts (≤ 5)</div>
+    </a>
     {% if low_stock %}
       <div class="tz-table-wrap"><table class="tz-table">
         <thead>
@@ -181,7 +206,9 @@
 <div class="tz-grid tz-2col">
 
   <div class="tz-card">
-    <div class="tz-section-title">Revenue by Category</div>
+    <a href="{% url 'admin:store_category_changelist' %}" class="tz-section-link">
+      <div class="tz-section-title">Revenue by Category</div>
+    </a>
     {% if cat_labels %}
       <div class="tz-chart-wrap">
         <canvas id="catChart"></canvas>
@@ -192,7 +219,9 @@
   </div>
 
   <div class="tz-card">
-    <div class="tz-section-title">Revenue by Gender</div>
+    <a href="{% url 'admin:store_product_changelist' %}" class="tz-section-link">
+      <div class="tz-section-title">Revenue by Gender</div>
+    </a>
     {% if gen_labels %}
       <div class="tz-chart-wrap" style="height:220px;display:flex;align-items:center;justify-content:center;">
         <canvas id="genChart" style="max-height:200px;max-width:200px;"></canvas>
@@ -206,7 +235,9 @@
 
 <!-- ── Top customers ──────────────────────────────────────────────────── -->
 <div class="tz-card" style="margin-bottom:24px;">
-  <div class="tz-section-title">Top Customers by Spend</div>
+  <a href="{% url 'admin:store_customer_changelist' %}" class="tz-section-link">
+    <div class="tz-section-title">Top Customers by Spend</div>
+  </a>
   <div class="tz-table-wrap"><table class="tz-table">
     <thead>
       <tr>
@@ -239,7 +270,9 @@
 
 <!-- ── Recent orders ──────────────────────────────────────────────────── -->
 <div class="tz-card" style="margin-bottom:24px;">
-  <div class="tz-section-title">Recent Orders</div>
+  <a href="{% url 'admin:store_order_changelist' %}" class="tz-section-link">
+    <div class="tz-section-title">Recent Orders</div>
+  </a>
   <div class="tz-table-wrap"><table class="tz-table">
     <thead>
       <tr>
