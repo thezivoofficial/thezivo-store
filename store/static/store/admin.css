@@ -450,32 +450,46 @@ tr:has(td .zivo-red) {
   white-space: nowrap !important;
 }
 
-/* ── Mobile — bigger tap targets ────────────────────────────────────── */
+/* Mobile counter — hidden on desktop */
+.tz-pag-counter { display: none !important; }
+
+/* ── Mobile — arrow-only Prev/Next + page counter, no number strip ── */
 @media (max-width: 768px) {
+  /* Row layout: [←]  [counter]  [→]  — nothing else */
   .tz-pag {
-    gap: 5px !important;
+    gap: 8px !important;
     padding: 12px 0 !important;
+    justify-content: center !important;
   }
-  .tz-pag a,
-  .tz-pag-edge-off span,
-  .tz-pag .font-medium {
-    min-width: 44px !important;
-    height: 44px !important;
+
+  /* Hide number strip on mobile — too many buttons for narrow screens */
+  .tz-pag-nums { display: none !important; }
+
+  /* Show "3 / 12" counter in the middle */
+  .tz-pag-counter {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: #374151 !important;
+    min-width: 60px !important;
+    text-align: center !important;
   }
+  .dark .tz-pag-counter { color: #d1d5db !important; }
+
+  /* Prev/Next: arrow-only, 48×48 tap target */
   .tz-pag-prev a,
   .tz-pag-next a,
   .tz-pag-edge-off span {
-    min-width: 80px !important;
+    min-width: 48px !important;
+    height: 48px !important;
+    font-size: 0 !important;
   }
-  .tz-pag-prev a::before,
-  .tz-pag-edge-off.tz-pag-prev span::before,
-  .tz-pag-next a::after,
-  .tz-pag-edge-off.tz-pag-next span::after {
-    font-size: 13px !important;
-  }
-  .tz-pag-ellipsis {
-    height: 44px !important;
-  }
+  .tz-pag-prev a::before  { content: "←" !important; font-size: 18px !important; font-weight: 700 !important; }
+  .tz-pag-next a::after   { content: "→" !important; font-size: 18px !important; font-weight: 700 !important; }
+  .tz-pag-edge-off.tz-pag-prev span::before { content: "←" !important; font-size: 18px !important; font-weight: 700 !important; }
+  .tz-pag-edge-off.tz-pag-next span::after  { content: "→" !important; font-size: 18px !important; font-weight: 700 !important; }
 }
 
 /* ── Admin action bar — replace the "Select action / Go" default look ── */

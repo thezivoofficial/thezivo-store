@@ -12,7 +12,7 @@
     <div class="tz-pag-prev tz-pag-edge-off"><span></span></div>
   {% endif %}
 
-  {% comment %} Page numbers {% endcomment %}
+  {% comment %} Page numbers — desktop only {% endcomment %}
   <div class="tz-pag-nums">
     {% for i in page_range %}
       {% if i == "…" %}
@@ -22,6 +22,9 @@
       {% endif %}
     {% endfor %}
   </div>
+
+  {% comment %} Page X of Y counter — mobile only {% endcomment %}
+  <span class="tz-pag-counter">{{ cl.page_num }} / {{ cl.paginator.num_pages }}</span>
 
   {% comment %} Next → {% endcomment %}
   {% if cl.page_num < cl.paginator.num_pages %}
