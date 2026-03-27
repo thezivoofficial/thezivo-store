@@ -24,7 +24,7 @@
   </div>
 
   {% comment %} Page X of Y counter — mobile only {% endcomment %}
-  <span class="tz-pag-counter">{{ cl.page_num }} / {{ cl.paginator.num_pages }}</span>
+  <span class="tz-pag-counter">Page {{ cl.page_num }} of {{ cl.paginator.num_pages }}</span>
 
   {% comment %} Next → {% endcomment %}
   {% if cl.page_num < cl.paginator.num_pages %}

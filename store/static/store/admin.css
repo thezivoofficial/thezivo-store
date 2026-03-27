@@ -316,78 +316,65 @@ tr:has(td .zivo-red) {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   PAGINATION — full redesign (desktop + mobile)
+   PAGINATION — clean redesign
    ═══════════════════════════════════════════════════════════ */
 
-/* Outer wrapper — flex row, gap between groups */
+/* ── Container ──────────────────────────────────────────── */
 .tz-pag {
   display: flex !important;
   align-items: center !important;
-  gap: 6px !important;
-  flex-wrap: wrap !important;
-  padding: 10px 0 !important;
+  gap: 2px !important;
+  padding: 8px 0 !important;
+  flex-wrap: nowrap !important;
 }
 
-/* Shared button shell — page links + disabled edges */
-.tz-pag a,
-.tz-pag-edge-off span {
+/* ── Page number strip ───────────────────────────────────── */
+.tz-pag-nums {
+  display: flex !important;
+  align-items: center !important;
+  gap: 2px !important;
+  margin: 0 8px !important;
+}
+
+/* Each page number — transparent base, no border */
+.tz-pag-nums a {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  min-width: 36px !important;
-  height: 36px !important;
-  padding: 0 10px !important;
-  border-radius: 8px !important;
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 6px !important;
   font-size: 13px !important;
   font-weight: 500 !important;
-  border: 1px solid #e5e7eb !important;
-  background: #fff !important;
-  color: #374151 !important;
+  color: #6b7280 !important;
   text-decoration: none !important;
-  transition: background .15s, border-color .15s, color .15s !important;
-  white-space: nowrap !important;
+  background: transparent !important;
+  border: none !important;
+  transition: background .12s, color .12s !important;
 }
-.dark .tz-pag a,
-.dark .tz-pag-edge-off span {
-  background: #1f2937 !important;
-  border-color: #374151 !important;
-  color: #d1d5db !important;
-}
-
-/* Hover on clickable page numbers */
 .tz-pag-nums a:hover {
-  background: #f5f3ff !important;
-  border-color: #8b5cf6 !important;
+  background: rgba(139,92,246,.1) !important;
   color: #7c3aed !important;
 }
+.dark .tz-pag-nums a { color: #9ca3af !important; }
 .dark .tz-pag-nums a:hover {
-  background: rgba(139,92,246,.12) !important;
-  border-color: #8b5cf6 !important;
+  background: rgba(139,92,246,.18) !important;
   color: #a78bfa !important;
 }
 
-/* Current active page */
+/* Current page — solid purple chip */
 .tz-pag .font-medium {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  min-width: 36px !important;
-  height: 36px !important;
-  padding: 0 10px !important;
-  border-radius: 8px !important;
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 6px !important;
   font-size: 13px !important;
   font-weight: 700 !important;
   background: #8b5cf6 !important;
   color: #fff !important;
-  border: 1px solid #8b5cf6 !important;
-}
-
-/* Page-numbers strip */
-.tz-pag-nums {
-  display: flex !important;
-  align-items: center !important;
-  gap: 4px !important;
-  flex-wrap: wrap !important;
+  border: none !important;
 }
 
 /* Ellipsis */
@@ -395,101 +382,126 @@ tr:has(td .zivo-red) {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  min-width: 28px !important;
-  height: 36px !important;
-  color: #9ca3af !important;
-  font-size: 14px !important;
+  width: 24px !important;
+  height: 32px !important;
+  font-size: 13px !important;
+  color: #d1d5db !important;
+  letter-spacing: 1px !important;
 }
 
-/* ── Prev / Next — hide the raw page number, show label via CSS ─────── */
+/* ── Prev / Next buttons ─────────────────────────────────── */
 .tz-pag-prev a,
-.tz-pag-next a {
-  font-size: 0 !important;   /* hide raw number */
-  min-width: 76px !important;
-  gap: 4px !important;
+.tz-pag-next a,
+.tz-pag-edge-off span {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 32px !important;
+  padding: 0 14px !important;
+  border-radius: 6px !important;
+  font-size: 0 !important;       /* hides raw page number */
+  font-weight: 600 !important;
+  border: 1.5px solid #e5e7eb !important;
+  background: #fff !important;
+  color: #374151 !important;
+  text-decoration: none !important;
+  white-space: nowrap !important;
+  transition: background .15s, border-color .15s, color .15s !important;
 }
-.tz-pag-prev a::before {
-  content: "← Prev" !important;
+.dark .tz-pag-prev a,
+.dark .tz-pag-next a,
+.dark .tz-pag-edge-off span {
+  background: #111827 !important;
+  border-color: #374151 !important;
+  color: #9ca3af !important;
+}
+
+/* Prev label */
+.tz-pag-prev a::before,
+.tz-pag-edge-off.tz-pag-prev span::before {
   font-size: 12px !important;
   font-weight: 600 !important;
+  content: "← Previous" !important;
 }
-.tz-pag-next a::after {
+/* Next label */
+.tz-pag-next a::after,
+.tz-pag-edge-off.tz-pag-next span::after {
+  font-size: 12px !important;
+  font-weight: 600 !important;
   content: "Next →" !important;
-  font-size: 12px !important;
-  font-weight: 600 !important;
 }
-/* Prev/Next hover — distinct purple fill */
+
+/* Prev/Next hover */
 .tz-pag-prev a:hover,
 .tz-pag-next a:hover {
   background: #8b5cf6 !important;
   border-color: #8b5cf6 !important;
   color: #fff !important;
 }
-/* Disabled edge buttons */
-.tz-pag-edge-off span {
-  opacity: .35 !important;
-  cursor: not-allowed !important;
-  min-width: 76px !important;
-}
-.tz-pag-edge-off.tz-pag-prev span::before {
-  content: "← Prev" !important;
-  font-size: 12px !important;
-  font-weight: 600 !important;
-}
-.tz-pag-edge-off.tz-pag-next span::after {
-  content: "Next →" !important;
-  font-size: 12px !important;
-  font-weight: 600 !important;
+.dark .tz-pag-prev a:hover,
+.dark .tz-pag-next a:hover {
+  background: #7c3aed !important;
+  border-color: #7c3aed !important;
+  color: #fff !important;
 }
 
-/* Result count pill */
+/* Disabled */
+.tz-pag-edge-off span {
+  opacity: .38 !important;
+  cursor: default !important;
+}
+
+/* ── Result count ────────────────────────────────────────── */
 .tz-pag-info {
   font-size: 12px !important;
   color: #9ca3af !important;
-  padding: 6px 0 !important;
+  padding: 4px 0 4px 12px !important;
   white-space: nowrap !important;
+  border-left: 1px solid #e5e7eb !important;
+  margin-left: 8px !important;
 }
+.dark .tz-pag-info { border-color: #374151 !important; }
 
 /* Mobile counter — hidden on desktop */
 .tz-pag-counter { display: none !important; }
 
-/* ── Mobile — arrow-only Prev/Next + page counter, no number strip ── */
+/* ── Mobile ──────────────────────────────────────────────── */
 @media (max-width: 768px) {
-  /* Row layout: [←]  [counter]  [→]  — nothing else */
+  /* [← Previous]   Page 3 of 12   [Next →] — spread full width */
   .tz-pag {
-    gap: 8px !important;
-    padding: 12px 0 !important;
-    justify-content: center !important;
+    justify-content: space-between !important;
+    padding: 10px 0 !important;
+    gap: 0 !important;
   }
 
-  /* Hide number strip on mobile — too many buttons for narrow screens */
+  /* Hide number strip */
   .tz-pag-nums { display: none !important; }
 
-  /* Show "3 / 12" counter in the middle */
+  /* Show "Page 3 of 12" counter */
   .tz-pag-counter {
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    font-size: 13px !important;
+    display: inline-block !important;
+    font-size: 12px !important;
     font-weight: 600 !important;
-    color: #374151 !important;
-    min-width: 60px !important;
+    color: #6b7280 !important;
     text-align: center !important;
+    padding: 0 8px !important;
   }
-  .dark .tz-pag-counter { color: #d1d5db !important; }
+  .dark .tz-pag-counter { color: #9ca3af !important; }
 
-  /* Prev/Next: arrow-only, 48×48 tap target */
+  /* Larger tap targets */
   .tz-pag-prev a,
   .tz-pag-next a,
   .tz-pag-edge-off span {
-    min-width: 48px !important;
-    height: 48px !important;
-    font-size: 0 !important;
+    height: 40px !important;
+    padding: 0 16px !important;
   }
-  .tz-pag-prev a::before  { content: "←" !important; font-size: 18px !important; font-weight: 700 !important; }
-  .tz-pag-next a::after   { content: "→" !important; font-size: 18px !important; font-weight: 700 !important; }
-  .tz-pag-edge-off.tz-pag-prev span::before { content: "←" !important; font-size: 18px !important; font-weight: 700 !important; }
-  .tz-pag-edge-off.tz-pag-next span::after  { content: "→" !important; font-size: 18px !important; font-weight: 700 !important; }
+  .tz-pag-prev a::before,
+  .tz-pag-edge-off.tz-pag-prev span::before { content: "← Prev" !important; }
+  .tz-pag-next a::after,
+  .tz-pag-edge-off.tz-pag-next span::after  { content: "Next →" !important; }
+
+  /* Hide result count on mobile — shows in page counter */
+  .tz-pag-info { display: none !important; }
 }
 
 /* ── Admin action bar — replace the "Select action / Go" default look ── */
