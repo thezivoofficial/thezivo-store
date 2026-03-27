@@ -90,8 +90,12 @@ UNFOLD = {
             "950": "59 7 100",
         },
     },
+    "STYLES": [
+        lambda _: "/static/store/admin.css",
+    ],
     "SCRIPTS": [
         lambda _: "/static/store/admin_bfcache.js",
+        lambda _: "/static/store/admin_mobile.js",
     ],
     "SIDEBAR": {
         "show_search": True,

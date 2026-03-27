@@ -125,6 +125,88 @@ tr:has(td .zivo-red) {
   }
 }
 
+/* ═══════════════════════════════════════════════════════════
+   MOBILE CARD LAYOUT — transforms #result_list table to cards
+   ═══════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* Hide table header row */
+  #result_list thead { display: none !important; }
+
+  /* Remove table layout — stack rows */
+  #result_list table,
+  #result_list tbody { display: block !important; width: 100% !important; }
+
+  /* Each row = a card */
+  #result_list tbody tr {
+    display: block !important;
+    margin-bottom: 12px !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 10px !important;
+    padding: 10px 14px !important;
+    background: #fff !important;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06) !important;
+  }
+  .dark #result_list tbody tr {
+    background: #1f2937 !important;
+    border-color: #374151 !important;
+  }
+
+  /* Checkbox cell — small strip at top-right */
+  #result_list tbody td.action-checkbox {
+    display: flex !important;
+    justify-content: flex-end !important;
+    border-bottom: none !important;
+    padding: 0 0 6px !important;
+  }
+  #result_list tbody td.action-checkbox::before { display: none !important; }
+
+  /* Each data cell = label + value row */
+  #result_list tbody td {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 6px 0 !important;
+    border-bottom: 1px solid #f3f4f6 !important;
+    font-size: 13px !important;
+    gap: 8px !important;
+    min-height: 32px !important;
+  }
+  .dark #result_list tbody td { border-bottom-color: #374151 !important; }
+  #result_list tbody td:last-child { border-bottom: none !important; }
+
+  /* Label from data-label attribute */
+  #result_list tbody td::before {
+    content: attr(data-label);
+    font-weight: 600 !important;
+    color: #6b7280 !important;
+    font-size: 11px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.4px !important;
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+  }
+  .dark #result_list tbody td::before { color: #9ca3af !important; }
+
+  /* First data cell (usually name/id) — make it the card title */
+  #result_list tbody td:nth-child(2) {
+    font-weight: 700 !important;
+    font-size: 14px !important;
+    padding-bottom: 8px !important;
+    border-bottom: 2px solid #f3f4f6 !important;
+    margin-bottom: 2px !important;
+  }
+  .dark #result_list tbody td:nth-child(2) { border-bottom-color: #374151 !important; }
+
+  /* Action buttons — full width, easy to tap */
+  #result_list tbody td a.button,
+  #result_list tbody td .zivo-badge { font-size: 12px !important; }
+
+  /* Pagination — larger tap targets */
+  .paginator { font-size: 14px !important; }
+  .paginator a, .paginator span { padding: 6px 12px !important; }
+}
+
 /* ── Admin action bar — replace the "Select action / Go" default look ── */
 .actions {
   display: flex !important;
