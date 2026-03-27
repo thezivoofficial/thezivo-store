@@ -46,13 +46,13 @@
                 td.setAttribute('data-label', label);
             });
 
-            /* Make entire card clickable — find the first detail link in the row */
+            /* Make entire row/card clickable — find the first detail link */
             const detailLink = row.querySelector('td:not(.action-checkbox) a[href]');
             if (detailLink) {
-                row.style.cursor = 'pointer';
+                row.classList.add('row-clickable');
                 row.addEventListener('click', function (e) {
                     /* Don't hijack if user clicked a real link/button/checkbox */
-                    if (e.target.closest('a, button, input')) return;
+                    if (e.target.closest('a, button, input, select')) return;
                     window.location.href = detailLink.href;
                 });
             }

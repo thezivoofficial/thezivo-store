@@ -14,6 +14,76 @@ html, body {
   -webkit-overflow-scrolling: touch;
 }
 
+/* ═══════════════════════════════════════════════════
+   DESKTOP TABLE IMPROVEMENTS
+   ═══════════════════════════════════════════════════ */
+
+/* 1. Sticky header — stays visible while scrolling */
+@media (min-width: 769px) {
+  #result_list thead th {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 10 !important;
+    background: inherit !important;
+    box-shadow: 0 1px 0 #e5e7eb !important;
+  }
+  .dark #result_list thead th {
+    box-shadow: 0 1px 0 #374151 !important;
+  }
+}
+
+/* 2. Compact row height — more rows visible at once */
+@media (min-width: 769px) {
+  #result_list tbody td {
+    padding-top: 7px !important;
+    padding-bottom: 7px !important;
+    font-size: 13px !important;
+  }
+  #result_list thead th {
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+    font-size: 12px !important;
+  }
+}
+
+/* 3. Stronger row hover highlight */
+@media (min-width: 769px) {
+  #result_list tbody tr {
+    transition: background .1s !important;
+  }
+  #result_list tbody tr:hover td {
+    background: #f5f3ff !important;
+  }
+  .dark #result_list tbody tr:hover td {
+    background: rgba(139,92,246,.08) !important;
+  }
+}
+
+/* 4. Clickable row cursor */
+@media (min-width: 769px) {
+  #result_list tbody tr.row-clickable {
+    cursor: pointer !important;
+  }
+}
+
+/* 5. Right-align number columns */
+@media (min-width: 769px) {
+  #result_list .field-total_amount,
+  #result_list .field-selling_price,
+  #result_list .field-mrp,
+  #result_list .field-stock,
+  #result_list .field-sku_count,
+  #result_list .field-order_count,
+  #result_list .field-used_count,
+  #result_list .field-usage_limit,
+  #result_list .field-discount_amount,
+  #result_list .field-min_order,
+  #result_list .field-sort_order {
+    text-align: right !important;
+    padding-right: 16px !important;
+  }
+}
+
 /* list_editable inputs — compact so table doesn't explode in width */
 #result_list input[type="text"],
 #result_list input[type="number"] {
