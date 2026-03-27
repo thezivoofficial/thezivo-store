@@ -104,6 +104,7 @@ class OrderItemInline(TabularInline):
 @admin.register(Address)
 class AddressAdmin(ModelAdmin):
     list_display = ("customer", "name", "city", "state", "pincode", "is_default")
+    list_display_links = ("customer", "name")
     list_filter = ("state", "is_default")
     search_fields = ("customer__name", "customer__phone", "name", "city", "pincode")
 
@@ -112,8 +113,9 @@ class AddressAdmin(ModelAdmin):
 
 @admin.register(Category)
 class CategoryAdmin(ModelAdmin):
-    list_display  = ("cat_thumbnail", "name", "slug", "gender", "sort_order", "is_active")
-    list_editable = ("sort_order", "is_active")
+    list_display       = ("cat_thumbnail", "name", "slug", "gender", "sort_order", "is_active")
+    list_display_links = ("cat_thumbnail", "name")
+    list_editable      = ("sort_order", "is_active")
     list_filter   = ("gender", "is_active")
     search_fields = ("name", "slug")
     prepopulated_fields = {"slug": ("name",)}
@@ -131,6 +133,7 @@ class CategoryAdmin(ModelAdmin):
 @admin.register(Product)
 class ProductAdmin(ModelAdmin):
     list_display        = ("thumbnail", "name", "brand", "gender", "category", "sku_count", "stock_status", "trending_badge", "active", "is_trending")
+    list_display_links  = ("thumbnail", "name")
     list_filter         = ("active", "is_trending", "gender", "category", "brand")
     search_fields       = ("name", "brand")
     list_editable       = ("active", "is_trending")
@@ -232,10 +235,11 @@ class ProductAdmin(ModelAdmin):
 
 @admin.register(NewsletterSubscriber)
 class NewsletterSubscriberAdmin(ModelAdmin):
-    list_display  = ("email", "subscribed_at", "is_active")
-    list_editable = ("is_active",)
-    list_filter   = ("is_active",)
-    search_fields = ("email",)
+    list_display       = ("email", "subscribed_at", "is_active")
+    list_display_links = ("email",)
+    list_editable      = ("is_active",)
+    list_filter        = ("is_active",)
+    search_fields      = ("email",)
 
 
 # ── SKU ───────────────────────────────────────────────────────────────────────
@@ -678,7 +682,8 @@ class OrderAdmin(ModelAdmin):
 
 @admin.register(OrderItem)
 class OrderItemAdmin(ModelAdmin):
-    list_display = ("sku_code", "product_name", "quantity", "order_id", "order_date")
+    list_display       = ("sku_code", "product_name", "quantity", "order_id", "order_date")
+    list_display_links = ("sku_code", "product_name")
     list_filter = ("sku__product", "sku__size")
     search_fields = ("sku__sku_code", "sku__product__name")
     change_list_template = "admin/sku_analytics.html"
@@ -721,7 +726,8 @@ class OrderItemAdmin(ModelAdmin):
 
 @admin.register(StockNotification)
 class StockNotificationAdmin(ModelAdmin):
-    list_display = ("id", "product", "customer_name", "customer_phone", "created_at")
+    list_display       = ("id", "product", "customer_name", "customer_phone", "created_at")
+    list_display_links = ("id", "product")
     list_filter = ("product", "created_at")
     search_fields = ("product__name", "customer__name", "customer__phone")
     readonly_fields = ("created_at",)
@@ -739,7 +745,8 @@ class StockNotificationAdmin(ModelAdmin):
 
 @admin.register(Customer)
 class CustomerAdmin(ModelAdmin):
-    list_display  = ("id", "name", "phone", "email", "order_count", "date_joined")
+    list_display       = ("id", "name", "phone", "email", "order_count", "date_joined")
+    list_display_links = ("id", "name")
     search_fields = ("name", "phone", "email")
     readonly_fields = ("date_joined", "password")
     ordering = ("-date_joined",)
@@ -759,10 +766,11 @@ class StaffUserAdmin(ModelAdmin, DjangoUserAdmin):
 
     add_form = StaffUserCreationForm
 
-    list_display  = ("username", "email", "is_active", "is_staff", "role_list", "last_login")
-    list_filter   = ("is_active", "is_staff", "groups")
-    search_fields = ("username", "email", "first_name", "last_name")
-    ordering      = ("-date_joined",)
+    list_display       = ("username", "email", "is_active", "is_staff", "role_list", "last_login")
+    list_display_links = ("username", "email")
+    list_filter        = ("is_active", "is_staff", "groups")
+    search_fields      = ("username", "email", "first_name", "last_name")
+    ordering           = ("-date_joined",)
 
     # Change form: clean sections, no granular permissions
     fieldsets = (
@@ -884,20 +892,22 @@ class SiteSettingsAdmin(ModelAdmin):
 
 @admin.register(Coupon)
 class CouponAdmin(ModelAdmin):
-    list_display = ("code", "discount_amount", "min_order", "is_active", "used_count", "usage_limit", "valid_from", "valid_to")
-    list_filter = ("is_active", "one_per_customer")
-    search_fields = ("code",)
-    list_editable = ("is_active",)
+    list_display       = ("code", "discount_amount", "min_order", "is_active", "used_count", "usage_limit", "valid_from", "valid_to")
+    list_display_links = ("code",)
+    list_filter        = ("is_active", "one_per_customer")
+    search_fields      = ("code",)
+    list_editable      = ("is_active",)
 
 
 # ── Offer ─────────────────────────────────────────────────────────────────────
 
 @admin.register(Offer)
 class OfferAdmin(ModelAdmin):
-    list_display  = ("name", "offer_type", "discount_summary", "scope_summary", "is_active", "valid_from", "valid_to")
-    list_filter   = ("offer_type", "is_active")
-    list_editable = ("is_active",)
-    search_fields = ("name", "description")
+    list_display       = ("name", "offer_type", "discount_summary", "scope_summary", "is_active", "valid_from", "valid_to")
+    list_display_links = ("name",)
+    list_filter        = ("offer_type", "is_active")
+    list_editable      = ("is_active",)
+    search_fields      = ("name", "description")
     filter_horizontal = ("applicable_products", "applicable_categories")
 
     fieldsets = (
@@ -958,16 +968,18 @@ class OfferAdmin(ModelAdmin):
 
 @admin.register(Announcement)
 class AnnouncementAdmin(ModelAdmin):
-    list_display  = ("text", "is_active", "valid_from", "valid_to")
-    list_editable = ("is_active",)
-    list_filter   = ("is_active",)
+    list_display       = ("text", "is_active", "valid_from", "valid_to")
+    list_display_links = ("text",)
+    list_editable      = ("is_active",)
+    list_filter        = ("is_active",)
 
 
 # ── Review ────────────────────────────────────────────────────────────────────
 
 @admin.register(Review)
 class ReviewAdmin(ModelAdmin):
-    list_display = ("customer", "product", "rating", "title", "created_at")
+    list_display       = ("customer", "product", "rating", "title", "created_at")
+    list_display_links = ("customer", "product")
     list_filter = ("rating",)
     search_fields = ("customer__name", "product__name", "title")
     readonly_fields = ("customer", "product", "order_item", "rating", "title", "comment", "created_at")
@@ -984,7 +996,8 @@ class ReturnItemInline(TabularInline):
 
 @admin.register(ReturnRequest)
 class ReturnRequestAdmin(ModelAdmin):
-    list_display = ("id", "display_order", "display_customer", "reason", "display_status", "refund_amount", "created_at")
+    list_display       = ("id", "display_order", "display_customer", "reason", "display_status", "refund_amount", "created_at")
+    list_display_links = ("id", "display_order")
     list_filter = ("status", "reason", "created_at")
     search_fields = ("order__id", "order__name", "order__phone")
     readonly_fields = ("order", "reason", "reason_detail", "display_video", "refund_via", "upi_id", "bank_account_name", "bank_account_number", "bank_ifsc", "created_at", "updated_at", "razorpay_refund_id")

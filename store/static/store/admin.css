@@ -57,6 +57,12 @@ html, body {
   .dark #result_list tbody tr:hover td {
     background: rgba(139,92,246,.08) !important;
   }
+  #result_list tbody tr:hover td a {
+    color: #7c3aed !important;
+  }
+  .dark #result_list tbody tr:hover td a {
+    color: #a78bfa !important;
+  }
 }
 
 /* 4. Clickable row cursor */
