@@ -467,6 +467,23 @@ tr:has(td .zivo-red) {
 
 /* ── Mobile ──────────────────────────────────────────────── */
 @media (max-width: 768px) {
+  /* Sticky at bottom of viewport, same as desktop does with lg:sticky */
+  .tz-pag-container {
+    position: sticky !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    background: rgba(255,255,255,.92) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    border-top: 1px solid #e5e7eb !important;
+    z-index: 50 !important;
+  }
+  .dark .tz-pag-container {
+    background: rgba(17,24,39,.92) !important;
+    border-color: #374151 !important;
+  }
+
   /* [← Previous]   Page 3 of 12   [Next →] — spread full width */
   .tz-pag {
     justify-content: space-between !important;
