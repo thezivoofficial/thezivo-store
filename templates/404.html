@@ -1,0 +1,31 @@
+{% extends "store/base.html" %}
+
+{% block title %}Page Not Found — TheZivo{% endblock %}
+
+{% block content %}
+<div style="min-height:60vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:60px 20px;">
+
+    <div style="font-size:5rem; font-weight:800; color:#f0f0f0; letter-spacing:-4px; line-height:1;">404</div>
+
+    <h2 style="font-family:'Playfair Display',serif; font-size:1.4rem; font-weight:700; color:#111; margin:12px 0 8px;">
+        Oops! Page not found.
+    </h2>
+
+    <p style="color:#888; font-size:0.9rem; max-width:360px; line-height:1.6; margin-bottom:28px;">
+        The page you're looking for doesn't exist or may have been moved.
+    </p>
+
+    <div style="display:flex; gap:12px; flex-wrap:wrap; justify-content:center;">
+        <a href="{% url 'home' %}" class="btn btn-dark" style="font-size:0.85rem; padding:10px 24px; border-radius:6px;">
+            Go to Home
+        </a>
+        <a href="{% url 'men' %}" class="btn btn-outline-dark" style="font-size:0.85rem; padding:10px 24px; border-radius:6px;">
+            Shop Men
+        </a>
+        <a href="{% url 'women' %}" class="btn btn-outline-dark" style="font-size:0.85rem; padding:10px 24px; border-radius:6px;">
+            Shop Women
+        </a>
+    </div>
+
+</div>
+{% endblock %}
