@@ -1,29 +1,45 @@
-from django.db.models import Sum, Count, F, ExpressionWrapper, DecimalField
+from django.db.models import Sum, Count, F, ExpressionWrapper, DecimalField, Q
 from django.utils import timezone
 from datetime import timedelta
 from .models import Order, SKU, OrderItem
 
 
+# Revenue filters
+# Order-level: online PAID  OR  COD that reached DELIVERED (cash collected)
+ORDER_CONFIRMED = Q(payment_status="PAID") | Q(payment_method="COD", status="DELIVERED")
+
+# OrderItem-level: same logic via order FK
+ITEM_CONFIRMED = (
+    Q(order__payment_status="PAID") |
+    Q(order__payment_method="COD", order__status="DELIVERED")
+)
+
+# Active orders only (exclude bare CREATED and CANCELLED)
+ITEM_ACTIVE = Q(order__status__in=["PLACED", "CONFIRMED", "SHIPPED", "DELIVERED"])
+
+
 def dashboard_callback(request, context):
     now = timezone.now()
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    week_start = today_start - timedelta(days=7)
+    week_start  = today_start - timedelta(days=7)
     month_start = today_start.replace(day=1)
 
     # ── Revenue cards ────────────────────────────────────────────────────────
-    def paid_revenue(qs_filter):
-        return (
-            Order.objects.filter(payment_status="PAID", **qs_filter)
-            .aggregate(total=Sum("total_amount"))["total"] or 0
-        )
+    def confirmed_revenue(extra_filter=None):
+        qs = Order.objects.filter(ORDER_CONFIRMED)
+        if extra_filter:
+            qs = qs.filter(**extra_filter)
+        return qs.aggregate(total=Sum("total_amount"))["total"] or 0
 
-    context["revenue_today"]  = paid_revenue({"created_at__gte": today_start})
-    context["revenue_week"]   = paid_revenue({"created_at__gte": week_start})
-    context["revenue_month"]  = paid_revenue({"created_at__gte": month_start})
-    context["revenue_total"]  = paid_revenue({})
+    context["revenue_today"]  = confirmed_revenue({"created_at__gte": today_start})
+    context["revenue_week"]   = confirmed_revenue({"created_at__gte": week_start})
+    context["revenue_month"]  = confirmed_revenue({"created_at__gte": month_start})
+    context["revenue_total"]  = confirmed_revenue()
 
     # ── Order counts ─────────────────────────────────────────────────────────
-    context["orders_today"]   = Order.objects.filter(created_at__gte=today_start).count()
+    context["orders_today"]   = Order.objects.filter(
+        created_at__gte=today_start
+    ).exclude(status__in=["CREATED", "CANCELLED"]).count()
     context["orders_placed"]  = Order.objects.filter(status="PLACED").count()
     context["orders_shipped"] = Order.objects.filter(status="SHIPPED").count()
 
@@ -49,11 +65,11 @@ def dashboard_callback(request, context):
     # ── Revenue last 30 days (line chart) ────────────────────────────────────
     days_labels, day_revenues = [], []
     for i in range(29, -1, -1):
-        day     = today_start - timedelta(days=i)
+        day      = today_start - timedelta(days=i)
         next_day = day + timedelta(days=1)
         rev = (
             Order.objects
-            .filter(created_at__gte=day, created_at__lt=next_day, payment_status="PAID")
+            .filter(ORDER_CONFIRMED, created_at__gte=day, created_at__lt=next_day)
             .aggregate(total=Sum("total_amount"))["total"] or 0
         )
         days_labels.append(day.strftime("%d %b"))
@@ -65,6 +81,7 @@ def dashboard_callback(request, context):
     # ── Top 5 selling products (bar chart) ───────────────────────────────────
     top = (
         OrderItem.objects
+        .filter(ITEM_ACTIVE)
         .values("sku__product__name")
         .annotate(total_sold=Sum("quantity"))
         .order_by("-total_sold")[:5]
@@ -83,20 +100,20 @@ def dashboard_callback(request, context):
     # ── Revenue by category ──────────────────────────────────────────────────
     cat_qs = (
         OrderItem.objects
-        .filter(order__payment_status="PAID")
-        .values("sku__product__category")
+        .filter(ITEM_CONFIRMED)
+        .values("sku__product__category__name")
         .annotate(rev=Sum(
             ExpressionWrapper(F("quantity") * F("price"), output_field=DecimalField())
         ))
         .order_by("-rev")
     )
-    context["cat_labels"] = [r["sku__product__category"] or "Other" for r in cat_qs]
+    context["cat_labels"] = [r["sku__product__category__name"] or "Uncategorised" for r in cat_qs]
     context["cat_data"]   = [float(r["rev"]) for r in cat_qs]
 
     # ── Revenue by gender ────────────────────────────────────────────────────
     gen_qs = (
         OrderItem.objects
-        .filter(order__payment_status="PAID")
+        .filter(ITEM_CONFIRMED)
         .values("sku__product__gender")
         .annotate(rev=Sum(
             ExpressionWrapper(F("quantity") * F("price"), output_field=DecimalField())
@@ -109,8 +126,8 @@ def dashboard_callback(request, context):
     # ── Top customers ────────────────────────────────────────────────────────
     context["top_customers"] = (
         Order.objects
-        .filter(payment_status="PAID")
-        .values("customer__name", "customer__phone", "name", "phone")
+        .filter(ORDER_CONFIRMED)
+        .values("customer__id", "customer__name", "customer__phone", "name", "phone")
         .annotate(
             order_count=Count("id"),
             total_spent=Sum("total_amount"),
