@@ -59,15 +59,33 @@ html, body {
   .dark #result_list tbody tr:hover th {
     background: rgba(139,92,246,.08) !important;
   }
-  #result_list tbody tr:hover td a,
+  /* Text links — purple, no extra background */
+  #result_list tbody tr:hover td:not(.field-quick_status_btn) a,
   #result_list tbody tr:hover th a {
     color: #7c3aed !important;
     background: transparent !important;
   }
-  .dark #result_list tbody tr:hover td a,
+  .dark #result_list tbody tr:hover td:not(.field-quick_status_btn) a,
   .dark #result_list tbody tr:hover th a {
     color: #a78bfa !important;
     background: transparent !important;
+  }
+
+  /* Quick action button — keep its own colour, just lighten slightly on row hover */
+  #result_list tbody tr:hover .field-quick_status_btn a {
+    filter: brightness(1.08) !important;
+  }
+}
+
+/* 6. Quick action button — dedicated hover (scale + glow) */
+@media (min-width: 769px) {
+  #result_list .field-quick_status_btn a {
+    transition: filter .15s, transform .15s, box-shadow .15s !important;
+  }
+  #result_list .field-quick_status_btn a:hover {
+    filter: brightness(1.15) !important;
+    transform: scale(1.05) !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,.18) !important;
   }
 }
 
