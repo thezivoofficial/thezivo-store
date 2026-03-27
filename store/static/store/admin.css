@@ -51,17 +51,21 @@ html, body {
   #result_list tbody tr {
     transition: background .1s !important;
   }
-  #result_list tbody tr:hover td {
+  #result_list tbody tr:hover td,
+  #result_list tbody tr:hover th {
     background: #f5f3ff !important;
   }
-  .dark #result_list tbody tr:hover td {
+  .dark #result_list tbody tr:hover td,
+  .dark #result_list tbody tr:hover th {
     background: rgba(139,92,246,.08) !important;
   }
-  #result_list tbody tr:hover td a {
+  #result_list tbody tr:hover td a,
+  #result_list tbody tr:hover th a {
     color: #7c3aed !important;
     background: transparent !important;
   }
-  .dark #result_list tbody tr:hover td a {
+  .dark #result_list tbody tr:hover td a,
+  .dark #result_list tbody tr:hover th a {
     color: #a78bfa !important;
     background: transparent !important;
   }
