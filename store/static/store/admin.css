@@ -59,9 +59,11 @@ html, body {
   }
   #result_list tbody tr:hover td a {
     color: #7c3aed !important;
+    background: transparent !important;
   }
   .dark #result_list tbody tr:hover td a {
     color: #a78bfa !important;
+    background: transparent !important;
   }
 }
 
