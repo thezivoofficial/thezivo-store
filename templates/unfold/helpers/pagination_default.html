@@ -1,0 +1,41 @@
+{% load unfold_list %}
+
+{% if pagination_required %}
+<div class="tz-pag">
+
+  {% comment %} ← Prev {% endcomment %}
+  {% if cl.page_num > 1 %}
+    {% with prev=cl.page_num|add:"-1" %}
+    <div class="tz-pag-prev">{% paginator_number cl prev %}</div>
+    {% endwith %}
+  {% else %}
+    <div class="tz-pag-prev tz-pag-edge-off"><span></span></div>
+  {% endif %}
+
+  {% comment %} Page numbers {% endcomment %}
+  <div class="tz-pag-nums">
+    {% for i in page_range %}
+      {% if i == "…" %}
+        <span class="tz-pag-ellipsis">…</span>
+      {% else %}
+        {% paginator_number cl i %}
+      {% endif %}
+    {% endfor %}
+  </div>
+
+  {% comment %} Next → {% endcomment %}
+  {% if cl.page_num < cl.paginator.num_pages %}
+    {% with next=cl.page_num|add:"1" %}
+    <div class="tz-pag-next">{% paginator_number cl next %}</div>
+    {% endwith %}
+  {% else %}
+    <div class="tz-pag-next tz-pag-edge-off"><span></span></div>
+  {% endif %}
+
+</div>
+{% endif %}
+
+<div class="tz-pag-info">
+  {{ cl.result_count }}
+  {% if cl.result_count == 1 %}{{ cl.opts.verbose_name }}{% else %}{{ cl.opts.verbose_name_plural }}{% endif %}
+</div>

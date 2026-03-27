@@ -313,9 +313,169 @@ tr:has(td .zivo-red) {
   #result_list tbody td a.button,
   #result_list tbody td .zivo-badge { font-size: 12px !important; }
 
-  /* Pagination — larger tap targets */
-  .paginator { font-size: 14px !important; }
-  .paginator a, .paginator span { padding: 6px 12px !important; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PAGINATION — full redesign (desktop + mobile)
+   ═══════════════════════════════════════════════════════════ */
+
+/* Outer wrapper — flex row, gap between groups */
+.tz-pag {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  flex-wrap: wrap !important;
+  padding: 10px 0 !important;
+}
+
+/* Shared button shell — page links + disabled edges */
+.tz-pag a,
+.tz-pag-edge-off span {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 36px !important;
+  height: 36px !important;
+  padding: 0 10px !important;
+  border-radius: 8px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  border: 1px solid #e5e7eb !important;
+  background: #fff !important;
+  color: #374151 !important;
+  text-decoration: none !important;
+  transition: background .15s, border-color .15s, color .15s !important;
+  white-space: nowrap !important;
+}
+.dark .tz-pag a,
+.dark .tz-pag-edge-off span {
+  background: #1f2937 !important;
+  border-color: #374151 !important;
+  color: #d1d5db !important;
+}
+
+/* Hover on clickable page numbers */
+.tz-pag-nums a:hover {
+  background: #f5f3ff !important;
+  border-color: #8b5cf6 !important;
+  color: #7c3aed !important;
+}
+.dark .tz-pag-nums a:hover {
+  background: rgba(139,92,246,.12) !important;
+  border-color: #8b5cf6 !important;
+  color: #a78bfa !important;
+}
+
+/* Current active page */
+.tz-pag .font-medium {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 36px !important;
+  height: 36px !important;
+  padding: 0 10px !important;
+  border-radius: 8px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  background: #8b5cf6 !important;
+  color: #fff !important;
+  border: 1px solid #8b5cf6 !important;
+}
+
+/* Page-numbers strip */
+.tz-pag-nums {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  flex-wrap: wrap !important;
+}
+
+/* Ellipsis */
+.tz-pag-ellipsis {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 28px !important;
+  height: 36px !important;
+  color: #9ca3af !important;
+  font-size: 14px !important;
+}
+
+/* ── Prev / Next — hide the raw page number, show label via CSS ─────── */
+.tz-pag-prev a,
+.tz-pag-next a {
+  font-size: 0 !important;   /* hide raw number */
+  min-width: 76px !important;
+  gap: 4px !important;
+}
+.tz-pag-prev a::before {
+  content: "← Prev" !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+}
+.tz-pag-next a::after {
+  content: "Next →" !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+}
+/* Prev/Next hover — distinct purple fill */
+.tz-pag-prev a:hover,
+.tz-pag-next a:hover {
+  background: #8b5cf6 !important;
+  border-color: #8b5cf6 !important;
+  color: #fff !important;
+}
+/* Disabled edge buttons */
+.tz-pag-edge-off span {
+  opacity: .35 !important;
+  cursor: not-allowed !important;
+  min-width: 76px !important;
+}
+.tz-pag-edge-off.tz-pag-prev span::before {
+  content: "← Prev" !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+}
+.tz-pag-edge-off.tz-pag-next span::after {
+  content: "Next →" !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+}
+
+/* Result count pill */
+.tz-pag-info {
+  font-size: 12px !important;
+  color: #9ca3af !important;
+  padding: 6px 0 !important;
+  white-space: nowrap !important;
+}
+
+/* ── Mobile — bigger tap targets ────────────────────────────────────── */
+@media (max-width: 768px) {
+  .tz-pag {
+    gap: 5px !important;
+    padding: 12px 0 !important;
+  }
+  .tz-pag a,
+  .tz-pag-edge-off span,
+  .tz-pag .font-medium {
+    min-width: 44px !important;
+    height: 44px !important;
+  }
+  .tz-pag-prev a,
+  .tz-pag-next a,
+  .tz-pag-edge-off span {
+    min-width: 80px !important;
+  }
+  .tz-pag-prev a::before,
+  .tz-pag-edge-off.tz-pag-prev span::before,
+  .tz-pag-next a::after,
+  .tz-pag-edge-off.tz-pag-next span::after {
+    font-size: 13px !important;
+  }
+  .tz-pag-ellipsis {
+    height: 44px !important;
+  }
 }
 
 /* ── Admin action bar — replace the "Select action / Go" default look ── */
