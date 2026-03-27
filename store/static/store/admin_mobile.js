@@ -45,6 +45,17 @@
                     || fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                 td.setAttribute('data-label', label);
             });
+
+            /* Make entire card clickable — find the first detail link in the row */
+            const detailLink = row.querySelector('td:not(.action-checkbox) a[href]');
+            if (detailLink) {
+                row.style.cursor = 'pointer';
+                row.addEventListener('click', function (e) {
+                    /* Don't hijack if user clicked a real link/button/checkbox */
+                    if (e.target.closest('a, button, input')) return;
+                    window.location.href = detailLink.href;
+                });
+            }
         });
     }
 

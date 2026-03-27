@@ -146,6 +146,11 @@ tr:has(td .zivo-red) {
     padding: 10px 14px !important;
     background: #fff !important;
     box-shadow: 0 1px 4px rgba(0,0,0,.06) !important;
+    transition: box-shadow .15s, border-color .15s !important;
+  }
+  #result_list tbody tr:active {
+    box-shadow: 0 2px 8px rgba(0,0,0,.12) !important;
+    border-color: #8b5cf6 !important;
   }
   .dark #result_list tbody tr {
     background: #1f2937 !important;
