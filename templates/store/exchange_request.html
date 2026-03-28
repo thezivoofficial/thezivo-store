@@ -231,6 +231,12 @@
                     No other sizes available for this product.
                 </div>
             {% else %}
+                <div style="background:#f9f7ff; border:1px solid #e9d5ff; border-radius:10px;
+                            padding:11px 14px; font-size:0.8rem; color:#5b21b6; line-height:1.7; margin-bottom:14px;">
+                    📦 <strong>Before submitting:</strong> Make sure the item is unused, unwashed, and has all original tags attached.
+                    If your request is approved, we will arrange a <strong>free pickup</strong> and ship the replacement — no need to visit a courier.
+                </div>
+
                 <div class="size-label">Choose new size</div>
                 <form method="post" action="{% url 'request_exchange' order.id %}">
                     {% csrf_token %}

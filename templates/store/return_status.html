@@ -161,6 +161,20 @@
       {% endif %}
     </div>
 
+    <!-- Pickup instruction — shown only when approved -->
+    {% if rr.status == "APPROVED" %}
+    <div class="return-card" style="background:#f0fdf4; border:1px solid #bbf7d0;">
+      <div style="font-size:0.9rem; font-weight:600; color:#15803d; margin-bottom:8px;">📦 How to prepare for pickup</div>
+      <ul style="font-size:0.85rem; color:#166534; line-height:1.8; margin:0; padding-left:18px;">
+        <li>Pack the item securely in its original packaging if available.</li>
+        <li>Ensure all original tags are still attached and the item is unworn and unwashed.</li>
+        <li>Our logistics partner will contact you within <strong>2 business days</strong> to schedule a pickup from your delivery address.</li>
+        <li>You do <strong>not</strong> need to visit any courier office — pickup is arranged at your doorstep.</li>
+        <li>Keep the item ready and be available during the pickup window.</li>
+      </ul>
+    </div>
+    {% endif %}
+
     <!-- Items -->
     <div class="return-card">
       <div class="section-label">Items Being Returned</div>
