@@ -2005,14 +2005,24 @@ def order_detail(request, order_id):
     order = get_object_or_404(Order, id=order_id, customer=request.customer)
     exchange_requests = order.exchange_requests.select_related("order_item__sku", "requested_sku").all()
     credit_balance = StoreCredit.get_balance(request.customer)
+    now = timezone.now()
+
+    return_open = False
     exchange_open = False
     if order.status == "DELIVERED" and order.delivered_at:
+        store = SiteSettings.get()
+        days_since = (now - order.delivered_at).days
+        return_open = days_since <= store.return_window_days
+        # Exchange only open if no return request exists
         cutoff = order.delivered_at + timezone.timedelta(days=EXCHANGE_WINDOW_DAYS)
-        exchange_open = timezone.now() <= cutoff
+        has_return = ReturnRequest.objects.filter(order=order).exists()
+        exchange_open = now <= cutoff and not has_return
+
     return render(request, "store/order_detail.html", {
         "order": order,
         "exchange_requests": exchange_requests,
         "credit_balance": credit_balance,
+        "return_open": return_open,
         "exchange_open": exchange_open,
     })
 
@@ -2795,6 +2805,11 @@ def request_exchange(request, order_id):
 
     if order.status != "DELIVERED":
         messages.error(request, "Exchange requests can only be raised for delivered orders.")
+        return redirect("order_detail", order_id=order.id)
+
+    # Block exchange if a return request already exists for this order
+    if ReturnRequest.objects.filter(order=order).exists():
+        messages.error(request, "You already have an active return request for this order. You cannot request an exchange at the same time.")
         return redirect("order_detail", order_id=order.id)
 
     # Enforce 3-day window from delivery

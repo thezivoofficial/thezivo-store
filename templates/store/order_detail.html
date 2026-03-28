@@ -629,18 +629,58 @@
             </div>
         </div>
         {% elif order.status == "DELIVERED" %}
+
+        <!-- RETURN -->
         <div class="detail-card">
             {% if order.return_request %}
-                <div class="cancel-section" style="text-align:center;">
-                    <div style="font-size:0.82rem; color:#6b7280; margin-bottom:10px;">
-                        You have submitted a return request for this order.
+                {% with rr=order.return_request %}
+                {% if rr.status == "REFUND_PROCESSED" %}
+                    <div class="cancel-section" style="text-align:center;">
+                        <div style="font-size:1.1rem; margin-bottom:6px;">✅</div>
+                        <div style="font-size:0.92rem; font-weight:600; color:#15803d; margin-bottom:4px;">Refund Processed</div>
+                        <div style="font-size:0.82rem; color:#6b7280; margin-bottom:10px;">
+                            Your refund{% if rr.refund_amount %} of <strong>₹{{ rr.refund_amount }}</strong>{% endif %} has been processed. Please allow 5–10 business days to reflect in your account.
+                        </div>
+                        <a href="{% url 'return_status' order.id %}" class="btn-cancel"
+                           style="display:inline-block; text-decoration:none; background:#15803d; color:#fff; border-color:#15803d;">
+                            View Details
+                        </a>
                     </div>
-                    <a href="{% url 'return_status' order.id %}" class="btn-cancel"
-                       style="display:inline-block; text-decoration:none; background:#7c3aed; color:#fff;">
-                        View Return Status
-                    </a>
-                </div>
-            {% else %}
+                {% elif rr.status == "REJECTED" %}
+                    <div class="cancel-section" style="text-align:center;">
+                        <div style="font-size:0.92rem; font-weight:600; color:#c62828; margin-bottom:4px;">Return Request Rejected</div>
+                        <div style="font-size:0.82rem; color:#6b7280; margin-bottom:10px;">
+                            Your return request was not approved. See details for more information.
+                        </div>
+                        <a href="{% url 'return_status' order.id %}" class="btn-cancel"
+                           style="display:inline-block; text-decoration:none;">
+                            View Details
+                        </a>
+                    </div>
+                {% elif rr.status == "APPROVED" %}
+                    <div class="cancel-section" style="text-align:center;">
+                        <div style="font-size:0.92rem; font-weight:600; color:#1d4ed8; margin-bottom:4px;">Return Approved</div>
+                        <div style="font-size:0.82rem; color:#6b7280; margin-bottom:10px;">
+                            Your return has been approved. A pickup will be arranged at your delivery address.
+                        </div>
+                        <a href="{% url 'return_status' order.id %}" class="btn-cancel"
+                           style="display:inline-block; text-decoration:none; background:#1d4ed8; color:#fff; border-color:#1d4ed8;">
+                            View Details
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="cancel-section" style="text-align:center;">
+                        <div style="font-size:0.82rem; color:#6b7280; margin-bottom:10px;">
+                            Your return request is under review. We'll update you within 2 business days.
+                        </div>
+                        <a href="{% url 'return_status' order.id %}" class="btn-cancel"
+                           style="display:inline-block; text-decoration:none; background:#7c3aed; color:#fff;">
+                            View Return Status
+                        </a>
+                    </div>
+                {% endif %}
+                {% endwith %}
+            {% elif return_open %}
                 <div class="cancel-section">
                     <div style="font-size:0.82rem; color:#999; margin-bottom:12px;">
                         Not satisfied? You can request a return within the eligible return window.
@@ -649,6 +689,12 @@
                        style="display:inline-block; text-decoration:none;">
                         Request Return
                     </a>
+                </div>
+            {% else %}
+                <div class="cancel-section" style="text-align:center;">
+                    <span style="font-size:0.82rem; color:#9ca3af;">
+                        The return window for this order has closed.
+                    </span>
                 </div>
             {% endif %}
         </div>
