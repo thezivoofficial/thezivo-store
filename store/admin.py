@@ -1183,18 +1183,31 @@ class SizeExchangeRequestAdmin(ModelAdmin):
     display_status.short_description = "Status"
 
     def save_model(self, request, obj, form, change):
-        """Auto-issue store credit when status is set to STORE_CREDIT_ISSUED."""
-        if change and "status" in form.changed_data and obj.status == "STORE_CREDIT_ISSUED":
-            if obj.credit_amount and obj.credit_amount > 0:
-                customer = obj.order.customer
-                if customer:
-                    sc, _ = StoreCredit.objects.get_or_create(customer=customer)
-                    sc.add(obj.credit_amount)
-                    self.message_user(request, f"Store credit of ₹{obj.credit_amount} issued to {customer.name}.")
-        super().save_model(request, obj, form, change)
+        """Auto-issue store credit + send email when status changes via detail view."""
+        if change and "status" in form.changed_data:
+            if obj.status == "STORE_CREDIT_ISSUED":
+                if obj.credit_amount and obj.credit_amount > 0:
+                    customer = obj.order.customer
+                    if customer:
+                        sc, _ = StoreCredit.objects.get_or_create(customer=customer)
+                        sc.add(obj.credit_amount)
+                        self.message_user(request, f"Store credit of ₹{obj.credit_amount} issued to {customer.name}.")
+            super().save_model(request, obj, form, change)
+            from .utils import send_exchange_email
+            subjects = {
+                "APPROVED":            f"Your Size Exchange is Approved — Order #{obj.order_id} | Zivo",
+                "REJECTED":            f"Size Exchange Update — Order #{obj.order_id} | Zivo",
+                "STORE_CREDIT_ISSUED": f"Store Credit Issued for Your Exchange — Order #{obj.order_id} | Zivo",
+                "COMPLETED":           f"Size Exchange Complete — Order #{obj.order_id} | Zivo",
+            }
+            if obj.status in subjects:
+                send_exchange_email(obj, "exchange_update.html", subjects[obj.status])
+        else:
+            super().save_model(request, obj, form, change)
 
     @admin.action(description="Approve — replacement will be shipped")
     def action_approve(self, request, queryset):
+        from .utils import send_exchange_email
         updated = 0
         for ex in queryset.filter(status="REQUESTED"):
             if ex.requested_sku and ex.requested_sku.stock > 0:
@@ -1202,6 +1215,7 @@ class SizeExchangeRequestAdmin(ModelAdmin):
                 ex.requested_sku.save()
                 ex.status = "APPROVED"
                 ex.save()
+                send_exchange_email(ex, "exchange_update.html", f"Your Size Exchange is Approved — Order #{ex.order_id} | Zivo")
                 updated += 1
             else:
                 self.message_user(request, f"Exchange #{ex.id}: requested size is out of stock — use 'Issue Store Credit' instead.", level="warning")
@@ -1209,11 +1223,18 @@ class SizeExchangeRequestAdmin(ModelAdmin):
 
     @admin.action(description="Reject selected exchange requests")
     def action_reject(self, request, queryset):
-        updated = queryset.filter(status="REQUESTED").update(status="REJECTED")
+        from .utils import send_exchange_email
+        updated = 0
+        for ex in queryset.filter(status="REQUESTED"):
+            ex.status = "REJECTED"
+            ex.save()
+            send_exchange_email(ex, "exchange_update.html", f"Size Exchange Update — Order #{ex.order_id} | Zivo")
+            updated += 1
         self.message_user(request, f"{updated} exchange(s) rejected.")
 
     @admin.action(description="Issue store credit (requested size OOS)")
     def action_issue_credit(self, request, queryset):
+        from .utils import send_exchange_email
         issued = 0
         for ex in queryset.filter(status="REQUESTED"):
             customer = ex.order.customer
@@ -1225,6 +1246,7 @@ class SizeExchangeRequestAdmin(ModelAdmin):
             ex.status = "STORE_CREDIT_ISSUED"
             ex.credit_amount = credit_amount
             ex.save()
+            send_exchange_email(ex, "exchange_update.html", f"Store Credit Issued for Your Exchange — Order #{ex.order_id} | Zivo")
             issued += 1
         self.message_user(request, f"Store credit issued for {issued} exchange(s).")
 

@@ -53,6 +53,42 @@ def send_order_email(order, template_name, subject):
     threading.Thread(target=_send, daemon=False).start()
 
 
+# ─────────────────────────── Exchange emails ─────────────────────────────────
+
+def send_exchange_email(exchange, template_name, subject):
+    """Send a size-exchange email to the customer in a background thread."""
+    import threading
+    from django.template.loader import render_to_string
+
+    customer = exchange.order.customer
+    if not customer or not customer.email:
+        return
+
+    html = render_to_string(f"store/emails/{template_name}", {
+        "exchange": exchange,
+        "store_name": "Zivo",
+        "site_url": settings.SITE_URL,
+    })
+    recipient = customer.email
+
+    def _send():
+        try:
+            from brevo import Brevo, SendTransacEmailRequestToItem, SendTransacEmailRequestSender
+            client = Brevo(api_key=settings.BREVO_API_KEY)
+            client.transactional_emails.send_transac_email(
+                to=[SendTransacEmailRequestToItem(email=recipient)],
+                sender=SendTransacEmailRequestSender(
+                    email=settings.DEFAULT_FROM_EMAIL, name="Zivo"
+                ),
+                subject=subject,
+                html_content=html,
+            )
+        except Exception as e:
+            logger.error(f"[EXCHANGE EMAIL] {template_name} for exchange #{exchange.id}: {e}", exc_info=True)
+
+    threading.Thread(target=_send, daemon=False).start()
+
+
 # ─────────────────────────── Offer engine ────────────────────────────────────
 
 def _get_active_offers():

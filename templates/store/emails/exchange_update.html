@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Size Exchange Update</title>
+</head>
+<body style="margin:0;padding:0;background:#f8f7f5;font-family:'Helvetica Neue',Arial,sans-serif;color:#111;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f8f7f5;padding:32px 0;">
+  <tr><td align="center">
+    <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#fff;border-radius:16px;border:1px solid #ececec;overflow:hidden;">
+
+      <!-- HEADER -->
+      <tr><td style="background:#111;padding:28px 32px;text-align:center;">
+        <div style="font-size:1.4rem;font-weight:700;color:#fff;letter-spacing:1px;">{{ store_name|upper }}</div>
+        <div style="font-size:0.8rem;color:rgba(255,255,255,0.6);margin-top:4px;">Size Exchange Update</div>
+      </td></tr>
+
+      <!-- BODY -->
+      <tr><td style="padding:32px 32px 24px;">
+        <h2 style="font-size:1.2rem;font-weight:600;margin:0 0 8px;">
+          {% if exchange.status == "APPROVED" %}Your exchange has been approved ✓
+          {% elif exchange.status == "STORE_CREDIT_ISSUED" %}Store credit issued for your exchange 🎁
+          {% elif exchange.status == "REJECTED" %}Your exchange request update
+          {% elif exchange.status == "COMPLETED" %}Your exchange is complete 🎉
+          {% else %}Exchange Request Update{% endif %}
+        </h2>
+        <p style="font-size:0.88rem;color:#666;margin:0 0 24px;line-height:1.6;">
+          Hi {{ exchange.order.name }},
+          {% if exchange.status == "APPROVED" %}
+            your size exchange request for Order #{{ exchange.order.id }} has been approved.
+            Please keep the original item packed and ready — our logistics partner will contact you within <strong>2 business days</strong> to arrange a free doorstep pickup.
+            Your replacement ({{ exchange.requested_sku.size }}) will be shipped once we collect the original.
+          {% elif exchange.status == "STORE_CREDIT_ISSUED" %}
+            unfortunately the size you requested for Order #{{ exchange.order.id }} is currently out of stock.
+            We've issued <strong>store credit of ₹{{ exchange.credit_amount }}</strong> to your account — you can use it on any future order at checkout.
+          {% elif exchange.status == "REJECTED" %}
+            after reviewing your exchange request for Order #{{ exchange.order.id }}, we're unable to process it at this time.
+            Please contact us if you have any questions.
+          {% elif exchange.status == "COMPLETED" %}
+            your size exchange for Order #{{ exchange.order.id }} is now complete. We hope the new size fits perfectly!
+          {% endif %}
+        </p>
+
+        <!-- Exchange summary -->
+        <div style="background:#f8f7f5;border-radius:10px;padding:16px 18px;margin-bottom:24px;font-size:0.85rem;">
+          <div style="margin-bottom:8px;">
+            <strong>{{ exchange.order_item.sku.product.name }}</strong>
+          </div>
+          <div style="color:#6b7280;">
+            {{ exchange.order_item.sku.color }} &nbsp;·&nbsp;
+            {{ exchange.order_item.sku.size }} → {% if exchange.requested_sku %}{{ exchange.requested_sku.size }}{% else %}—{% endif %}
+          </div>
+          <div style="margin-top:8px;">
+            Status: <strong style="color:{% if exchange.status == 'APPROVED' %}#166534{% elif exchange.status == 'STORE_CREDIT_ISSUED' %}#5b21b6{% elif exchange.status == 'REJECTED' %}#991b1b{% else %}#15803d{% endif %};">
+              {{ exchange.get_status_display }}
+            </strong>
+          </div>
+        </div>
+
+        {% if exchange.status == "APPROVED" %}
+        <div style="background:#f0fdf4;border-left:3px solid #10b981;border-radius:0 8px 8px 0;padding:14px 16px;font-size:0.84rem;color:#166534;margin-bottom:24px;line-height:1.75;">
+          <strong>Pickup checklist:</strong><br>
+          • Pack the item securely with all original tags attached<br>
+          • Item must be unworn and unwashed<br>
+          • Our team will contact you to schedule pickup — no need to visit a courier
+        </div>
+        {% endif %}
+
+        {% if exchange.status == "STORE_CREDIT_ISSUED" %}
+        <div style="background:#f5f3ff;border-left:3px solid #8b5cf6;border-radius:0 8px 8px 0;padding:14px 16px;font-size:0.84rem;color:#5b21b6;margin-bottom:24px;line-height:1.75;">
+          <strong>₹{{ exchange.credit_amount }} store credit</strong> has been added to your account.<br>
+          It will be automatically shown at checkout on your next order — just click "Apply".
+        </div>
+        {% endif %}
+
+        {% if exchange.admin_notes %}
+        <div style="background:#fafafa;border-left:3px solid #7c3aed;border-radius:0 8px 8px 0;padding:12px 16px;font-size:0.85rem;color:#374151;margin-bottom:24px;">
+          <strong>Note from our team:</strong><br>{{ exchange.admin_notes }}
+        </div>
+        {% endif %}
+
+        <div style="margin-bottom:24px;">
+          <a href="{{ site_url }}{% url 'exchange_status' exchange.order.id %}"
+             style="display:inline-block;background:#7c3aed;color:#fff;padding:12px 28px;
+                    border-radius:8px;text-decoration:none;font-size:0.88rem;font-weight:600;">
+            View Exchange Status
+          </a>
+        </div>
+      </td></tr>
+
+      <!-- FOOTER -->
+      <tr><td style="padding:20px 32px;border-top:1px solid #f0f0f0;text-align:center;">
+        <p style="font-size:0.8rem;color:#aaa;margin:0;">
+          Questions? Contact us at <a href="mailto:support@thezivo.com" style="color:#7c3aed;text-decoration:none;">support@thezivo.com</a>
+        </p>
+      </td></tr>
+
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>

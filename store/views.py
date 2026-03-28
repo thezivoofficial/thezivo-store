@@ -2859,11 +2859,13 @@ def request_exchange(request, order_id):
             messages.error(request, "Please select a different size.")
             return redirect("request_exchange", order_id=order.id)
 
-        SizeExchangeRequest.objects.create(
+        exc = SizeExchangeRequest.objects.create(
             order=order,
             order_item=order_item,
             requested_sku=requested_sku,
         )
+        from .utils import send_exchange_email
+        send_exchange_email(exc, "exchange_submitted.html", f"Exchange Request Received — Order #{order.id} | Zivo")
         messages.success(request, "Exchange request submitted! We'll review it within 2 business days.")
         return redirect("exchange_status", order_id=order.id)
 

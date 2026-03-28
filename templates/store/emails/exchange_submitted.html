@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Size Exchange Request Received</title>
+</head>
+<body style="margin:0;padding:0;background:#f8f7f5;font-family:'Helvetica Neue',Arial,sans-serif;color:#111;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f8f7f5;padding:32px 0;">
+  <tr><td align="center">
+    <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#fff;border-radius:16px;border:1px solid #ececec;overflow:hidden;">
+
+      <!-- HEADER -->
+      <tr><td style="background:#111;padding:28px 32px;text-align:center;">
+        <div style="font-size:1.4rem;font-weight:700;color:#fff;letter-spacing:1px;">{{ store_name|upper }}</div>
+        <div style="font-size:0.8rem;color:rgba(255,255,255,0.6);margin-top:4px;">Size Exchange Request</div>
+      </td></tr>
+
+      <!-- BODY -->
+      <tr><td style="padding:32px 32px 24px;">
+        <h2 style="font-size:1.2rem;font-weight:600;margin:0 0 8px;">We've received your exchange request ✓</h2>
+        <p style="font-size:0.88rem;color:#666;margin:0 0 24px;line-height:1.6;">
+          Hi {{ exchange.order.name }}, your size exchange request for Order #{{ exchange.order.id }} has been received.
+          Our team will review it within <strong>2 business days</strong> and update you here.
+        </p>
+
+        <!-- Exchange summary -->
+        <div style="background:#f8f7f5;border-radius:10px;padding:16px 18px;margin-bottom:24px;font-size:0.85rem;">
+          <div style="margin-bottom:8px;">
+            <strong>{{ exchange.order_item.sku.product.name }}</strong>
+          </div>
+          <div style="color:#6b7280;">
+            {{ exchange.order_item.sku.color }} &nbsp;·&nbsp;
+            Current size: <strong style="color:#111;">{{ exchange.order_item.sku.size }}</strong>
+            &nbsp;→&nbsp;
+            Requested size: <strong style="color:#7c3aed;">{% if exchange.requested_sku %}{{ exchange.requested_sku.size }}{% else %}—{% endif %}</strong>
+          </div>
+        </div>
+
+        <!-- What to expect -->
+        <div style="background:#f9f7ff;border-left:3px solid #8b5cf6;border-radius:0 8px 8px 0;padding:14px 16px;font-size:0.84rem;color:#374151;margin-bottom:24px;line-height:1.75;">
+          <strong style="color:#5b21b6;">What happens next?</strong><br>
+          • If your requested size is available, we'll arrange a <strong>free pickup</strong> from your delivery address and ship the replacement.<br>
+          • If the size is out of stock, we'll issue <strong>store credit</strong> equal to the item price for use on any future order.
+        </div>
+
+        <div style="margin-bottom:24px;">
+          <a href="{{ site_url }}{% url 'exchange_status' exchange.order.id %}"
+             style="display:inline-block;background:#7c3aed;color:#fff;padding:12px 28px;
+                    border-radius:8px;text-decoration:none;font-size:0.88rem;font-weight:600;">
+            View Exchange Status
+          </a>
+        </div>
+      </td></tr>
+
+      <!-- FOOTER -->
+      <tr><td style="padding:20px 32px;border-top:1px solid #f0f0f0;text-align:center;">
+        <p style="font-size:0.8rem;color:#aaa;margin:0;">
+          Questions? Contact us at <a href="mailto:support@thezivo.com" style="color:#7c3aed;text-decoration:none;">support@thezivo.com</a>
+        </p>
+      </td></tr>
+
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>
