@@ -706,17 +706,57 @@
 
         <!-- SIZE EXCHANGE -->
         {% if exchange_requests %}
+        {% with ex=exchange_requests.first %}
         <div class="detail-card">
             <div class="cancel-section">
-                <div style="font-size:0.82rem; color:#6b7280; margin-bottom:10px;">
-                    You have submitted a size exchange request for this order.
+                {% if ex.status == "COMPLETED" %}
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                    <span style="font-size:1.3rem;">✅</span>
+                    <div>
+                        <div style="font-size:0.88rem; font-weight:600; color:#166534;">Exchange Complete</div>
+                        <div style="font-size:0.8rem; color:#6b7280; margin-top:2px;">Your replacement item has been dispatched.</div>
+                    </div>
                 </div>
+                {% elif ex.status == "STORE_CREDIT_ISSUED" %}
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                    <span style="font-size:1.3rem;">🎁</span>
+                    <div>
+                        <div style="font-size:0.88rem; font-weight:600; color:#5b21b6;">Store Credit Issued</div>
+                        <div style="font-size:0.8rem; color:#6b7280; margin-top:2px;">
+                            ₹{{ ex.credit_amount }} store credit has been added to your account.
+                        </div>
+                    </div>
+                </div>
+                {% elif ex.status == "APPROVED" %}
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                    <span style="font-size:1.3rem;">📦</span>
+                    <div>
+                        <div style="font-size:0.88rem; font-weight:600; color:#1d4ed8;">Exchange Approved</div>
+                        <div style="font-size:0.8rem; color:#6b7280; margin-top:2px;">Pickup will be arranged within 2 business days.</div>
+                    </div>
+                </div>
+                {% elif ex.status == "REJECTED" %}
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                    <span style="font-size:1.3rem;">✕</span>
+                    <div>
+                        <div style="font-size:0.88rem; font-weight:600; color:#991b1b;">Exchange Not Approved</div>
+                        <div style="font-size:0.8rem; color:#6b7280; margin-top:2px;">We were unable to process your exchange request.</div>
+                    </div>
+                </div>
+                {% else %}
+                <div style="font-size:0.82rem; color:#6b7280; margin-bottom:10px;">
+                    Your size exchange request is under review. We'll update you within 2 business days.
+                </div>
+                {% endif %}
+                {% if ex.status != "COMPLETED" %}
                 <a href="{% url 'exchange_status' order.id %}" class="btn-cancel"
                    style="display:inline-block; text-decoration:none; background:#8b5cf6; color:#fff; border-color:#8b5cf6;">
                     View Exchange Status
                 </a>
+                {% endif %}
             </div>
         </div>
+        {% endwith %}
         {% elif exchange_open %}
         <div class="detail-card">
             <div class="cancel-section">
