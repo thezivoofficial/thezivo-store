@@ -748,12 +748,10 @@
                     Your size exchange request is under review. We'll update you within 2 business days.
                 </div>
                 {% endif %}
-                {% if ex.status != "COMPLETED" %}
                 <a href="{% url 'exchange_status' order.id %}" class="btn-cancel"
                    style="display:inline-block; text-decoration:none; background:#8b5cf6; color:#fff; border-color:#8b5cf6;">
                     View Exchange Status
                 </a>
-                {% endif %}
             </div>
         </div>
         {% endwith %}
