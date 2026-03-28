@@ -2810,8 +2810,16 @@ def request_exchange(request, order_id):
         order_item_id = request.POST.get("order_item_id", "").strip()
         requested_sku_id = request.POST.get("requested_sku_id", "").strip()
 
+        if not order_item_id.isdigit():
+            messages.error(request, "Invalid item selected.")
+            return redirect("request_exchange", order_id=order.id)
+
+        if not requested_sku_id.isdigit():
+            messages.error(request, "Please select a size.")
+            return redirect("request_exchange", order_id=order.id)
+
         try:
-            order_item = order_items.get(id=order_item_id)
+            order_item = order_items.get(id=int(order_item_id))
         except OrderItem.DoesNotExist:
             messages.error(request, "Invalid item selected.")
             return redirect("request_exchange", order_id=order.id)
@@ -2825,7 +2833,7 @@ def request_exchange(request, order_id):
             return redirect("order_detail", order_id=order.id)
 
         try:
-            requested_sku = SKU.objects.get(id=requested_sku_id, product=order_item.sku.product)
+            requested_sku = SKU.objects.get(id=int(requested_sku_id), product=order_item.sku.product)
         except SKU.DoesNotExist:
             messages.error(request, "Invalid size selected.")
             return redirect("request_exchange", order_id=order.id)
