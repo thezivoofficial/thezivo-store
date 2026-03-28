@@ -748,3 +748,67 @@ class AbandonedCart(models.Model):
 
     def __str__(self):
         return f"Cart – {self.customer} ({self.updated_at:%Y-%m-%d %H:%M})"
+
+
+class StoreCredit(models.Model):
+    """One balance row per customer. Issued when a size-exchange replacement is out of stock."""
+    customer   = models.OneToOneField(Customer, on_delete=models.CASCADE, related_name="store_credit")
+    balance    = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Store Credit"
+        verbose_name_plural = "Store Credits"
+
+    def __str__(self):
+        return f"{self.customer} — ₹{self.balance}"
+
+    @classmethod
+    def get_balance(cls, customer):
+        obj, _ = cls.objects.get_or_create(customer=customer)
+        return obj.balance
+
+    def add(self, amount):
+        self.balance += amount
+        self.save()
+
+    def deduct(self, amount):
+        """Deduct up to `amount` from balance. Returns amount actually deducted."""
+        actual = min(amount, self.balance)
+        self.balance -= actual
+        self.save()
+        return actual
+
+
+class SizeExchangeRequest(models.Model):
+    STATUS_CHOICES = [
+        ("REQUESTED",           "Requested"),
+        ("APPROVED",            "Approved — Replacement Shipping"),
+        ("REJECTED",            "Rejected"),
+        ("STORE_CREDIT_ISSUED", "Store Credit Issued (size OOS)"),
+        ("COMPLETED",           "Completed"),
+    ]
+
+    order         = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="exchange_requests")
+    order_item    = models.ForeignKey(OrderItem, on_delete=models.CASCADE, related_name="exchange_requests")
+    requested_sku = models.ForeignKey(
+        SKU, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="exchange_requests_incoming",
+        help_text="The new size/SKU the customer wants.",
+    )
+    status        = models.CharField(max_length=25, choices=STATUS_CHOICES, default="REQUESTED")
+    admin_notes   = models.TextField(blank=True, default="", help_text="Internal notes (not shown to customer).")
+    credit_amount = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True,
+        help_text="Store credit issued if requested size was out of stock.",
+    )
+    created_at    = models.DateTimeField(auto_now_add=True)
+    updated_at    = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Size Exchange Request"
+        verbose_name_plural = "Size Exchange Requests"
+
+    def __str__(self):
+        return f"Exchange #{self.id} — Order #{self.order_id} [{self.status}]"

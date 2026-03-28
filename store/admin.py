@@ -11,7 +11,7 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import path, reverse
 from django.utils.html import format_html
 from unfold.admin import ModelAdmin, TabularInline
-from .models import Product, SKU, Order, OrderItem, StockNotification, ProductImage, Address, Customer, SiteSettings, Coupon, Review, Announcement, Category, Offer, NewsletterSubscriber, ReturnRequest, ReturnItem
+from .models import Product, SKU, Order, OrderItem, StockNotification, ProductImage, Address, Customer, SiteSettings, Coupon, Review, Announcement, Category, Offer, NewsletterSubscriber, ReturnRequest, ReturnItem, SizeExchangeRequest, StoreCredit
 from .utils import send_whatsapp, send_order_email, send_new_product_alert, whatsapp_order_shipped, whatsapp_order_delivered
 from django.conf import settings
 
@@ -1125,3 +1125,120 @@ class ReturnRequestAdmin(ModelAdmin):
             rr.save()
             _send_return_email(rr, "return_update.html", f"Refund Processed for Return #{rr.id} — Zivo")
         self.message_user(request, "Refund(s) processed.")
+
+
+# ── Size Exchange Admin ───────────────────────────────────────────────────────
+
+@admin.register(SizeExchangeRequest)
+class SizeExchangeRequestAdmin(ModelAdmin):
+    list_display       = ("id", "display_order", "display_customer", "display_item", "display_requested_sku", "display_status", "credit_amount", "created_at")
+    list_display_links = ("id", "display_order")
+    list_filter        = ("status", "created_at")
+    search_fields      = ("order__id", "order__name", "order__phone")
+    readonly_fields    = ("order", "order_item", "requested_sku", "created_at", "updated_at")
+    actions            = ["action_approve", "action_reject", "action_issue_credit"]
+
+    fieldsets = (
+        ("Exchange Info", {"fields": ("order", "order_item", "requested_sku", "created_at")}),
+        ("Resolution", {"fields": ("status", "admin_notes", "credit_amount", "updated_at")}),
+    )
+
+    def display_order(self, obj):
+        url = reverse("admin:store_order_change", args=[obj.order_id])
+        return format_html('<a href="{}">Order #{}</a>', url, obj.order_id)
+    display_order.short_description = "Order"
+
+    def display_customer(self, obj):
+        return obj.order.name
+    display_customer.short_description = "Customer"
+
+    def display_item(self, obj):
+        return f"{obj.order_item.sku.product.name} — {obj.order_item.sku.size} ({obj.order_item.sku.color})"
+    display_item.short_description = "Ordered Item"
+
+    def display_requested_sku(self, obj):
+        if obj.requested_sku:
+            stock = obj.requested_sku.stock
+            color = "#166534" if stock > 0 else "#991b1b"
+            return format_html(
+                '{} <span style="color:{};font-size:0.75rem;">(stock: {})</span>',
+                obj.requested_sku.size, color, stock,
+            )
+        return "—"
+    display_requested_sku.short_description = "Requested Size"
+
+    def display_status(self, obj):
+        colors = {
+            "REQUESTED":           ("#fef9c3", "#854d0e"),
+            "APPROVED":            ("#dcfce7", "#166534"),
+            "REJECTED":            ("#fee2e2", "#991b1b"),
+            "STORE_CREDIT_ISSUED": ("#ede9fe", "#5b21b6"),
+            "COMPLETED":           ("#f0fdf4", "#15803d"),
+        }
+        bg, fg = colors.get(obj.status, ("#f3f4f6", "#374151"))
+        return format_html(
+            '<span style="background:{};color:{};padding:3px 10px;border-radius:12px;font-size:0.78rem;font-weight:600;">{}</span>',
+            bg, fg, obj.get_status_display()
+        )
+    display_status.short_description = "Status"
+
+    def save_model(self, request, obj, form, change):
+        """Auto-issue store credit when status is set to STORE_CREDIT_ISSUED."""
+        if change and "status" in form.changed_data and obj.status == "STORE_CREDIT_ISSUED":
+            if obj.credit_amount and obj.credit_amount > 0:
+                customer = obj.order.customer
+                if customer:
+                    sc, _ = StoreCredit.objects.get_or_create(customer=customer)
+                    sc.add(obj.credit_amount)
+                    self.message_user(request, f"Store credit of ₹{obj.credit_amount} issued to {customer.name}.")
+        super().save_model(request, obj, form, change)
+
+    @admin.action(description="Approve — replacement will be shipped")
+    def action_approve(self, request, queryset):
+        updated = 0
+        for ex in queryset.filter(status="REQUESTED"):
+            if ex.requested_sku and ex.requested_sku.stock > 0:
+                ex.requested_sku.stock -= 1
+                ex.requested_sku.save()
+                ex.status = "APPROVED"
+                ex.save()
+                updated += 1
+            else:
+                self.message_user(request, f"Exchange #{ex.id}: requested size is out of stock — use 'Issue Store Credit' instead.", level="warning")
+        self.message_user(request, f"{updated} exchange(s) approved and stock reserved.")
+
+    @admin.action(description="Reject selected exchange requests")
+    def action_reject(self, request, queryset):
+        updated = queryset.filter(status="REQUESTED").update(status="REJECTED")
+        self.message_user(request, f"{updated} exchange(s) rejected.")
+
+    @admin.action(description="Issue store credit (requested size OOS)")
+    def action_issue_credit(self, request, queryset):
+        issued = 0
+        for ex in queryset.filter(status="REQUESTED"):
+            customer = ex.order.customer
+            if not customer:
+                continue
+            credit_amount = ex.order_item.price
+            sc, _ = StoreCredit.objects.get_or_create(customer=customer)
+            sc.add(credit_amount)
+            ex.status = "STORE_CREDIT_ISSUED"
+            ex.credit_amount = credit_amount
+            ex.save()
+            issued += 1
+        self.message_user(request, f"Store credit issued for {issued} exchange(s).")
+
+
+# ── Store Credit Admin ────────────────────────────────────────────────────────
+
+@admin.register(StoreCredit)
+class StoreCreditAdmin(ModelAdmin):
+    list_display       = ("id", "display_customer", "balance", "updated_at")
+    list_display_links = ("id", "display_customer")
+    search_fields      = ("customer__name", "customer__phone")
+    readonly_fields    = ("customer", "updated_at")
+
+    def display_customer(self, obj):
+        url = reverse("admin:store_customer_change", args=[obj.customer_id])
+        return format_html('<a href="{}">{}</a>', url, obj.customer)
+    display_customer.short_description = "Customer"

@@ -608,7 +608,7 @@
 
         </div>
 
-        <!-- CANCEL ORDER -->
+        <!-- CANCEL ORDER / ACTIONS -->
         {% if order.status in "PLACED,CREATED" %}
         <div class="detail-card">
             <div class="cancel-section">
@@ -651,6 +651,51 @@
                     </a>
                 </div>
             {% endif %}
+        </div>
+
+        <!-- SIZE EXCHANGE -->
+        {% if exchange_requests %}
+        <div class="detail-card">
+            <div class="cancel-section">
+                <div style="font-size:0.82rem; color:#6b7280; margin-bottom:10px;">
+                    You have submitted a size exchange request for this order.
+                </div>
+                <a href="{% url 'exchange_status' order.id %}" class="btn-cancel"
+                   style="display:inline-block; text-decoration:none; background:#8b5cf6; color:#fff; border-color:#8b5cf6;">
+                    View Exchange Status
+                </a>
+            </div>
+        </div>
+        {% elif exchange_open %}
+        <div class="detail-card">
+            <div class="cancel-section">
+                <div style="font-size:0.82rem; color:#999; margin-bottom:12px;">
+                    Wrong size? You can request a size exchange within 3 days of delivery.
+                </div>
+                <a href="{% url 'request_exchange' order.id %}" class="btn-cancel"
+                   style="display:inline-block; text-decoration:none; border-color:#c4b5fd; color:#7c3aed;">
+                    Request Size Exchange
+                </a>
+            </div>
+        </div>
+        {% endif %}
+        {% endif %}
+
+        <!-- STORE CREDIT BANNER -->
+        {% if credit_balance > 0 %}
+        <div style="background:#f5f3ff; border:1px solid #ddd6fe; border-radius:16px; padding:20px 24px;
+                    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;
+                    margin-bottom:16px;">
+            <div>
+                <div style="font-size:0.7rem; font-weight:600; color:#7c3aed; text-transform:uppercase; letter-spacing:0.7px; margin-bottom:4px;">Store Credit Balance</div>
+                <div style="font-family:'Playfair Display',serif; font-size:1.4rem; color:#7c3aed; font-weight:600;">₹{{ credit_balance }}</div>
+                <div style="font-size:0.78rem; color:#a78bfa; margin-top:2px;">Applied automatically at checkout</div>
+            </div>
+            <a href="{% url 'home' %}"
+               style="display:inline-block; background:#7c3aed; color:#fff; padding:10px 20px;
+                      border-radius:8px; font-size:0.85rem; font-weight:600; text-decoration:none;">
+                Shop Now →
+            </a>
         </div>
         {% endif %}
 

@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404
-from .models import Product, SKU, Order, OrderItem, StockNotification, ProductImage, Address, SiteSettings, CartItem, WishlistItem, Coupon, Review, Category, NewsletterSubscriber, ReturnRequest, ReturnItem
+from .models import Product, SKU, Order, OrderItem, StockNotification, ProductImage, Address, SiteSettings, CartItem, WishlistItem, Coupon, Review, Category, NewsletterSubscriber, ReturnRequest, ReturnItem, SizeExchangeRequest, StoreCredit
 from django.shortcuts import redirect
 from django.http import JsonResponse, HttpResponse
 from django.db.models import Min, F, ExpressionWrapper, IntegerField, Sum, Q
@@ -937,6 +937,16 @@ def checkout(request):
             coupon_code_applied = coupon_session.get('code', '')
             final_amount = max(0, final_amount - coupon_discount)
 
+    # ── Store Credit (only for logged-in customers) ───────────────────
+    store_credit_balance = 0
+    store_credit_applied = 0
+    if request.customer:
+        store_credit_balance = int(StoreCredit.get_balance(request.customer))
+        sc_session = request.session.get("store_credit_applied", 0)
+        if sc_session:
+            store_credit_applied = min(int(sc_session), store_credit_balance, final_amount)
+            final_amount = max(0, final_amount - store_credit_applied)
+
     from .models import SiteSettings
     cod_enabled = SiteSettings.get().cod_enabled
 
@@ -956,6 +966,8 @@ def checkout(request):
         "offer_lines": offer_lines,
         "est_delivery_start": est_delivery_start,
         "est_delivery_end": est_delivery_end,
+        "store_credit_balance": store_credit_balance,
+        "store_credit_applied": store_credit_applied,
     }
 
     # ---------- POST ----------
@@ -1064,7 +1076,13 @@ def checkout(request):
                 if coupon_obj:
                     Coupon.objects.filter(pk=coupon_obj.pk).update(used_count=F('used_count') + 1)
 
+                # Deduct store credit if applied
+                if store_credit_applied > 0 and request.customer:
+                    sc_obj, _ = StoreCredit.objects.get_or_create(customer=request.customer)
+                    sc_obj.deduct(store_credit_applied)
+
             request.session.pop('coupon', None)
+            request.session.pop('store_credit_applied', None)
             # Allow guest to view their own order_success page
             placed = request.session.get("placed_order_ids", [])
             placed.append(order.id)
@@ -1113,8 +1131,11 @@ def checkout(request):
                     price=item["sku"].selling_price
                 )
 
-            # Store for guest ownership check in create_razorpay_order
+            # Store for guest ownership check and store-credit deduction
             request.session["pending_online_order_id"] = order.id
+            if store_credit_applied > 0:
+                request.session[f"sc_for_order_{order.id}"] = store_credit_applied
+            request.session.pop("store_credit_applied", None)
             request.session.modified = True
 
             return render(request, "store/checkout.html", {
@@ -1256,6 +1277,13 @@ def verify_payment(request):
             Coupon.objects.filter(pk=order.coupon_id).update(used_count=F('used_count') + 1)
 
     request.session.pop('coupon', None)
+    # Deduct store credit if it was applied during checkout
+    sc_key = f"sc_for_order_{order.id}"
+    sc_amount = request.session.pop(sc_key, 0)
+    if sc_amount > 0 and order.customer_id:
+        sc_obj, _ = StoreCredit.objects.get_or_create(customer_id=order.customer_id)
+        sc_obj.deduct(sc_amount)
+
     # ✅ CLEAR CART HERE (CRITICAL)
     clear_cart(request)
 
@@ -1973,8 +2001,20 @@ def cart_ajax(request):
 
 @customer_login_required
 def order_detail(request, order_id):
+    from django.utils import timezone
     order = get_object_or_404(Order, id=order_id, customer=request.customer)
-    return render(request, "store/order_detail.html", {"order": order})
+    exchange_requests = order.exchange_requests.select_related("order_item__sku", "requested_sku").all()
+    credit_balance = StoreCredit.get_balance(request.customer)
+    exchange_open = False
+    if order.status == "DELIVERED" and order.delivered_at:
+        cutoff = order.delivered_at + timezone.timedelta(days=EXCHANGE_WINDOW_DAYS)
+        exchange_open = timezone.now() <= cutoff
+    return render(request, "store/order_detail.html", {
+        "order": order,
+        "exchange_requests": exchange_requests,
+        "credit_balance": credit_balance,
+        "exchange_open": exchange_open,
+    })
 
 
 @customer_login_required
@@ -2740,3 +2780,136 @@ def reset_password(request):
         return redirect("home")
 
     return render(request, "store/reset_password.html")
+
+
+# ─────────────────────────── Size Exchange ───────────────────────────
+
+EXCHANGE_WINDOW_DAYS = 3
+
+
+@customer_login_required
+def request_exchange(request, order_id):
+    from django.utils import timezone
+
+    order = get_object_or_404(Order, id=order_id, customer=request.customer)
+
+    if order.status != "DELIVERED":
+        messages.error(request, "Exchange requests can only be raised for delivered orders.")
+        return redirect("order_detail", order_id=order.id)
+
+    # Enforce 3-day window from delivery
+    if order.delivered_at:
+        cutoff = order.delivered_at + timezone.timedelta(days=EXCHANGE_WINDOW_DAYS)
+        if timezone.now() > cutoff:
+            messages.error(request, "The exchange window (3 days from delivery) has passed.")
+            return redirect("order_detail", order_id=order.id)
+
+    order_items = order.items.select_related("sku__product").all()
+
+    if request.method == "POST":
+        order_item_id = request.POST.get("order_item_id", "").strip()
+        requested_sku_id = request.POST.get("requested_sku_id", "").strip()
+
+        try:
+            order_item = order_items.get(id=order_item_id)
+        except OrderItem.DoesNotExist:
+            messages.error(request, "Invalid item selected.")
+            return redirect("request_exchange", order_id=order.id)
+
+        # Prevent duplicate active requests for same item
+        if SizeExchangeRequest.objects.filter(
+            order_item=order_item,
+            status__in=["REQUESTED", "APPROVED"],
+        ).exists():
+            messages.error(request, "An exchange request for this item is already pending.")
+            return redirect("order_detail", order_id=order.id)
+
+        try:
+            requested_sku = SKU.objects.get(id=requested_sku_id, product=order_item.sku.product)
+        except SKU.DoesNotExist:
+            messages.error(request, "Invalid size selected.")
+            return redirect("request_exchange", order_id=order.id)
+
+        if requested_sku.id == order_item.sku_id:
+            messages.error(request, "Please select a different size.")
+            return redirect("request_exchange", order_id=order.id)
+
+        SizeExchangeRequest.objects.create(
+            order=order,
+            order_item=order_item,
+            requested_sku=requested_sku,
+        )
+        messages.success(request, "Exchange request submitted! We'll review it within 2 business days.")
+        return redirect("exchange_status", order_id=order.id)
+
+    # Build available sizes per item (same product + color, different size)
+    items_with_sizes = []
+    for item in order_items:
+        existing = SizeExchangeRequest.objects.filter(
+            order_item=item,
+            status__in=["REQUESTED", "APPROVED", "STORE_CREDIT_ISSUED", "COMPLETED"],
+        ).first()
+        other_skus = SKU.objects.filter(
+            product=item.sku.product,
+            color=item.sku.color,
+        ).exclude(id=item.sku_id).order_by("size")
+        items_with_sizes.append({
+            "item": item,
+            "other_skus": other_skus,
+            "existing_exchange": existing,
+        })
+
+    return render(request, "store/exchange_request.html", {
+        "order": order,
+        "items_with_sizes": items_with_sizes,
+        "exchange_window_days": EXCHANGE_WINDOW_DAYS,
+    })
+
+
+@customer_login_required
+def exchange_status(request, order_id):
+    order = get_object_or_404(Order, id=order_id, customer=request.customer)
+    exchanges = SizeExchangeRequest.objects.filter(order=order).select_related(
+        "order_item__sku__product", "requested_sku"
+    )
+    if not exchanges.exists():
+        return redirect("order_detail", order_id=order.id)
+    credit_balance = StoreCredit.get_balance(request.customer)
+    return render(request, "store/exchange_status.html", {
+        "order": order,
+        "exchanges": exchanges,
+        "credit_balance": credit_balance,
+    })
+
+
+# ─────────────────────────── Store Credit checkout ───────────────────
+
+@require_POST
+@customer_login_required
+def apply_store_credit(request):
+    try:
+        final_amount = int(request.POST.get("final_amount", 0))
+    except (ValueError, TypeError):
+        return JsonResponse({"status": "error", "message": "Invalid amount."})
+
+    balance = StoreCredit.get_balance(request.customer)
+    applicable = min(int(balance), final_amount)
+    new_total = max(0, final_amount - applicable)
+
+    request.session["store_credit_applied"] = float(applicable)
+    request.session.modified = True
+
+    return JsonResponse({
+        "status": "ok",
+        "applied": float(applicable),
+        "balance": float(balance),
+        "new_total": new_total,
+    })
+
+
+@require_POST
+@customer_login_required
+def remove_store_credit(request):
+    request.session.pop("store_credit_applied", None)
+    request.session.modified = True
+    return JsonResponse({"status": "ok"})

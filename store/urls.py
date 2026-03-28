@@ -63,4 +63,8 @@ urlpatterns = [
     path("forgot-password/", views.forgot_password, name="forgot_password"),
     path("verify-otp/", views.verify_otp, name="verify_otp"),
     path("reset-password/", views.reset_password, name="reset_password"),
+    path("orders/<int:order_id>/exchange/", views.request_exchange, name="request_exchange"),
+    path("orders/<int:order_id>/exchange/status/", views.exchange_status, name="exchange_status"),
+    path("apply-store-credit/", views.apply_store_credit, name="apply_store_credit"),
+    path("remove-store-credit/", views.remove_store_credit, name="remove_store_credit"),
 ]

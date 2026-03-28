@@ -1,0 +1,252 @@
+{% extends "store/base.html" %}
+{% block title %}Exchange Status — Order #{{ order.id }} | Zivo{% endblock %}
+
+{% block content %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+    .xch-page {
+        background: #f8f7f5;
+        min-height: 100vh;
+        padding: 48px 0 80px;
+        font-family: 'DM Sans', sans-serif;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.85rem;
+        color: #888;
+        text-decoration: none;
+        margin-bottom: 28px;
+        transition: color 0.15s;
+    }
+    .back-link:hover { color: #111; }
+
+    .xch-page h1 {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.9rem;
+        font-weight: 600;
+        color: #111;
+        margin-bottom: 6px;
+    }
+    .xch-page .sub { color: #999; font-size: 0.85rem; margin-bottom: 32px; }
+
+    .exchange-card {
+        background: #fff;
+        border: 1px solid #ececec;
+        border-radius: 16px;
+        overflow: hidden;
+        margin-bottom: 16px;
+    }
+
+    .exchange-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 24px;
+        border-bottom: 1px solid #f5f5f5;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .exchange-card-header .title {
+        font-weight: 600;
+        font-size: 0.92rem;
+        color: #111;
+    }
+
+    .exchange-card-header .sub-meta {
+        font-size: 0.78rem;
+        color: #999;
+        margin-top: 2px;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 14px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    .status-badge::before {
+        content: '';
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+    }
+
+    .s-requested  { background: #fef9c3; color: #854d0e; }
+    .s-approved   { background: #dcfce7; color: #166534; }
+    .s-rejected   { background: #fee2e2; color: #991b1b; }
+    .s-credit     { background: #ede9fe; color: #5b21b6; }
+    .s-completed  { background: #f0fdf4; color: #15803d; }
+
+    .exchange-body {
+        padding: 18px 24px;
+    }
+
+    .xch-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 12px;
+    }
+
+    .xch-arrow {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #9ca3af;
+        font-size: 1.1rem;
+        padding-top: 6px;
+    }
+
+    .size-chip {
+        display: inline-block;
+        padding: 5px 14px;
+        border-radius: 20px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        background: #f3f4f6;
+        color: #374151;
+    }
+
+    .size-chip.new {
+        background: #ede9fe;
+        color: #7c3aed;
+    }
+
+    .detail-label {
+        font-size: 0.7rem;
+        font-weight: 500;
+        color: #bbb;
+        text-transform: uppercase;
+        letter-spacing: 0.7px;
+        margin-bottom: 4px;
+    }
+
+    .detail-value {
+        font-size: 0.88rem;
+        color: #374151;
+    }
+
+    .credit-banner {
+        background: #f5f3ff;
+        border: 1px solid #ddd6fe;
+        border-radius: 12px;
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .credit-banner .label { font-size: 0.85rem; color: #5b21b6; font-weight: 500; }
+    .credit-banner .amount { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: #7c3aed; font-weight: 600; }
+
+    .btn-shop {
+        display: inline-block;
+        background: #7c3aed;
+        color: #fff;
+        padding: 10px 22px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: background 0.15s;
+    }
+    .btn-shop:hover { background: #6d28d9; color: #fff; }
+</style>
+
+<div class="xch-page">
+    <div class="container" style="max-width:680px;">
+
+        <a href="{% url 'order_detail' order.id %}" class="back-link">← Back to Order</a>
+
+        <h1>Exchange Status</h1>
+        <p class="sub">Order #{{ order.id }}</p>
+
+        {% if credit_balance > 0 %}
+        <div class="credit-banner">
+            <div>
+                <div class="label">Your Store Credit Balance</div>
+                <div class="amount">₹{{ credit_balance }}</div>
+            </div>
+            <a href="{% url 'home' %}" class="btn-shop">Shop Now →</a>
+        </div>
+        {% endif %}
+
+        {% for ex in exchanges %}
+        <div class="exchange-card">
+            <div class="exchange-card-header">
+                <div>
+                    <div class="title">{{ ex.order_item.sku.product.name }}</div>
+                    <div class="sub-meta">{{ ex.order_item.sku.color }} · Requested {{ ex.created_at|date:"d M Y" }}</div>
+                </div>
+                {% if ex.status == "REQUESTED" %}
+                    <span class="status-badge s-requested">Under Review</span>
+                {% elif ex.status == "APPROVED" %}
+                    <span class="status-badge s-approved">Replacement Shipping</span>
+                {% elif ex.status == "REJECTED" %}
+                    <span class="status-badge s-rejected">Rejected</span>
+                {% elif ex.status == "STORE_CREDIT_ISSUED" %}
+                    <span class="status-badge s-credit">Store Credit Issued</span>
+                {% elif ex.status == "COMPLETED" %}
+                    <span class="status-badge s-completed">Completed</span>
+                {% endif %}
+            </div>
+            <div class="exchange-body">
+                <div class="xch-row">
+                    <div>
+                        <div class="detail-label">Current Size</div>
+                        <span class="size-chip">{{ ex.order_item.sku.size }}</span>
+                    </div>
+                    <div class="xch-arrow">→</div>
+                    <div>
+                        <div class="detail-label">Requested Size</div>
+                        {% if ex.requested_sku %}
+                            <span class="size-chip new">{{ ex.requested_sku.size }}</span>
+                        {% else %}
+                            <span class="size-chip">—</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if ex.status == "STORE_CREDIT_ISSUED" and ex.credit_amount %}
+                <div style="margin-top:10px; background:#f5f3ff; border-radius:8px; padding:12px 16px; font-size:0.85rem; color:#5b21b6;">
+                    ✅ Store credit of <strong>₹{{ ex.credit_amount }}</strong> has been added to your account. Use it on any future purchase at checkout.
+                </div>
+                {% endif %}
+
+                {% if ex.status == "REJECTED" and ex.admin_notes %}
+                <div style="margin-top:10px; background:#fce4ec; border-radius:8px; padding:12px 16px; font-size:0.85rem; color:#c62828;">
+                    {{ ex.admin_notes }}
+                </div>
+                {% endif %}
+
+                {% if ex.status == "APPROVED" %}
+                <div style="margin-top:10px; background:#f0fdf4; border-radius:8px; padding:12px 16px; font-size:0.85rem; color:#15803d;">
+                    ✅ Your replacement is being arranged. You'll receive an update once it ships.
+                </div>
+                {% endif %}
+
+                {% if ex.status == "REQUESTED" %}
+                <div style="margin-top:10px; background:#fef9c3; border-radius:8px; padding:12px 16px; font-size:0.85rem; color:#854d0e;">
+                    ⏳ We'll review your request within 2 business days and update you here.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+
+    </div>
+</div>
+{% endblock %}

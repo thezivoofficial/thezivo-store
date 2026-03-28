@@ -804,12 +804,53 @@
                         </div>
                         {% endif %}
 
+                        {% if store_credit_applied > 0 %}
+                        <div class="totals-row" id="store-credit-line" style="color:#7c3aed;">
+                            <span>🎁 Store Credit</span>
+                            <span>-₹{{ store_credit_applied }}</span>
+                        </div>
+                        {% else %}
+                        <div class="totals-row" id="store-credit-line" style="display:none; color:#7c3aed;">
+                            <span>🎁 Store Credit</span>
+                            <span id="sc-val">-₹0</span>
+                        </div>
+                        {% endif %}
+
                         <div class="totals-row final">
                             <span>Amount Payable</span>
-                            <span>₹{{ final_amount }}</span>
+                            <span id="final-amount-val">₹{{ final_amount }}</span>
                         </div>
 
                     </div>
+
+                    {% if store_credit_balance > 0 %}
+                    <div style="background:#f5f3ff; border:1px solid #ddd6fe; border-radius:10px; padding:12px 16px; margin:12px 0;">
+                        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+                            <div style="font-size:0.82rem; color:#7c3aed; font-weight:600;">
+                                Store Credit: ₹{{ store_credit_balance }}
+                            </div>
+                            {% if store_credit_applied > 0 %}
+                            <button onclick="removeStoreCredit()" id="sc-remove-btn"
+                                    style="background:none; border:none; color:#c62828; font-size:0.75rem; cursor:pointer; padding:0;">
+                                Remove
+                            </button>
+                            {% else %}
+                            <button onclick="applyStoreCredit({{ final_amount }})" id="sc-apply-btn"
+                                    style="background:#7c3aed; color:#fff; border:none; border-radius:6px;
+                                           padding:5px 12px; font-size:0.78rem; cursor:pointer; font-family:'DM Sans',sans-serif;">
+                                Apply
+                            </button>
+                            {% endif %}
+                        </div>
+                        <div id="sc-status" style="font-size:0.75rem; color:#6b7280;">
+                            {% if store_credit_applied > 0 %}
+                                ✓ ₹{{ store_credit_applied }} applied from your store credit
+                            {% else %}
+                                Apply your store credit to reduce the payable amount.
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
 
                     <div class="secure-note">
                         🔒 Secure & encrypted checkout
@@ -1030,8 +1071,8 @@ function applyCoupon() {
             row.style.fontSize = '0.82rem';
             document.getElementById('coupon-label').textContent = code.toUpperCase();
             var dl = document.getElementById('discount-line');
-            if (dl) { dl.style.display = 'flex'; dl.querySelector('#discount-val, span:last-child').textContent = '-₹' + d.discount; }
-            var finalEl = document.querySelector('.totals-row.final span:last-child');
+            if (dl) { dl.style.display = 'flex'; var dv = document.getElementById('discount-val'); if (dv) dv.textContent = '-₹' + d.discount; }
+            var finalEl = document.getElementById('final-amount-val');
             if (finalEl) finalEl.textContent = '₹' + d.final_amount;
             var payBtn = document.getElementById('pay-btn');
             if (payBtn && payBtn.textContent.trim() !== 'Place Order') payBtn.textContent = 'Pay ₹' + d.final_amount;
@@ -1055,11 +1096,44 @@ function removeCoupon() {
         document.getElementById('coupon-input').value = '';
         var dl = document.getElementById('discount-line');
         if (dl) dl.style.display = 'none';
-        var finalEl = document.querySelector('.totals-row.final span:last-child');
+        var finalEl = document.getElementById('final-amount-val');
         if (finalEl) finalEl.textContent = '₹' + d.final_amount;
         var payBtn = document.getElementById('pay-btn');
         if (payBtn && payBtn.textContent.trim() !== 'Place Order') payBtn.textContent = 'Pay ₹' + d.final_amount;
     });
+}
+
+function applyStoreCredit(finalAmount) {
+    fetch('/apply-store-credit/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCsrf(), 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'final_amount=' + encodeURIComponent(finalAmount)
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.status === 'ok' && d.applied > 0) {
+            var scLine = document.getElementById('store-credit-line');
+            if (scLine) { scLine.style.display = 'flex'; var sv = document.getElementById('sc-val'); if (sv) sv.textContent = '-₹' + d.applied; }
+            var finalEl = document.getElementById('final-amount-val');
+            if (finalEl) finalEl.textContent = '₹' + d.new_total;
+            var payBtn = document.getElementById('pay-btn');
+            if (payBtn && payBtn.textContent.trim() !== 'Place Order') payBtn.textContent = 'Pay ₹' + d.new_total;
+            var scStatus = document.getElementById('sc-status');
+            if (scStatus) scStatus.textContent = '✓ ₹' + d.applied + ' applied from your store credit';
+            var applyBtn = document.getElementById('sc-apply-btn');
+            if (applyBtn) { applyBtn.textContent = 'Remove'; applyBtn.onclick = removeStoreCredit; applyBtn.style.background = 'none'; applyBtn.style.color = '#c62828'; }
+        }
+    });
+}
+
+function removeStoreCredit() {
+    fetch('/remove-store-credit/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCsrf(), 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: ''
+    })
+    .then(r => r.json())
+    .then(() => { location.reload(); });
 }
 </script>
 

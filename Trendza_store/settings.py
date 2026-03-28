@@ -207,6 +207,16 @@ UNFOLD = {
                         "link": reverse_lazy("admin:store_newslettersubscriber_changelist"),
                     },
                     {
+                        "title": "Size Exchanges",
+                        "icon": "swap_horiz",
+                        "link": reverse_lazy("admin:store_sizeexchangerequest_changelist"),
+                    },
+                    {
+                        "title": "Store Credits",
+                        "icon": "wallet",
+                        "link": reverse_lazy("admin:store_storecredit_changelist"),
+                    },
+                    {
                         "title": "Announcements",
                         "icon": "campaign",
                         "link": reverse_lazy("admin:store_announcement_changelist"),
