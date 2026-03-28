@@ -337,6 +337,11 @@
         border-color: #ef9a9a;
     }
 
+    .btn-exchange:hover {
+        background: #f5f3ff !important;
+        border-color: #a78bfa !important;
+    }
+
     /* CANCEL MODAL */
     .cancel-overlay {
         display: none;
@@ -718,7 +723,7 @@
                 <div style="font-size:0.82rem; color:#999; margin-bottom:12px;">
                     Wrong size? You can request a size exchange within 3 days of delivery.
                 </div>
-                <a href="{% url 'request_exchange' order.id %}" class="btn-cancel"
+                <a href="{% url 'request_exchange' order.id %}" class="btn-cancel btn-exchange"
                    style="display:inline-block; text-decoration:none; border-color:#c4b5fd; color:#7c3aed;">
                     Request Size Exchange
                 </a>
