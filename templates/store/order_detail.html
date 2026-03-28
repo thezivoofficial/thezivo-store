@@ -717,6 +717,10 @@
                         <div style="font-size:0.8rem; color:#6b7280; margin-top:2px;">Your replacement item has been dispatched.</div>
                     </div>
                 </div>
+                <a href="{% url 'exchange_status' order.id %}" class="btn-cancel"
+                   style="display:inline-block; text-decoration:none; background:#15803d; color:#fff; border-color:#15803d;">
+                    View Details
+                </a>
                 {% elif ex.status == "STORE_CREDIT_ISSUED" %}
                 <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
                     <span style="font-size:1.3rem;">🎁</span>
@@ -748,10 +752,12 @@
                     Your size exchange request is under review. We'll update you within 2 business days.
                 </div>
                 {% endif %}
+                {% if ex.status != "COMPLETED" %}
                 <a href="{% url 'exchange_status' order.id %}" class="btn-cancel"
                    style="display:inline-block; text-decoration:none; background:#8b5cf6; color:#fff; border-color:#8b5cf6;">
                     View Exchange Status
                 </a>
+                {% endif %}
             </div>
         </div>
         {% endwith %}
