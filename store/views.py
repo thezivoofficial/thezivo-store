@@ -2012,10 +2012,12 @@ def order_detail(request, order_id):
     if order.status == "DELIVERED" and order.delivered_at:
         store = SiteSettings.get()
         days_since = (now - order.delivered_at).days
-        return_open = days_since <= store.return_window_days
-        # Exchange only open if no return request exists
-        cutoff = order.delivered_at + timezone.timedelta(days=EXCHANGE_WINDOW_DAYS)
         has_return = ReturnRequest.objects.filter(order=order).exists()
+        has_exchange = exchange_requests.exists()
+        # Return only shown if within window AND no exchange request active
+        return_open = days_since <= store.return_window_days and not has_exchange
+        # Exchange only shown if within 3-day window AND no return request active
+        cutoff = order.delivered_at + timezone.timedelta(days=EXCHANGE_WINDOW_DAYS)
         exchange_open = now <= cutoff and not has_return
 
     return render(request, "store/order_detail.html", {
