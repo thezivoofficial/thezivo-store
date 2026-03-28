@@ -1136,7 +1136,7 @@ class SizeExchangeRequestAdmin(ModelAdmin):
     list_filter        = ("status", "created_at")
     search_fields      = ("order__id", "order__name", "order__phone")
     readonly_fields    = ("order", "order_item", "requested_sku", "created_at", "updated_at")
-    actions            = ["action_approve", "action_reject", "action_issue_credit"]
+    actions            = ["action_approve", "action_reject", "action_issue_credit", "action_complete"]
 
     fieldsets = (
         ("Exchange Info", {"fields": ("order", "order_item", "requested_sku", "created_at")}),
@@ -1249,6 +1249,17 @@ class SizeExchangeRequestAdmin(ModelAdmin):
             send_exchange_email(ex, "exchange_update.html", f"Store Credit Issued for Your Exchange — Order #{ex.order_id} | Zivo")
             issued += 1
         self.message_user(request, f"Store credit issued for {issued} exchange(s).")
+
+    @admin.action(description="Mark selected exchanges as Completed")
+    def action_complete(self, request, queryset):
+        from .utils import send_exchange_email
+        updated = 0
+        for ex in queryset.filter(status="APPROVED"):
+            ex.status = "COMPLETED"
+            ex.save()
+            send_exchange_email(ex, "exchange_update.html", f"Size Exchange Complete — Order #{ex.order_id} | Zivo")
+            updated += 1
+        self.message_user(request, f"{updated} exchange(s) marked as completed.")
 
 
 # ── Store Credit Admin ────────────────────────────────────────────────────────
