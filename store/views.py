@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404
-from .models import Product, SKU, Order, OrderItem, StockNotification, ProductImage, Address, SiteSettings, CartItem, WishlistItem, Coupon, Review, Category, NewsletterSubscriber, ReturnRequest, ReturnItem, SizeExchangeRequest, StoreCredit
+from .models import Product, SKU, Order, OrderItem, StockNotification, ProductImage, Address, SiteSettings, CartItem, WishlistItem, Coupon, Review, Category, NewsletterSubscriber, ReturnRequest, ReturnItem, SizeExchangeRequest, StoreCredit, UserNotification, PushSubscription, SiteBanner
 from django.shortcuts import redirect
 from django.http import JsonResponse, HttpResponse
 from django.db.models import Min, F, ExpressionWrapper, IntegerField, Sum, Q
@@ -2939,4 +2939,123 @@ def apply_store_credit(request):
 def remove_store_credit(request):
     request.session.pop("store_credit_applied", None)
     request.session.modified = True
+    return JsonResponse({"status": "ok"})
+
+
+# ─────────────────────────── Notifications ───────────────────────────────────
+
+def notifications_json(request):
+    """Bell dropdown — recent notifications + unread count."""
+    if not request.customer:
+        return JsonResponse({"notifications": [], "unread_count": 0})
+    notifs = list(
+        request.customer.notifications.all()[:20].values(
+            "id", "title", "message", "notif_type", "link", "is_read", "created_at"
+        )
+    )
+    for n in notifs:
+        n["created_at"] = n["created_at"].strftime("%b %d, %I:%M %p")
+    unread = request.customer.notifications.filter(is_read=False).count()
+    return JsonResponse({"notifications": notifs, "unread_count": unread})
+
+
+@require_POST
+@customer_login_required
+def mark_notifications_read(request):
+    notif_id = request.POST.get("id")
+    qs = request.customer.notifications.filter(is_read=False)
+    if notif_id:
+        qs = qs.filter(id=notif_id)
+    qs.update(is_read=True)
+    return JsonResponse({"status": "ok"})
+
+
+# ─────────────────────────── Browser push ────────────────────────────────────
+
+@require_POST
+@customer_login_required
+def push_subscribe(request):
+    import json
+    try:
+        data = json.loads(request.body)
+        PushSubscription.objects.update_or_create(
+            endpoint=data["endpoint"],
+            defaults={
+                "customer": request.customer,
+                "p256dh":   data["keys"]["p256dh"],
+                "auth":     data["keys"]["auth"],
+            },
+        )
+        return JsonResponse({"status": "ok"})
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=400)
+
+
+@require_POST
+@customer_login_required
+def push_unsubscribe(request):
+    import json
+    try:
+        data = json.loads(request.body)
+        PushSubscription.objects.filter(endpoint=data.get("endpoint", "")).delete()
+    except Exception:
+        pass
+    return JsonResponse({"status": "ok"})
+
+
+# ─────────────────────────── Service Worker ──────────────────────────────────
+
+def service_worker(request):
+    from django.http import HttpResponse
+    from django.conf import settings
+    content = f"""
+self.addEventListener('push', function(event) {{
+  const data = event.data ? event.data.json() : {{}};
+  const title   = data.title || 'Zivo';
+  const options = {{
+    body:    data.body  || '',
+    icon:    '/static/store/images/icon-192.png',
+    badge:   '/static/store/images/icon-192.png',
+    data:    {{ url: data.url || '/' }},
+  }};
+  event.waitUntil(self.registration.showNotification(title, options));
+}});
+
+self.addEventListener('notificationclick', function(event) {{
+  event.notification.close();
+  event.waitUntil(clients.openWindow(event.notification.data.url || '/'));
+}});
+"""
+    return HttpResponse(content, content_type="application/javascript")
+
+
+# ─────────────────────────── Site banners ────────────────────────────────────
+
+def site_banners_json(request):
+    from django.utils import timezone
+    from django.db.models import Q
+    now = timezone.now()
+    dismissed = request.session.get("dismissed_banners", [])
+    banners = list(
+        SiteBanner.objects.filter(is_active=True)
+        .filter(Q(valid_from__isnull=True) | Q(valid_from__lte=now))
+        .filter(Q(valid_to__isnull=True)   | Q(valid_to__gte=now))
+        .exclude(id__in=dismissed)
+        .values("id", "title", "message", "banner_type", "link", "link_text")
+    )
+    return JsonResponse({"banners": banners})
+
+
+@require_POST
+def dismiss_banner(request):
+    import json
+    try:
+        banner_id = int(json.loads(request.body).get("id", 0))
+        dismissed = request.session.get("dismissed_banners", [])
+        if banner_id and banner_id not in dismissed:
+            dismissed.append(banner_id)
+            request.session["dismissed_banners"] = dismissed
+            request.session.modified = True
+    except Exception:
+        pass
     return JsonResponse({"status": "ok"})

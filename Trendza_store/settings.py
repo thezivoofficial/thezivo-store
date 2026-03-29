@@ -222,6 +222,21 @@ UNFOLD = {
                         "link": reverse_lazy("admin:store_announcement_changelist"),
                     },
                     {
+                        "title": "Site Banners",
+                        "icon": "web",
+                        "link": reverse_lazy("admin:store_sitebanner_changelist"),
+                    },
+                    {
+                        "title": "Notifications",
+                        "icon": "notifications",
+                        "link": reverse_lazy("admin:store_usernotification_changelist"),
+                    },
+                    {
+                        "title": "Push Subscriptions",
+                        "icon": "phonelink_ring",
+                        "link": reverse_lazy("admin:store_pushsubscription_changelist"),
+                    },
+                    {
                         "title": "Site Settings",
                         "icon": "settings",
                         "link": reverse_lazy("admin:store_sitesettings_changelist"),
@@ -276,6 +291,7 @@ TEMPLATES = [
                 'store.context_processors.announcement_banner',
                 'store.context_processors.nav_categories',
                 'store.context_processors.active_offers_context',
+                'store.context_processors.vapid_key',
             ],
         },
     },
@@ -390,6 +406,10 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='support@thezivo.com')
 
 # ── SMS (2Factor.in OTP) ──────────────────────────────────────────────────────
 TWO_FACTOR_API_KEY = config('TWO_FACTOR_API_KEY', default='')
+
+# ── Web Push (VAPID) ──────────────────────────────────────────────────────────
+VAPID_PUBLIC_KEY  = config('VAPID_PUBLIC_KEY',  default='')
+VAPID_PRIVATE_KEY = config('VAPID_PRIVATE_KEY', default='')
 
 # ── Security headers ────────────────────────────────────────────────────────
 SECURE_CONTENT_TYPE_NOSNIFF = True

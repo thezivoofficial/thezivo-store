@@ -11,8 +11,8 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import path, reverse
 from django.utils.html import format_html
 from unfold.admin import ModelAdmin, TabularInline
-from .models import Product, SKU, Order, OrderItem, StockNotification, ProductImage, Address, Customer, SiteSettings, Coupon, Review, Announcement, Category, Offer, NewsletterSubscriber, ReturnRequest, ReturnItem, SizeExchangeRequest, StoreCredit
-from .utils import send_whatsapp, send_order_email, send_new_product_alert, whatsapp_order_shipped, whatsapp_order_delivered
+from .models import Product, SKU, Order, OrderItem, StockNotification, ProductImage, Address, Customer, SiteSettings, Coupon, Review, Announcement, Category, Offer, NewsletterSubscriber, ReturnRequest, ReturnItem, SizeExchangeRequest, StoreCredit, UserNotification, PushSubscription, SiteBanner
+from .utils import send_whatsapp, send_order_email, send_new_product_alert, whatsapp_order_shipped, whatsapp_order_delivered, create_notification, send_push_to_user, send_push_to_all
 from django.conf import settings
 
 
@@ -459,6 +459,10 @@ class OrderAdmin(ModelAdmin):
                 order.save()
                 send_order_email(order, 'order_shipped.html', f'Your Order #{order.id} Has Been Shipped!')
                 whatsapp_order_shipped(order)
+                if order.customer:
+                    url = f"/orders/{order.id}/"
+                    create_notification(order.customer, "Order Shipped 🚚", f"Your order #{order.id} is on its way!", link=url)
+                    send_push_to_user(order.customer, "Order Shipped 🚚", f"Your Zivo order #{order.id} is on its way!", url=url)
             elif new_status == "DELIVERED":
                 from django.utils import timezone
                 order.delivered_at = timezone.now()
@@ -467,8 +471,16 @@ class OrderAdmin(ModelAdmin):
                 order.save()
                 send_order_email(order, 'order_delivered.html', f'Your Order #{order.id} Has Been Delivered!')
                 whatsapp_order_delivered(order)
+                if order.customer:
+                    url = f"/orders/{order.id}/"
+                    create_notification(order.customer, "Order Delivered 🎉", f"Your order #{order.id} has been delivered.", link=url)
+                    send_push_to_user(order.customer, "Order Delivered 🎉", f"Your Zivo order #{order.id} has been delivered.", url=url)
             else:
                 order.save()
+                if new_status == "CONFIRMED" and order.customer:
+                    url = f"/orders/{order.id}/"
+                    create_notification(order.customer, "Order Confirmed ✅", f"Your order #{order.id} has been confirmed.", link=url)
+                    send_push_to_user(order.customer, "Order Confirmed ✅", f"Your Zivo order #{order.id} is confirmed.", url=url)
             messages.success(request, f"Order #{order_id} marked as {new_status}.")
         return redirect(request.META.get("HTTP_REFERER") or "..")
 
@@ -665,7 +677,13 @@ class OrderAdmin(ModelAdmin):
 
     @admin.action(description="✅ Mark as Confirmed")
     def action_confirm(self, request, queryset):
+        orders = list(queryset.filter(status__in=["PLACED", "CREATED"]))
         n = queryset.filter(status__in=["PLACED", "CREATED"]).update(status="CONFIRMED")
+        for order in orders:
+            if order.customer:
+                url = f"/orders/{order.id}/"
+                create_notification(order.customer, "Order Confirmed ✅", f"Your order #{order.id} has been confirmed.", link=url)
+                send_push_to_user(order.customer, "Order Confirmed ✅", f"Your Zivo order #{order.id} is confirmed.", url=url)
         self.message_user(request, f"{n} order(s) marked as Confirmed.")
 
     @admin.action(description="🚚 Mark as Shipped")
@@ -676,6 +694,10 @@ class OrderAdmin(ModelAdmin):
             order.save()
             send_order_email(order, 'order_shipped.html', f'Your Order #{order.id} Has Been Shipped!')
             whatsapp_order_shipped(order)
+            if order.customer:
+                url = f"/orders/{order.id}/"
+                create_notification(order.customer, "Order Shipped 🚚", f"Your order #{order.id} is on its way!", link=url)
+                send_push_to_user(order.customer, "Order Shipped 🚚", f"Your Zivo order #{order.id} is on its way!", url=url)
             n += 1
         self.message_user(request, f"{n} order(s) marked as Shipped.")
 
@@ -691,6 +713,10 @@ class OrderAdmin(ModelAdmin):
             order.save()
             send_order_email(order, 'order_delivered.html', f'Your Order #{order.id} Has Been Delivered!')
             whatsapp_order_delivered(order)
+            if order.customer:
+                url = f"/orders/{order.id}/"
+                create_notification(order.customer, "Order Delivered 🎉", f"Your order #{order.id} has been delivered.", link=url)
+                send_push_to_user(order.customer, "Order Delivered 🎉", f"Your Zivo order #{order.id} has been delivered.", url=url)
             n += 1
         self.message_user(request, f"{n} order(s) marked as Delivered.")
 
@@ -1289,3 +1315,76 @@ class StoreCreditAdmin(ModelAdmin):
         url = reverse("admin:store_customer_change", args=[obj.customer_id])
         return format_html('<a href="{}">{}</a>', url, obj.customer)
     display_customer.short_description = "Customer"
+
+
+# ── User Notifications Admin ───────────────────────────────────────────────────
+
+@admin.register(UserNotification)
+class UserNotificationAdmin(ModelAdmin):
+    list_display       = ("id", "display_customer", "title", "notif_type", "is_read", "created_at")
+    list_display_links = ("id", "title")
+    list_filter        = ("notif_type", "is_read")
+    search_fields      = ("customer__name", "customer__phone", "title", "message")
+    readonly_fields    = ("customer", "created_at")
+    actions            = ["mark_all_read", "broadcast_notification"]
+
+    def display_customer(self, obj):
+        url = reverse("admin:store_customer_change", args=[obj.customer_id])
+        return format_html('<a href="{}">{}</a>', url, obj.customer)
+    display_customer.short_description = "Customer"
+
+    @admin.action(description="Mark selected as read")
+    def mark_all_read(self, request, queryset):
+        n = queryset.update(is_read=True)
+        self.message_user(request, f"{n} notification(s) marked as read.")
+
+
+# ── Push Subscriptions Admin ───────────────────────────────────────────────────
+
+@admin.register(PushSubscription)
+class PushSubscriptionAdmin(ModelAdmin):
+    list_display       = ("id", "display_customer", "endpoint_short", "created_at")
+    list_display_links = ("id", "display_customer")
+    search_fields      = ("customer__name", "customer__phone", "endpoint")
+    readonly_fields    = ("customer", "endpoint", "p256dh", "auth", "created_at")
+
+    def display_customer(self, obj):
+        url = reverse("admin:store_customer_change", args=[obj.customer_id])
+        return format_html('<a href="{}">{}</a>', url, obj.customer)
+    display_customer.short_description = "Customer"
+
+    def endpoint_short(self, obj):
+        return obj.endpoint[:60] + "…"
+    endpoint_short.short_description = "Endpoint"
+
+
+# ── Site Banners Admin ─────────────────────────────────────────────────────────
+
+@admin.register(SiteBanner)
+class SiteBannerAdmin(ModelAdmin):
+    list_display       = ("id", "title", "banner_type", "is_active", "valid_from", "valid_to", "created_at")
+    list_display_links = ("id", "title")
+    list_editable      = ("is_active",)
+    list_filter        = ("banner_type", "is_active")
+    search_fields      = ("title", "message")
+    actions            = ["broadcast_as_push"]
+
+    @admin.action(description="📣 Send as push notification to all subscribers")
+    def broadcast_as_push(self, request, queryset):
+        n = 0
+        for banner in queryset:
+            send_push_to_all(
+                banner.title,
+                banner.message,
+                url=banner.link or "/",
+            )
+            # Also create in-app notification for all customers
+            from .models import Customer as C
+            customers = C.objects.filter(push_subscriptions__isnull=False).distinct()
+            for customer in customers:
+                create_notification(
+                    customer, banner.title, banner.message,
+                    notif_type="PROMO", link=banner.link or "",
+                )
+            n += 1
+        self.message_user(request, f"{n} banner(s) broadcast as push notification.")

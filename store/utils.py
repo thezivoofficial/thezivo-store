@@ -281,6 +281,62 @@ def send_new_product_alert(product_id):
     transaction.on_commit(lambda: threading.Thread(target=_send, daemon=True).start())
 
 
+# ─────────────────────────── In-app notifications ────────────────────────────
+
+def create_notification(customer, title, message, notif_type="ORDER", link=""):
+    """Create a UserNotification for the bell dropdown."""
+    try:
+        from .models import UserNotification
+        UserNotification.objects.create(
+            customer=customer, title=title, message=message,
+            notif_type=notif_type, link=link,
+        )
+    except Exception as e:
+        logger.error(f"create_notification failed: {e}", exc_info=True)
+
+
+# ─────────────────────────── Browser push ────────────────────────────────────
+
+def _send_one_push(endpoint, p256dh, auth, title, body, url="/"):
+    try:
+        from pywebpush import webpush
+        import json
+        webpush(
+            subscription_info={"endpoint": endpoint, "keys": {"p256dh": p256dh, "auth": auth}},
+            data=json.dumps({"title": title, "body": body, "url": url}),
+            vapid_private_key=settings.VAPID_PRIVATE_KEY,
+            vapid_claims={"sub": f"mailto:{settings.DEFAULT_FROM_EMAIL}"},
+        )
+    except Exception as e:
+        logger.error(f"Push send failed [{endpoint[:40]}]: {e}")
+
+
+def send_push_to_user(customer, title, body, url="/"):
+    """Send browser push to all subscriptions of one customer (background)."""
+    import threading
+    from .models import PushSubscription
+    subs = list(PushSubscription.objects.filter(customer=customer).values("endpoint", "p256dh", "auth"))
+    if not subs:
+        return
+    def _send():
+        for s in subs:
+            _send_one_push(s["endpoint"], s["p256dh"], s["auth"], title, body, url)
+    threading.Thread(target=_send, daemon=True).start()
+
+
+def send_push_to_all(title, body, url="/"):
+    """Broadcast browser push to every subscribed user (background)."""
+    import threading
+    from .models import PushSubscription
+    subs = list(PushSubscription.objects.all().values("endpoint", "p256dh", "auth"))
+    if not subs:
+        return
+    def _send():
+        for s in subs:
+            _send_one_push(s["endpoint"], s["p256dh"], s["auth"], title, body, url)
+    threading.Thread(target=_send, daemon=True).start()
+
+
 def send_otp_sms(phone, otp):
     """Send OTP via 2Factor.in. phone should be 10-digit Indian mobile number."""
     import requests

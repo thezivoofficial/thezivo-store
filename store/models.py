@@ -812,3 +812,73 @@ class SizeExchangeRequest(models.Model):
 
     def __str__(self):
         return f"Exchange #{self.id} — Order #{self.order_id} [{self.status}]"
+
+
+# ── In-app notifications ───────────────────────────────────────────────────────
+
+class UserNotification(models.Model):
+    TYPE_CHOICES = [
+        ("ORDER",  "Order Update"),
+        ("PROMO",  "Promotion"),
+        ("SYSTEM", "System"),
+    ]
+    customer   = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="notifications")
+    title      = models.CharField(max_length=120)
+    message    = models.CharField(max_length=300)
+    notif_type = models.CharField(max_length=10, choices=TYPE_CHOICES, default="ORDER")
+    link       = models.CharField(max_length=200, blank=True, default="")
+    is_read    = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "User Notification"
+        verbose_name_plural = "User Notifications"
+
+    def __str__(self):
+        return f"{self.customer} — {self.title}"
+
+
+# ── Browser push subscriptions ─────────────────────────────────────────────────
+
+class PushSubscription(models.Model):
+    customer   = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="push_subscriptions")
+    endpoint   = models.TextField(unique=True)
+    p256dh     = models.TextField()
+    auth       = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Push Subscription"
+        verbose_name_plural = "Push Subscriptions"
+
+    def __str__(self):
+        return f"{self.customer} — {self.endpoint[:60]}"
+
+
+# ── Site banners (popup / toast) ───────────────────────────────────────────────
+
+class SiteBanner(models.Model):
+    TYPE_CHOICES = [
+        ("INFO",    "Info (blue)"),
+        ("PROMO",   "Promo (purple)"),
+        ("URGENT",  "Urgent (red)"),
+        ("SUCCESS", "Success (green)"),
+    ]
+    title       = models.CharField(max_length=100)
+    message     = models.CharField(max_length=300)
+    banner_type = models.CharField(max_length=10, choices=TYPE_CHOICES, default="PROMO")
+    link        = models.CharField(max_length=200, blank=True, default="", help_text="Optional CTA URL")
+    link_text   = models.CharField(max_length=50, blank=True, default="", help_text="CTA button label")
+    is_active   = models.BooleanField(default=True)
+    valid_from  = models.DateTimeField(null=True, blank=True)
+    valid_to    = models.DateTimeField(null=True, blank=True)
+    created_at  = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Site Banner"
+        verbose_name_plural = "Site Banners"
+
+    def __str__(self):
+        return f"[{self.banner_type}] {self.title}"

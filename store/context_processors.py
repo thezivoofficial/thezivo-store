@@ -134,6 +134,11 @@ def active_offers_context(request):
     }
 
 
+def vapid_key(request):
+    from django.conf import settings
+    return {"VAPID_PUBLIC_KEY": getattr(settings, "VAPID_PUBLIC_KEY", "")}
+
+
 def wishlist_count(request):
     customer = getattr(request, "customer", None)
 

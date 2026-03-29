@@ -1,0 +1,249 @@
+{% load static %}
+{% if request.customer %}
+<meta name="vapid-public-key" content="{{ VAPID_PUBLIC_KEY }}">
+
+<!-- Mobile notifications offcanvas -->
+<div class="offcanvas offcanvas-bottom" id="mobNotifCanvas" tabindex="-1"
+     style="height:80vh;border-radius:16px 16px 0 0;">
+    <div class="offcanvas-header border-bottom py-3 px-4">
+        <h6 class="mb-0 fw-bold">Notifications</h6>
+        <div class="d-flex align-items-center gap-3">
+            <button onclick="markAllRead()" style="background:none;border:none;font-size:0.78rem;color:#7c3aed;font-weight:600;cursor:pointer;">Mark all read</button>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+        </div>
+    </div>
+    <div class="offcanvas-body p-0">
+        <div id="mob-notif-list" style="max-height:100%;overflow-y:auto;"></div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Site banner popup container -->
+<div id="site-banner-container" style="position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:10px;max-width:340px;"></div>
+
+<script>
+// ── Notification helpers ────────────────────────────────────────────────────
+
+function _notifIcon(type) {
+    return type === 'ORDER' ? '📦' : type === 'PROMO' ? '🎁' : '🔔';
+}
+
+function _renderNotifItem(n) {
+    var bg   = n.is_read ? '#fff' : '#f5f3ff';
+    var dot  = n.is_read ? '' : '<span style="width:7px;height:7px;border-radius:50%;background:#7c3aed;display:inline-block;margin-left:6px;flex-shrink:0;"></span>';
+    var link = n.link ? ' onclick="window.location=\''+n.link+'\'"' : '';
+    return '<div style="padding:12px 16px;border-bottom:1px solid #f5f5f5;background:'+bg+';cursor:'+(n.link?'pointer':'default')+';display:flex;align-items:flex-start;gap:10px;"'+link+'>'
+        + '<span style="font-size:1.1rem;margin-top:1px;">'+_notifIcon(n.notif_type)+'</span>'
+        + '<div style="flex:1;min-width:0;">'
+        + '<div style="font-size:0.82rem;font-weight:600;color:#111;display:flex;align-items:center;justify-content:space-between;">'
+        + '<span>'+n.title+'</span>'+dot
+        + '</div>'
+        + '<div style="font-size:0.78rem;color:#6b7280;margin-top:2px;line-height:1.4;">'+n.message+'</div>'
+        + '<div style="font-size:0.72rem;color:#aaa;margin-top:3px;">'+n.created_at+'</div>'
+        + '</div></div>';
+}
+
+function _renderEmpty() {
+    return '<div style="padding:40px 16px;text-align:center;color:#9ca3af;font-size:0.85rem;">No notifications yet</div>';
+}
+
+function loadNotifications() {
+    fetch('/api/notifications/')
+        .then(function(r){ return r.json(); })
+        .then(function(data) {
+            // Update badge
+            var badge    = document.getElementById('notif-badge');
+            var mobBadge = document.getElementById('mob-notif-badge');
+            if (badge) {
+                badge.textContent = data.unread_count || '';
+                badge.style.display = data.unread_count > 0 ? '' : 'none';
+            }
+            if (mobBadge) {
+                mobBadge.textContent = data.unread_count || '';
+                mobBadge.style.display = data.unread_count > 0 ? '' : 'none';
+            }
+            // Render items
+            var html = data.notifications.length
+                ? data.notifications.map(_renderNotifItem).join('')
+                : _renderEmpty();
+            var list    = document.getElementById('notif-list');
+            var mobList = document.getElementById('mob-notif-list');
+            if (list)    list.innerHTML = html;
+            if (mobList) mobList.innerHTML = html;
+        });
+}
+
+function toggleNotifPanel(e) {
+    e.stopPropagation();
+    var panel = document.getElementById('notif-panel');
+    if (!panel) return;
+    var isOpen = panel.style.display !== 'none';
+    panel.style.display = isOpen ? 'none' : 'block';
+    if (!isOpen) loadNotifications();
+}
+
+function openMobNotif(e) {
+    e.preventDefault();
+    loadNotifications();
+    var canvas = document.getElementById('mobNotifCanvas');
+    if (canvas) new bootstrap.Offcanvas(canvas).show();
+    var menu = document.getElementById('mobileMenu');
+    if (menu) bootstrap.Offcanvas.getInstance(menu) && bootstrap.Offcanvas.getInstance(menu).hide();
+}
+
+function markAllRead() {
+    fetch('/api/notifications/mark-read/', {
+        method: 'POST',
+        headers: {'X-CSRFToken': _getCsrf()},
+    }).then(function(){ loadNotifications(); });
+}
+
+// Close panel when clicking outside
+document.addEventListener('click', function(e) {
+    var wrapper = document.getElementById('notif-wrapper');
+    var panel   = document.getElementById('notif-panel');
+    if (panel && wrapper && !wrapper.contains(e.target)) {
+        panel.style.display = 'none';
+    }
+});
+
+// Load count on page load
+document.addEventListener('DOMContentLoaded', function() {
+    {% if request.customer %}
+    loadNotifications();
+    {% endif %}
+    loadSiteBanners();
+    initPush();
+});
+
+// ── Browser push ────────────────────────────────────────────────────────────
+
+function _urlB64ToUint8Array(base64String) {
+    var padding = '='.repeat((4 - base64String.length % 4) % 4);
+    var b64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    var raw = window.atob(b64);
+    var out = new Uint8Array(raw.length);
+    for (var i = 0; i < raw.length; ++i) out[i] = raw.charCodeAt(i);
+    return out;
+}
+
+function initPush() {
+    {% if not request.customer %}return;{% endif %}
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+    var pubKey = document.querySelector('meta[name="vapid-public-key"]');
+    if (!pubKey || !pubKey.content) return;
+
+    navigator.serviceWorker.register('/sw.js').then(function(reg) {
+        return reg.pushManager.getSubscription().then(function(sub) {
+            if (sub) return; // already subscribed
+            // Ask permission only once (don't re-prompt if denied)
+            if (Notification.permission === 'denied') return;
+            if (Notification.permission === 'granted') {
+                return _subscribePush(reg, pubKey.content);
+            }
+            // Show a soft prompt first, then request permission
+            _showPushPrompt(reg, pubKey.content);
+        });
+    }).catch(function(){});
+}
+
+function _showPushPrompt(reg, pubKey) {
+    // Only show once per session
+    if (sessionStorage.getItem('push_prompted')) return;
+    sessionStorage.setItem('push_prompted', '1');
+
+    var prompt = document.createElement('div');
+    prompt.id = 'push-prompt';
+    prompt.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#fff;'
+        + 'border:1px solid #ddd6fe;border-radius:14px;padding:16px 20px;box-shadow:0 8px 32px rgba(0,0,0,0.12);'
+        + 'z-index:9998;max-width:320px;width:calc(100% - 32px);text-align:center;';
+    prompt.innerHTML = '<div style="font-size:1.3rem;margin-bottom:6px;">🔔</div>'
+        + '<div style="font-weight:600;font-size:0.88rem;color:#111;margin-bottom:4px;">Stay in the loop</div>'
+        + '<div style="font-size:0.78rem;color:#6b7280;margin-bottom:14px;">Get notified about your orders and exclusive offers.</div>'
+        + '<div style="display:flex;gap:8px;justify-content:center;">'
+        + '<button onclick="_enablePush(this,\''+pubKey+'\')" style="background:#7c3aed;color:#fff;border:none;border-radius:8px;padding:7px 18px;font-size:0.82rem;font-weight:600;cursor:pointer;">Enable</button>'
+        + '<button onclick="document.getElementById(\'push-prompt\').remove()" style="background:#f3f4f6;color:#374151;border:none;border-radius:8px;padding:7px 14px;font-size:0.82rem;cursor:pointer;">Not now</button>'
+        + '</div>';
+    document.body.appendChild(prompt);
+    setTimeout(function(){ if (prompt.parentNode) prompt.remove(); }, 12000);
+}
+
+function _enablePush(btn, pubKey) {
+    btn.closest('#push-prompt').remove();
+    Notification.requestPermission().then(function(perm) {
+        if (perm !== 'granted') return;
+        navigator.serviceWorker.ready.then(function(reg) {
+            _subscribePush(reg, pubKey);
+        });
+    });
+}
+
+function _subscribePush(reg, pubKey) {
+    return reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: _urlB64ToUint8Array(pubKey),
+    }).then(function(sub) {
+        var json = sub.toJSON();
+        return fetch('/push/subscribe/', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': _getCsrf()},
+            body: JSON.stringify({
+                endpoint: json.endpoint,
+                keys: { p256dh: json.keys.p256dh, auth: json.keys.auth },
+            }),
+        });
+    }).catch(function(){});
+}
+
+// ── Site banners ────────────────────────────────────────────────────────────
+
+var _bannerColors = {
+    INFO:    {bg:'#eff6ff', border:'#3b82f6', color:'#1d4ed8'},
+    PROMO:   {bg:'#f5f3ff', border:'#8b5cf6', color:'#5b21b6'},
+    URGENT:  {bg:'#fff1f2', border:'#f43f5e', color:'#be123c'},
+    SUCCESS: {bg:'#f0fdf4', border:'#22c55e', color:'#15803d'},
+};
+
+function loadSiteBanners() {
+    fetch('/api/site-banners/')
+        .then(function(r){ return r.json(); })
+        .then(function(data) {
+            data.banners.forEach(function(b) { _showBanner(b); });
+        });
+}
+
+function _showBanner(b) {
+    var c = _bannerColors[b.banner_type] || _bannerColors.INFO;
+    var el = document.createElement('div');
+    el.style.cssText = 'background:'+c.bg+';border:1px solid '+c.border+';border-radius:12px;'
+        + 'padding:14px 16px;box-shadow:0 4px 16px rgba(0,0,0,0.08);position:relative;animation:slideInRight .3s ease;';
+    var cta = b.link
+        ? '<a href="'+b.link+'" style="display:inline-block;margin-top:8px;font-size:0.75rem;font-weight:600;color:'+c.color+';text-decoration:underline;">'+( b.link_text || 'View →')+'</a>'
+        : '';
+    el.innerHTML = '<button onclick="_dismissBanner(this,'+b.id+')" style="position:absolute;top:8px;right:10px;background:none;border:none;color:#9ca3af;font-size:0.9rem;cursor:pointer;line-height:1;">✕</button>'
+        + '<div style="font-size:0.82rem;font-weight:700;color:'+c.color+';margin-bottom:3px;padding-right:20px;">'+b.title+'</div>'
+        + '<div style="font-size:0.78rem;color:#374151;line-height:1.4;">'+b.message+'</div>'
+        + cta;
+    document.getElementById('site-banner-container').appendChild(el);
+    setTimeout(function(){ if (el.parentNode) el.remove(); }, 8000);
+}
+
+function _dismissBanner(btn, id) {
+    btn.closest('[style]').remove();
+    fetch('/api/site-banners/dismiss/', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', 'X-CSRFToken': _getCsrf()},
+        body: JSON.stringify({id: id}),
+    });
+}
+
+function _getCsrf() {
+    var el = document.cookie.match(/csrftoken=([^;]+)/);
+    return el ? el[1] : '';
+}
+
+// Slide-in animation
+var _notifStyle = document.createElement('style');
+_notifStyle.textContent = '@keyframes slideInRight{from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1}}';
+document.head.appendChild(_notifStyle);
+</script>

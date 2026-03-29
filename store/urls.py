@@ -67,4 +67,14 @@ urlpatterns = [
     path("orders/<int:order_id>/exchange/status/", views.exchange_status, name="exchange_status"),
     path("apply-store-credit/", views.apply_store_credit, name="apply_store_credit"),
     path("remove-store-credit/", views.remove_store_credit, name="remove_store_credit"),
+    # Notifications
+    path("api/notifications/", views.notifications_json, name="notifications_json"),
+    path("api/notifications/mark-read/", views.mark_notifications_read, name="mark_notifications_read"),
+    # Browser push
+    path("push/subscribe/", views.push_subscribe, name="push_subscribe"),
+    path("push/unsubscribe/", views.push_unsubscribe, name="push_unsubscribe"),
+    path("sw.js", views.service_worker, name="service_worker"),
+    # Site banners
+    path("api/site-banners/", views.site_banners_json, name="site_banners_json"),
+    path("api/site-banners/dismiss/", views.dismiss_banner, name="dismiss_banner"),
 ]
