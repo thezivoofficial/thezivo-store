@@ -412,6 +412,12 @@ class OrderAdmin(ModelAdmin):
     change_form_outer_before_template = "admin/order_print_button.html"
     actions = ["export_csv", "action_confirm", "action_ship", "action_deliver", "action_cancel", "action_bulk_print"]
 
+    def save_model(self, request, obj, form, change):
+        if change and "status" in form.changed_data:
+            if obj.status == "DELIVERED" and obj.payment_method == "COD":
+                obj.payment_status = "PAID"
+        super().save_model(request, obj, form, change)
+
     class Media:
         css = {"all": ("store/admin.css",)}
 
@@ -456,6 +462,8 @@ class OrderAdmin(ModelAdmin):
             elif new_status == "DELIVERED":
                 from django.utils import timezone
                 order.delivered_at = timezone.now()
+                if order.payment_method == "COD":
+                    order.payment_status = "PAID"
                 order.save()
                 send_order_email(order, 'order_delivered.html', f'Your Order #{order.id} Has Been Delivered!')
                 whatsapp_order_delivered(order)
@@ -532,6 +540,8 @@ class OrderAdmin(ModelAdmin):
                 elif new_status == "DELIVERED":
                     from django.utils import timezone
                     order.delivered_at = timezone.now()
+                    if order.payment_method == "COD":
+                        order.payment_status = "PAID"
                     order.save()
                     send_order_email(order, 'order_delivered.html', f'Your Order #{order.id} Has Been Delivered!')
                     whatsapp_order_delivered(order)
@@ -671,9 +681,13 @@ class OrderAdmin(ModelAdmin):
 
     @admin.action(description="✔ Mark as Delivered")
     def action_deliver(self, request, queryset):
+        from django.utils import timezone
         n = 0
         for order in queryset.filter(status="SHIPPED"):
             order.status = "DELIVERED"
+            order.delivered_at = timezone.now()
+            if order.payment_method == "COD":
+                order.payment_status = "PAID"
             order.save()
             send_order_email(order, 'order_delivered.html', f'Your Order #{order.id} Has Been Delivered!')
             whatsapp_order_delivered(order)
