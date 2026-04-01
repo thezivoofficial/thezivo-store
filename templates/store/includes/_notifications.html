@@ -152,11 +152,15 @@ function _showPushPrompt(reg, pubKey) {
     if (sessionStorage.getItem('push_prompted')) return;
     sessionStorage.setItem('push_prompted', '1');
 
+    var isMobile = window.innerWidth < 992;
     var prompt = document.createElement('div');
     prompt.id = 'push-prompt';
-    prompt.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#fff;'
+    var posStyle = isMobile
+        ? 'bottom:72px;left:12px;right:12px;'
+        : 'bottom:24px;right:24px;width:300px;';
+    prompt.style.cssText = 'position:fixed;'+posStyle+'background:#fff;'
         + 'border:1px solid #ddd6fe;border-radius:14px;padding:16px 20px;box-shadow:0 8px 32px rgba(0,0,0,0.12);'
-        + 'z-index:9998;max-width:320px;width:calc(100% - 32px);text-align:center;';
+        + 'z-index:9998;text-align:center;';
     prompt.innerHTML = '<div style="font-size:1.3rem;margin-bottom:6px;">🔔</div>'
         + '<div style="font-weight:600;font-size:0.88rem;color:#111;margin-bottom:4px;">Stay in the loop</div>'
         + '<div style="font-size:0.78rem;color:#6b7280;margin-bottom:14px;">Get notified about your orders and exclusive offers.</div>'
