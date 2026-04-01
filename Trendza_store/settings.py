@@ -415,6 +415,14 @@ VAPID_PRIVATE_KEY = config('VAPID_PRIVATE_KEY', default='').replace('\\n', '\n')
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"
 SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+
+# ── Production-only security (active when DEBUG=False) ────────────────────────
+if not DEBUG:
+    SECURE_SSL_REDIRECT     = True
+    SESSION_COOKIE_SECURE   = True
+    CSRF_COOKIE_SECURE      = True
+    SECURE_HSTS_SECONDS     = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SESSION_COOKIE_HTTPONLY = True   # JS cannot access session cookie
 CSRF_COOKIE_HTTPONLY    = False  # Must stay False — JS reads CSRF token for AJAX
 PERMISSIONS_POLICY = (
