@@ -8,7 +8,8 @@
     <div class="offcanvas-header border-bottom py-3 px-4">
         <h6 class="mb-0 fw-bold">Notifications</h6>
         <div class="d-flex align-items-center gap-3">
-            <button onclick="markAllRead()" style="background:none;border:none;font-size:0.78rem;color:#7c3aed;font-weight:600;cursor:pointer;">Mark all read</button>
+            <button onclick="markAllRead()" class="notif-action-btn" style="color:#7c3aed;">Mark all read</button>
+            <button onclick="clearAllNotifs()" class="notif-action-btn" style="color:#ef4444;">Clear all</button>
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
         </div>
     </div>
@@ -29,22 +30,34 @@ function _notifIcon(type) {
 }
 
 function _renderNotifItem(n) {
-    var bg   = n.is_read ? '#fff' : '#f5f3ff';
-    var dot  = n.is_read ? '' : '<span style="width:7px;height:7px;border-radius:50%;background:#7c3aed;display:inline-block;margin-left:6px;flex-shrink:0;"></span>';
-    var link = n.link ? ' onclick="window.location=\''+n.link+'\'"' : '';
-    return '<div style="padding:12px 16px;border-bottom:1px solid #f5f5f5;background:'+bg+';cursor:'+(n.link?'pointer':'default')+';display:flex;align-items:flex-start;gap:10px;"'+link+'>'
-        + '<span style="font-size:1.1rem;margin-top:1px;">'+_notifIcon(n.notif_type)+'</span>'
-        + '<div style="flex:1;min-width:0;">'
-        + '<div style="font-size:0.82rem;font-weight:600;color:#111;display:flex;align-items:center;justify-content:space-between;">'
-        + '<span>'+n.title+'</span>'+dot
-        + '</div>'
+    var bg  = n.is_read ? '#fff' : '#f5f3ff';
+    var dot = n.is_read ? '' : '<span style="width:7px;height:7px;border-radius:50%;background:#7c3aed;display:inline-block;flex-shrink:0;margin-top:5px;"></span>';
+    return '<div id="notif-item-'+n.id+'" style="padding:12px 16px 12px 14px;border-bottom:1px solid #f5f5f5;background:'+bg+';display:flex;align-items:flex-start;gap:10px;transition:background 0.2s;">'
+        + dot
+        + '<span style="font-size:1.05rem;margin-top:1px;flex-shrink:0;">'+_notifIcon(n.notif_type)+'</span>'
+        + '<div style="flex:1;min-width:0;cursor:'+(n.link?'pointer':'default')+';" '+(n.link?'onclick="_notifClick('+n.id+',\''+n.link+'\')"':'')+'>'
+        + '<div style="font-size:0.82rem;font-weight:600;color:#111;">'+n.title+'</div>'
         + '<div style="font-size:0.78rem;color:#6b7280;margin-top:2px;line-height:1.4;">'+n.message+'</div>'
-        + '<div style="font-size:0.72rem;color:#aaa;margin-top:3px;">'+n.created_at+'</div>'
-        + '</div></div>';
+        + '<div style="font-size:0.72rem;color:#bbb;margin-top:3px;">'+n.created_at+'</div>'
+        + '</div>'
+        + '<button onclick="deleteNotif(event,'+n.id+')" title="Remove" '
+        + 'style="background:none;border:none;cursor:pointer;color:#d1d5db;font-size:0.85rem;padding:2px 4px;line-height:1;flex-shrink:0;border-radius:4px;transition:color 0.15s;" '
+        + 'onmouseenter="this.style.color=\'#ef4444\'" onmouseleave="this.style.color=\'#d1d5db\'">✕</button>'
+        + '</div>';
 }
 
 function _renderEmpty() {
-    return '<div style="padding:40px 16px;text-align:center;color:#9ca3af;font-size:0.85rem;">No notifications yet</div>';
+    return '<div style="padding:48px 16px;text-align:center;">'
+        + '<div style="font-size:2rem;margin-bottom:8px;">🔔</div>'
+        + '<div style="color:#9ca3af;font-size:0.85rem;">No notifications yet</div>'
+        + '</div>';
+}
+
+function _notifClick(id, link) {
+    fetch('/api/notifications/mark-read/', {
+        method:'POST', headers:{'X-CSRFToken':_getCsrf()},
+        body: new URLSearchParams({id: id})
+    }).then(function(){ window.location = link; });
 }
 
 function loadNotifications() {
@@ -93,8 +106,28 @@ function openMobNotif(e) {
 
 function markAllRead() {
     fetch('/api/notifications/mark-read/', {
+        method: 'POST', headers: {'X-CSRFToken': _getCsrf()},
+    }).then(function(){ loadNotifications(); });
+}
+
+function deleteNotif(e, id) {
+    e.stopPropagation();
+    var el = document.getElementById('notif-item-'+id);
+    if (el) { el.style.transition='opacity 0.2s'; el.style.opacity='0'; setTimeout(function(){ el.remove(); }, 200); }
+    fetch('/api/notifications/delete/', {
         method: 'POST',
-        headers: {'X-CSRFToken': _getCsrf()},
+        headers: {'Content-Type':'application/json','X-CSRFToken':_getCsrf()},
+        body: JSON.stringify({id: id}),
+    }).then(function(){ loadNotifications(); });
+}
+
+function clearAllNotifs() {
+    var lists = [document.getElementById('notif-list'), document.getElementById('mob-notif-list')];
+    lists.forEach(function(l){ if(l) l.innerHTML = _renderEmpty(); });
+    fetch('/api/notifications/delete/', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json','X-CSRFToken':_getCsrf()},
+        body: JSON.stringify({}),
     }).then(function(){ loadNotifications(); });
 }
 
@@ -107,10 +140,11 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// Load count on page load
+// Load count on page load + auto-poll every 60s
 document.addEventListener('DOMContentLoaded', function() {
     {% if request.customer %}
     loadNotifications();
+    setInterval(loadNotifications, 60000);
     {% endif %}
     loadSiteBanners();
     initPush();
@@ -246,8 +280,11 @@ function _getCsrf() {
     return el ? el[1] : '';
 }
 
-// Slide-in animation
+// Styles
 var _notifStyle = document.createElement('style');
-_notifStyle.textContent = '@keyframes slideInRight{from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1}}';
+_notifStyle.textContent = ''
+    + '@keyframes slideInRight{from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1}}'
+    + '.notif-action-btn{background:none;border:none;font-size:0.75rem;font-weight:600;cursor:pointer;padding:4px 8px;border-radius:6px;transition:background 0.15s,opacity 0.15s;opacity:0.85;}'
+    + '.notif-action-btn:hover{opacity:1;background:rgba(0,0,0,0.05);}';
 document.head.appendChild(_notifStyle);
 </script>

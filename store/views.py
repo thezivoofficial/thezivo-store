@@ -2970,6 +2970,22 @@ def mark_notifications_read(request):
     return JsonResponse({"status": "ok"})
 
 
+@require_POST
+@customer_login_required
+def delete_notification(request):
+    import json
+    try:
+        data = json.loads(request.body)
+        notif_id = data.get("id")
+        if notif_id:
+            request.customer.notifications.filter(id=notif_id).delete()
+        else:
+            request.customer.notifications.all().delete()
+    except Exception:
+        pass
+    return JsonResponse({"status": "ok"})
+
+
 # ─────────────────────────── Browser push ────────────────────────────────────
 
 @require_POST

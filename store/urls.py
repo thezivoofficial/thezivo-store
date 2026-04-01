@@ -70,6 +70,7 @@ urlpatterns = [
     # Notifications
     path("api/notifications/", views.notifications_json, name="notifications_json"),
     path("api/notifications/mark-read/", views.mark_notifications_read, name="mark_notifications_read"),
+    path("api/notifications/delete/", views.delete_notification, name="delete_notification"),
     # Browser push
     path("push/subscribe/", views.push_subscribe, name="push_subscribe"),
     path("push/unsubscribe/", views.push_unsubscribe, name="push_unsubscribe"),
