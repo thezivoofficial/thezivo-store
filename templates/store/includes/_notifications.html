@@ -5,12 +5,14 @@
 <!-- Mobile notifications offcanvas -->
 <div class="offcanvas offcanvas-bottom" id="mobNotifCanvas" tabindex="-1"
      style="height:80vh;border-radius:16px 16px 0 0;">
-    <div class="offcanvas-header border-bottom py-3 px-4">
-        <h6 class="mb-0 fw-bold">Notifications</h6>
-        <div class="d-flex align-items-center gap-3">
-            <button onclick="markAllRead()" class="notif-action-btn" style="color:#7c3aed;">Mark all read</button>
-            <button onclick="clearAllNotifs()" class="notif-action-btn" style="color:#ef4444;">Clear all</button>
+    <div class="px-4 pt-3 pb-0 border-bottom">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+            <h6 class="mb-0 fw-bold">Notifications</h6>
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="d-flex gap-2 pb-2">
+            <button onclick="markAllRead()" class="notif-action-btn" style="color:#7c3aed;padding:5px 12px;border:1px solid #ddd6fe;border-radius:20px;font-size:0.75rem;">✓ Mark all read</button>
+            <button onclick="clearAllNotifs()" class="notif-action-btn" style="color:#ef4444;padding:5px 12px;border:1px solid #fecaca;border-radius:20px;font-size:0.75rem;">✕ Clear all</button>
         </div>
     </div>
     <div class="offcanvas-body p-0">
