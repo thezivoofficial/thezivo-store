@@ -63,6 +63,7 @@ qrcode==8.0
 
 APScheduler==3.11.2
 django-apscheduler==0.7.0
+sentry-sdk==2.57.0
 pywebpush==2.3.0
 py-vapid==1.9.4
 http-ece==1.2.1

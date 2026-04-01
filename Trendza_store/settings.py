@@ -292,6 +292,7 @@ TEMPLATES = [
                 'store.context_processors.nav_categories',
                 'store.context_processors.active_offers_context',
                 'store.context_processors.vapid_key',
+                'store.context_processors.analytics',
             ],
         },
     },
@@ -410,6 +411,20 @@ TWO_FACTOR_API_KEY = config('TWO_FACTOR_API_KEY', default='')
 # ── Web Push (VAPID) ──────────────────────────────────────────────────────────
 VAPID_PUBLIC_KEY  = config('VAPID_PUBLIC_KEY',  default='')
 VAPID_PRIVATE_KEY = config('VAPID_PRIVATE_KEY', default='').replace('\\n', '\n')
+
+# ── Google Analytics ──────────────────────────────────────────────────────────
+GA_MEASUREMENT_ID = config('GA_MEASUREMENT_ID', default='')
+
+# ── Sentry ────────────────────────────────────────────────────────────────────
+SENTRY_DSN = config('SENTRY_DSN', default='')
+if SENTRY_DSN:
+    import sentry_sdk
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        environment="production" if not DEBUG else "development",
+        traces_sample_rate=0.2,   # capture 20% of transactions for performance
+        send_default_pii=False,   # don't send personal data to Sentry
+    )
 
 # ── Security headers ────────────────────────────────────────────────────────
 SECURE_CONTENT_TYPE_NOSNIFF = True

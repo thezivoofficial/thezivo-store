@@ -3021,6 +3021,27 @@ def push_unsubscribe(request):
 
 # ─────────────────────────── Service Worker ──────────────────────────────────
 
+def robots_txt(request):
+    from django.http import HttpResponse
+    content = f"""User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /checkout/
+Disallow: /cart/
+Disallow: /api/
+Disallow: /push/
+Disallow: /orders/
+Disallow: /profile/
+Disallow: /addresses/
+Disallow: /apply-coupon/
+Disallow: /verify-payment/
+Disallow: /create-razorpay-order/
+
+Sitemap: {settings.SITE_URL}/sitemap.xml
+"""
+    return HttpResponse(content, content_type="text/plain")
+
+
 def service_worker(request):
     from django.http import HttpResponse
     from django.conf import settings

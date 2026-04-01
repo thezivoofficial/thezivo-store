@@ -139,6 +139,11 @@ def vapid_key(request):
     return {"VAPID_PUBLIC_KEY": getattr(settings, "VAPID_PUBLIC_KEY", "")}
 
 
+def analytics(request):
+    from django.conf import settings
+    return {"GA_MEASUREMENT_ID": getattr(settings, "GA_MEASUREMENT_ID", "")}
+
+
 def wishlist_count(request):
     customer = getattr(request, "customer", None)
 
