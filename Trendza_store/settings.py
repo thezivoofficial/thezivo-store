@@ -409,7 +409,7 @@ TWO_FACTOR_API_KEY = config('TWO_FACTOR_API_KEY', default='')
 
 # ── Web Push (VAPID) ──────────────────────────────────────────────────────────
 VAPID_PUBLIC_KEY  = config('VAPID_PUBLIC_KEY',  default='')
-VAPID_PRIVATE_KEY = config('VAPID_PRIVATE_KEY', default='')
+VAPID_PRIVATE_KEY = config('VAPID_PRIVATE_KEY', default='').replace('\\n', '\n')
 
 # ── Security headers ────────────────────────────────────────────────────────
 SECURE_CONTENT_TYPE_NOSNIFF = True
