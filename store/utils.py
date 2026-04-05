@@ -498,11 +498,16 @@ def create_shiprocket_shipment(order):
             if total_weight_kg < 0.1:
                 total_weight_kg = 0.2  # Shiprocket minimum
 
+            name_parts = order.name.strip().split(" ", 1)
+            first_name = name_parts[0]
+            last_name  = name_parts[1] if len(name_parts) > 1 else "."
+
             payload = {
                 "order_id": order.invoice_number,
                 "order_date": order.created_at.strftime("%Y-%m-%d %H:%M"),
                 "pickup_location": settings.SHIPROCKET_PICKUP_LOCATION,
-                "billing_customer_name": order.name,
+                "billing_customer_name": first_name,
+                "billing_last_name": last_name,
                 "billing_address": order.address,
                 "billing_city": order.city or "",
                 "billing_pincode": order.pincode or "",
