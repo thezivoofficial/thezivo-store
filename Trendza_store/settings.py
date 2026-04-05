@@ -441,7 +441,7 @@ if not DEBUG:
 SESSION_COOKIE_HTTPONLY = True   # JS cannot access session cookie
 CSRF_COOKIE_HTTPONLY    = False  # Must stay False — JS reads CSRF token for AJAX
 PERMISSIONS_POLICY = (
-    "camera=(), microphone=(), geolocation=(), "
+    "camera=(self), microphone=(), geolocation=(), "
     "payment=self, usb=(), fullscreen=(self)"
 )
 # HTTPS / SSL (auto-enabled in production)
