@@ -79,4 +79,5 @@ urlpatterns = [
     path("api/site-banners/", views.site_banners_json, name="site_banners_json"),
     path("api/site-banners/dismiss/", views.dismiss_banner, name="dismiss_banner"),
     path("robots.txt", views.robots_txt, name="robots_txt"),
+    path("favicon.ico", views.favicon, name="favicon"),
 ]

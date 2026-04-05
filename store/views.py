@@ -3021,6 +3021,13 @@ def push_unsubscribe(request):
 
 # ─────────────────────────── Service Worker ──────────────────────────────────
 
+def favicon(request):
+    import os
+    from django.http import FileResponse
+    path = os.path.join(settings.BASE_DIR, 'store', 'static', 'images', 'favicon.ico')
+    return FileResponse(open(path, 'rb'), content_type='image/x-icon')
+
+
 def robots_txt(request):
     from django.http import HttpResponse
     content = f"""User-agent: *
