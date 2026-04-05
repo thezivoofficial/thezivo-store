@@ -6,7 +6,6 @@
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
-  /* ── Screen ── */
   body {
     font-family: Arial, sans-serif;
     font-size: 9px;
@@ -32,8 +31,8 @@
 
   /* 4×6 preview card on screen */
   .label-page {
-    width: 384px;   /* 4in @ 96dpi */
-    min-height: 576px; /* 6in @ 96dpi */
+    width: 384px;
+    min-height: 576px;
     background: #fff;
     margin: 16px auto;
     padding: 14px;
@@ -42,7 +41,6 @@
     overflow: hidden;
   }
 
-  /* ── Print ── */
   @media print {
     @page { size: 4in 6in; margin: 5mm; }
     body  { background: #fff; font-size: 9px; }
@@ -108,7 +106,6 @@
   .red    { background: #ef4444; }
   .gray   { background: #9ca3af; }
 
-  /* Items table */
   table { width: 100%; border-collapse: collapse; margin-bottom: 3px; }
   thead tr { background: #f9fafb; }
   th { padding: 3px 4px; font-size: 7px; font-weight: 700; text-transform: uppercase;
@@ -120,7 +117,6 @@
   .prod-name { font-weight: 700; color: #111; }
   .prod-sub  { font-size: 7px; color: #9ca3af; margin-top: 1px; }
 
-  /* Totals */
   .totals { width: 150px; margin-left: auto; margin-top: 4px; }
   .totals td { font-size: 8px; padding: 2px 4px; border: none; color: #6b7280; }
   .totals td:last-child { text-align: right; font-weight: 600; color: #111; }
@@ -130,85 +126,208 @@
 
   .inv-footer { text-align: center; font-size: 7px; color: #9ca3af; margin-top: 8px; }
 
-  /* ══════════════════ SHIPPING LABEL STYLES ══════════════════ */
-  .sl-outer {
+  /* ══════════════════ SHIPPING LABEL — FRESH DESIGN ══════════════════ */
+  .sl-wrap {
     border: 2px solid #111;
-    border-radius: 7px;
+    border-radius: 8px;
     overflow: hidden;
     height: 100%;
     display: flex;
     flex-direction: column;
+    min-height: 548px;
   }
-  .sl-head {
-    background: #1f2937;
-    padding: 8px 12px;
+
+  /* ── Top bar ── */
+  .sl-topbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-shrink: 0;
+    padding: 8px 14px;
+    border-bottom: 2px solid #111;
+    background: #fff;
   }
-  .sl-brand { font-size: 14px; font-weight: 900; color: #a78bfa; }
-  .sl-title { font-size: 8px; font-weight: 700; text-transform: uppercase;
-              letter-spacing: .1em; color: #d1d5db; }
+  .sl-topbar-brand {
+    font-size: 17px;
+    font-weight: 900;
+    color: #111;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+  .sl-topbar-right {
+    text-align: right;
+  }
+  .sl-topbar-orderid {
+    font-size: 13px;
+    font-weight: 900;
+    color: #111;
+    letter-spacing: -.3px;
+  }
+  .sl-topbar-items {
+    font-size: 7px;
+    color: #6b7280;
+    margin-top: 1px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+  }
 
-  .sl-body {
-    display: grid;
-    grid-template-columns: 1fr 110px;
+  /* ── To section ── */
+  .sl-to-section {
     flex: 1;
-  }
-  .sl-to {
-    padding: 14px 12px;
-    border-right: 1px solid #e5e7eb;
+    padding: 18px 16px 14px;
     display: flex;
     flex-direction: column;
     justify-content: center;
   }
-  .sl-tag    { font-size: 7px; font-weight: 800; text-transform: uppercase;
-               letter-spacing: .08em; color: #9ca3af; margin-bottom: 5px; }
-  .sl-cname  { font-size: 18px; font-weight: 900; color: #111; line-height: 1.2;
-               margin-bottom: 5px; }
-  .sl-addr   { font-size: 8.5px; color: #374151; line-height: 1.7; }
-  .sl-phone  { font-size: 11px; font-weight: 800; color: #111; margin-top: 7px; }
+  .sl-to-label {
+    font-size: 7px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    color: #9ca3af;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 4px;
+  }
+  .sl-name {
+    font-size: 22px;
+    font-weight: 900;
+    color: #111;
+    line-height: 1.15;
+    margin-bottom: 10px;
+    word-break: break-word;
+  }
+  .sl-address {
+    font-size: 10px;
+    color: #374151;
+    line-height: 1.9;
+  }
+  .sl-phone {
+    margin-top: 12px;
+    font-size: 14px;
+    font-weight: 900;
+    color: #111;
+    letter-spacing: .5px;
+  }
 
-  .sl-meta {
+  /* ── Info band ── */
+  .sl-info-band {
+    display: flex;
+    align-items: stretch;
+    border-top: 2px solid #111;
+    min-height: 90px;
+  }
+
+  .sl-payment {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 12px 14px;
+    border-right: 1px solid #e5e7eb;
+  }
+  .sl-payment-type {
+    font-size: 7px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: #9ca3af;
+    margin-bottom: 4px;
+  }
+  .sl-cod-tag {
+    display: inline-block;
+    background: #ef4444;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 900;
+    padding: 4px 10px;
+    border-radius: 5px;
+    letter-spacing: .04em;
+    margin-bottom: 6px;
+  }
+  .sl-prepaid-tag {
+    display: inline-block;
+    background: #10b981;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 900;
+    padding: 4px 10px;
+    border-radius: 5px;
+    letter-spacing: .04em;
+    margin-bottom: 6px;
+  }
+  .sl-cod-amount {
+    font-size: 20px;
+    font-weight: 900;
+    color: #ef4444;
+    line-height: 1;
+  }
+  .sl-cod-collect {
+    font-size: 7px;
+    color: #9ca3af;
+    margin-top: 2px;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+  }
+  .sl-prepaid-note {
+    font-size: 8px;
+    color: #374151;
+    line-height: 1.5;
+    margin-top: 2px;
+  }
+
+  .sl-qr {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    padding: 14px 10px;
+    padding: 10px 12px;
+    min-width: 90px;
+    gap: 4px;
+  }
+  .sl-qr img {
+    width: 64px;
+    height: 64px;
+  }
+  .sl-qr-label {
+    font-size: 6px;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: .08em;
     text-align: center;
   }
-  .sl-order-lbl { font-size: 7px; color: #9ca3af; text-transform: uppercase;
-                  letter-spacing: .06em; }
-  .sl-order-id  { font-size: 22px; font-weight: 900; color: #111; line-height: 1; }
-  .sl-date      { font-size: 7px; color: #9ca3af; }
-  .sl-cod-badge {
-    background: #ef4444; color: #fff;
-    padding: 5px 8px; border-radius: 4px;
-    font-size: 8px; font-weight: 900; width: 100%; letter-spacing: .04em;
-  }
-  .sl-prepaid-badge {
-    background: #10b981; color: #fff;
-    padding: 5px 8px; border-radius: 4px;
-    font-size: 8px; font-weight: 900; width: 100%; letter-spacing: .04em;
-  }
-  .sl-collect { font-size: 12px; font-weight: 900; color: #ef4444; }
 
-  .sl-from {
-    border-top: 1px dashed #d1d5db;
-    padding: 8px 12px;
-    background: #f9fafb;
+  /* ── From footer ── */
+  .sl-from-bar {
+    background: #f3f4f6;
+    border-top: 1.5px solid #d1d5db;
+    padding: 8px 14px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-shrink: 0;
   }
-  .sl-from-tag    { font-size: 7px; font-weight: 800; text-transform: uppercase;
-                    letter-spacing: .06em; color: #9ca3af; }
-  .sl-from-detail { text-align: right; }
-  .sl-from-detail strong { font-size: 9px; color: #111; display: block; }
-  .sl-from-detail span   { font-size: 7px; color: #6b7280; display: block; line-height: 1.5; }
+  .sl-from-label {
+    font-size: 7px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: #9ca3af;
+  }
+  .sl-from-info {
+    text-align: right;
+  }
+  .sl-from-info strong {
+    font-size: 9px;
+    font-weight: 800;
+    color: #111;
+    display: block;
+  }
+  .sl-from-info span {
+    font-size: 7.5px;
+    color: #6b7280;
+    display: block;
+    line-height: 1.6;
+  }
 </style>
 </head>
 <body>
@@ -216,11 +335,11 @@
 <!-- Toolbar -->
 <div class="no-print">
   <button id="print-btn" onclick="window.print()"
-    style="background:#8b5cf6;color:#fff;padding:7px 16px;border:none;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;">
+    style="background:#8b5cf6;color:#fff;">
     🖨️ Print
   </button>
   <button onclick="window.close()"
-    style="background:#374151;color:#d1d5db;padding:7px 16px;border:none;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;">
+    style="background:#374151;color:#d1d5db;">
     ✕ Close
   </button>
   <span style="font-size:10px;color:#6b7280;margin:0 4px;">Print:</span>
@@ -232,7 +351,6 @@
 <!-- ════════════════════════ PAGE 1 — INVOICE ════════════════════════ -->
 <div class="label-page invoice-page">
 
-  <!-- Header -->
   <div class="inv-header">
     <div>
       <div class="inv-brand">{{ store.store_name|default:"Zivo" }}</div>
@@ -247,7 +365,6 @@
 
   <div class="divider"></div>
 
-  <!-- Ship To -->
   <div class="ship-to" style="margin-bottom:5px;">
     <div class="lbl">Ship To</div>
     <div class="name">{{ order.name }}</div>
@@ -258,7 +375,6 @@
     </div>
   </div>
 
-  <!-- Order status / payment -->
   <div class="order-info">
     <strong>Status:</strong>
     {% with s=order.status %}
@@ -279,7 +395,6 @@
 
   <div class="divider"></div>
 
-  <!-- Items table -->
   <table>
     <thead>
       <tr>
@@ -295,7 +410,7 @@
         <td style="color:#9ca3af;width:14px;">{{ forloop.counter }}</td>
         <td>
           <div class="prod-name">{{ item.sku.product.name }}</div>
-          <div class="prod-sub">{{ item.sku.size }}  ·  {{ item.sku.color }}</div>
+          <div class="prod-sub">{{ item.sku.size }} · {{ item.sku.color }}</div>
         </td>
         <td class="td-c" style="width:24px;">{{ item.quantity }}</td>
         <td class="td-r" style="font-weight:700;width:42px;">₹{{ item.price|floatformat:0 }}</td>
@@ -306,7 +421,6 @@
 
   <div class="divider"></div>
 
-  <!-- Totals -->
   <table class="totals">
     <tr><td>Subtotal</td><td>₹{{ subtotal|floatformat:0 }}</td></tr>
     <tr>
@@ -326,62 +440,61 @@
 </div>
 
 <!-- ════════════════════════ PAGE 2 — SHIPPING LABEL ════════════════════════ -->
-<div class="label-page shipping-page last">
-  <div class="sl-outer">
+<div class="label-page shipping-page last" style="padding:10px;">
+<div class="sl-wrap">
 
-    <!-- Header bar -->
-    <div class="sl-head">
-      <span class="sl-brand">{{ store.store_name|default:"Zivo" }}</span>
-      <span class="sl-title">Shipping Label</span>
+  <!-- Top bar: brand + order ID -->
+  <div class="sl-topbar">
+    <div class="sl-topbar-brand">{{ store.store_name|default:"ZIVO" }}</div>
+    <div class="sl-topbar-right">
+      <div class="sl-topbar-orderid">#{{ order.id }}</div>
+      <div class="sl-topbar-items">{{ items|length }} item{% if items|length != 1 %}s{% endif %} · {{ order.created_at|date:"d M Y" }}</div>
     </div>
-
-    <!-- TO + meta -->
-    <div class="sl-body">
-      <div class="sl-to">
-        <div class="sl-tag">Ship To</div>
-        <div class="sl-cname">{{ order.name }}</div>
-        <div class="sl-addr">{{ order.address }}</div>
-        {% if order.city or order.state or order.pincode %}
-        <div class="sl-addr">
-          {% if order.city %}{{ order.city }}{% endif %}{% if order.state %}, {{ order.state }}{% endif %}{% if order.pincode %} — {{ order.pincode }}{% endif %}
-        </div>
-        {% endif %}
-        <div class="sl-phone">📞 {{ order.phone }}</div>
-      </div>
-
-      <div class="sl-meta">
-        <div>
-          <div class="sl-order-lbl">Order</div>
-          <div class="sl-order-id">#{{ order.id }}</div>
-          <div class="sl-date">{{ order.created_at|date:"d M Y" }}</div>
-        </div>
-        {% if order.payment_method == "COD" %}
-          <div class="sl-cod-badge">CASH ON<br>DELIVERY</div>
-          <div class="sl-collect">₹{{ total|floatformat:0 }}</div>
-        {% else %}
-          <div class="sl-prepaid-badge">PREPAID</div>
-        {% endif %}
-        {% if qr_b64 %}
-          <div style="text-align:center;">
-            <img src="data:image/png;base64,{{ qr_b64 }}"
-                 style="width:72px;height:72px;" alt="Scan to update">
-            <div style="font-size:6px;color:#9ca3af;margin-top:2px;letter-spacing:.04em;">STAFF SCAN</div>
-          </div>
-        {% endif %}
-      </div>
-    </div>
-
-    <!-- FROM -->
-    <div class="sl-from">
-      <div class="sl-from-tag">From</div>
-      <div class="sl-from-detail">
-        <strong>{{ store.store_name|default:"Zivo Fashion Store" }}</strong>
-        {% if store.store_phone %}<span>{{ store.store_phone }}</span>{% endif %}
-        {% if store.store_address %}<span>{{ store.store_address }}</span>{% endif %}
-      </div>
-    </div>
-
   </div>
+
+  <!-- Ship To -->
+  <div class="sl-to-section">
+    <div class="sl-to-label">Deliver To</div>
+    <div class="sl-name">{{ order.name }}</div>
+    <div class="sl-address">
+      {{ order.address }}<br>
+      {% if order.city %}{{ order.city }}{% endif %}{% if order.state %}, {{ order.state }}{% endif %}{% if order.pincode %} — {{ order.pincode }}{% endif %}
+    </div>
+    <div class="sl-phone">📞 {{ order.phone }}</div>
+  </div>
+
+  <!-- Payment + QR band -->
+  <div class="sl-info-band">
+    <div class="sl-payment">
+      <div class="sl-payment-type">Payment</div>
+      {% if order.payment_method == "COD" %}
+        <div class="sl-cod-tag">CASH ON DELIVERY</div>
+        <div class="sl-cod-amount">₹{{ total|floatformat:0 }}</div>
+        <div class="sl-cod-collect">Collect at delivery</div>
+      {% else %}
+        <div class="sl-prepaid-tag">PREPAID</div>
+        <div class="sl-prepaid-note">Amount already paid.<br>Do not collect cash.</div>
+      {% endif %}
+    </div>
+    {% if qr_b64 %}
+    <div class="sl-qr">
+      <img src="data:image/png;base64,{{ qr_b64 }}" alt="Scan">
+      <div class="sl-qr-label">Staff Scan</div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- From -->
+  <div class="sl-from-bar">
+    <div class="sl-from-label">From</div>
+    <div class="sl-from-info">
+      <strong>{{ store.store_name|default:"Zivo Fashion Store" }}</strong>
+      {% if store.store_phone %}<span>{{ store.store_phone }}</span>{% endif %}
+      {% if store.store_address %}<span>{{ store.store_address }}</span>{% endif %}
+    </div>
+  </div>
+
+</div>
 </div>
 
 <script>
@@ -402,7 +515,7 @@
     var parts = [];
     if (state.invoice)  parts.push('Invoice');
     if (state.shipping) parts.push('Label');
-    var btn = document.getElementById('print-btn');
+    var btn  = document.getElementById('print-btn');
     var info = document.getElementById('print-info');
     if (parts.length === 0) {
       btn.disabled = true;
