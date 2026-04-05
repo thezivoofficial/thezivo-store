@@ -58,6 +58,8 @@ class Category(models.Model):
     )
     image      = models.ImageField(upload_to="categories/", null=True, blank=True, max_length=255,
                                    help_text="Shown on the home page category tiles")
+    size_chart = models.ImageField(upload_to="size_charts/", null=True, blank=True, max_length=255,
+                                   help_text="Size chart image shown on the product page (upload from Canva/Photoshop)")
     sort_order = models.PositiveSmallIntegerField(default=0, help_text="Lower number appears first in nav")
     is_active  = models.BooleanField(default=True)
 

@@ -129,6 +129,18 @@ class CategoryAdmin(ModelAdmin):
         return format_html('<span style="color:#9ca3af;font-size:11px;">No image</span>')
     cat_thumbnail.short_description = ""
 
+    def size_chart_preview(self, obj):
+        if obj.size_chart:
+            return format_html(
+                '<img src="{}" style="height:48px;border-radius:4px;"> '
+                '<span style="font-size:11px;color:#6b7280;">Uploaded</span>',
+                obj.size_chart.url,
+            )
+        return format_html('<span style="color:#9ca3af;font-size:11px;">Not uploaded</span>')
+    size_chart_preview.short_description = "Size Chart"
+
+    readonly_fields = ("size_chart_preview",)
+
 
 @admin.register(Product)
 class ProductAdmin(ModelAdmin):

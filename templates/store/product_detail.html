@@ -1015,8 +1015,15 @@
     </div>
     <div class="sc-body">
 
-        <!-- TAB 1: SIZE TABLE -->
+        <!-- TAB 1: SIZE TABLE / IMAGE -->
         <div class="sc-panel active" id="scTable">
+            {% if product.category.size_chart %}
+            <div style="text-align:center;padding:8px 0 4px;">
+                <img src="{{ product.category.size_chart.url }}"
+                     alt="Size Chart"
+                     style="max-width:100%;border-radius:8px;">
+            </div>
+            {% else %}
             <div class="unit-toggle">
                 <button class="unit-btn active" onclick="scSetUnit('in',this)">Inches</button>
                 <button class="unit-btn" onclick="scSetUnit('cm',this)">CM</button>
@@ -1026,6 +1033,7 @@
                 All measurements are body measurements, not garment measurements.
                 Sizes may vary slightly by style &mdash; when in doubt, size up.
             </p>
+            {% endif %}
         </div>
 
         <!-- TAB 2: HOW TO MEASURE -->
