@@ -125,7 +125,7 @@
         });
       })
       .catch(function(err) {
-        setStatus("❌ " + err.name + ": " + err.message);
+        document.getElementById("qr-status").innerHTML = "❌ Camera permission denied.<br>Tap the address bar icon → Permissions → Camera → Allow.";
       });
   }
 
