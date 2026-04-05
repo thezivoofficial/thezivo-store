@@ -77,21 +77,27 @@
   </div>
 </div>
 
-<!-- html5-qrcode library -->
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<!-- html5-qrcode library (served locally — no CDN dependency) -->
+{% load static %}
+<script src="{% static 'store/html5-qrcode.min.js' %}"></script>
 <script>
+  // Library exposes Html5Qrcode as a global after loading
+  var Html5QrcodeClass = window.Html5Qrcode || (window.__Html5QrcodeLibrary__ && window.__Html5QrcodeLibrary__.Html5Qrcode);
   let html5QrCode = null;
 
   function openQrScanner() {
     document.getElementById("qr-modal").style.display = "flex";
     document.getElementById("qr-status").textContent = "Starting camera…";
 
-    html5QrCode = new Html5Qrcode("qr-reader");
+    if (!Html5QrcodeClass) {
+      document.getElementById("qr-status").textContent = "❌ Scanner failed to load. Try refreshing.";
+      return;
+    }
 
-    // Use facingMode directly — avoids the double camera-open conflict that
-    // caused NotReadableError when using getCameras() + start() together.
+    html5QrCode = new Html5QrcodeClass("qr-reader");
+
     html5QrCode.start(
-      { facingMode: "environment" },   // back camera on phones; webcam on desktop
+      { facingMode: "environment" },
       { fps: 10, qrbox: { width: 220, height: 220 } },
       (decodedText) => {
         if (decodedText.includes("/scan/")) {
@@ -102,11 +108,12 @@
           document.getElementById("qr-status").textContent = "⚠ Not a valid order QR code.";
         }
       },
-      () => {} // ignore per-frame decode errors
+      () => {}
     ).then(() => {
       document.getElementById("qr-status").textContent = "Ready — hold the QR code steady";
-    }).catch(err => {
-      // Back camera failed — fall back to any available camera
+    }).catch(() => {
+      document.getElementById("qr-reader").innerHTML = "";
+      html5QrCode = new Html5QrcodeClass("qr-reader");
       html5QrCode.start(
         { facingMode: "user" },
         { fps: 10, qrbox: { width: 220, height: 220 } },
@@ -122,8 +129,14 @@
         () => {}
       ).then(() => {
         document.getElementById("qr-status").textContent = "Ready — hold the QR code steady";
-      }).catch(() => {
-        document.getElementById("qr-status").textContent = "❌ Camera unavailable or permission denied.";
+      }).catch((err) => {
+        var e = String(err).toLowerCase();
+        if (e.includes("notallowed") || e.includes("permission")) {
+          document.getElementById("qr-status").innerHTML =
+            "❌ Camera permission denied.<br>Tap the address bar icon → Permissions → Camera → Allow.";
+        } else {
+          document.getElementById("qr-status").textContent = "❌ Camera error: " + err;
+        }
       });
     });
   }
