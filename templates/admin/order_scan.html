@@ -260,46 +260,92 @@
 <script>
   let html5QrCode = null;
 
+  function setStatus(msg, color) {
+    var el = document.getElementById("qr-status");
+    el.textContent = msg;
+    el.style.color = color || "#6b7280";
+  }
+
+  function onScan(decodedText) {
+    if (decodedText.includes("/scan/")) {
+      setStatus("✓ QR detected — opening order…", "#065f46");
+      closeQrScanner();
+      window.location.href = decodedText;
+    } else {
+      setStatus("⚠ Not a valid order QR code", "#92400e");
+    }
+  }
+
+  function startCamera(facingMode) {
+    return html5QrCode.start(
+      { facingMode: facingMode },
+      { fps: 10, qrbox: { width: 220, height: 220 } },
+      onScan,
+      () => {}
+    );
+  }
+
+  function showPermissionHelp() {
+    document.getElementById("qr-status").innerHTML =
+      "❌ Camera blocked. To fix:<br>" +
+      "<strong>Tap the 🔒 lock icon</strong> in the address bar → " +
+      "<strong>Permissions → Camera → Allow</strong>, then tap Scan again.";
+    document.getElementById("qr-status").style.color = "#dc2626";
+    document.getElementById("qr-status").style.lineHeight = "1.6";
+  }
+
   function openQrScanner() {
     document.getElementById("qr-modal").style.display = "flex";
-    document.getElementById("qr-status").textContent = "Starting camera…";
+    setStatus("Checking camera permission…");
 
-    html5QrCode = new Html5Qrcode("qr-reader");
-    html5QrCode.start(
-      { facingMode: "environment" },
-      { fps: 10, qrbox: { width: 220, height: 220 } },
-      (decodedText) => {
-        if (decodedText.includes("/scan/")) {
-          document.getElementById("qr-status").textContent = "✓ QR detected — opening order…";
-          closeQrScanner();
-          window.location.href = decodedText;
-        } else {
-          document.getElementById("qr-status").textContent = "⚠ Not a valid order QR code";
+    // Check permission state first so we can give a clear message
+    if (navigator.permissions) {
+      navigator.permissions.query({ name: "camera" }).then(function(result) {
+        if (result.state === "denied") {
+          showPermissionHelp();
+          return;
         }
-      },
-      () => {}
-    ).then(() => {
-      document.getElementById("qr-status").textContent = "Ready — hold the QR code steady";
-    }).catch(() => {
-      html5QrCode.start(
-        { facingMode: "user" },
-        { fps: 10, qrbox: { width: 220, height: 220 } },
-        (decodedText) => {
-          if (decodedText.includes("/scan/")) {
-            document.getElementById("qr-status").textContent = "✓ QR detected — opening order…";
-            closeQrScanner();
-            window.location.href = decodedText;
-          } else {
-            document.getElementById("qr-status").textContent = "⚠ Not a valid order QR code";
-          }
-        },
-        () => {}
-      ).then(() => {
-        document.getElementById("qr-status").textContent = "Ready — hold the QR code steady";
-      }).catch(() => {
-        document.getElementById("qr-status").textContent = "❌ Camera unavailable or permission denied.";
+        doStartCamera();
+        // Listen for permission change (user grants via browser prompt)
+        result.onchange = function() {
+          if (result.state === "granted") doStartCamera();
+        };
+      }).catch(function() {
+        doStartCamera(); // permissions API not supported, just try
       });
-    });
+    } else {
+      doStartCamera();
+    }
+  }
+
+  function doStartCamera() {
+    setStatus("Starting camera…");
+    if (html5QrCode) {
+      try { html5QrCode.stop().catch(() => {}); } catch(e) {}
+    }
+    html5QrCode = new Html5Qrcode("qr-reader");
+
+    startCamera("environment")
+      .then(function() { setStatus("Ready — hold the QR code steady", "#065f46"); })
+      .catch(function(err) {
+        var errStr = String(err).toLowerCase();
+        if (errStr.includes("notallowed") || errStr.includes("permission")) {
+          showPermissionHelp();
+          return;
+        }
+        // Back camera failed — try front camera
+        html5QrCode = new Html5Qrcode("qr-reader");
+        startCamera("user")
+          .then(function() { setStatus("Ready — hold the QR code steady", "#065f46"); })
+          .catch(function(err2) {
+            var e = String(err2).toLowerCase();
+            if (e.includes("notallowed") || e.includes("permission")) {
+              showPermissionHelp();
+            } else {
+              setStatus("❌ Camera unavailable. Is another app using it?", "#dc2626");
+            }
+          });
+      });
   }
 
   function closeQrScanner() {
@@ -307,9 +353,7 @@
     if (html5QrCode) {
       const scanner = html5QrCode;
       html5QrCode = null;
-      try {
-        scanner.stop().catch(() => {});
-      } catch(e) {}
+      try { scanner.stop().catch(() => {}); } catch(e) {}
     }
   }
 
