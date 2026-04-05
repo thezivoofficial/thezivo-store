@@ -507,6 +507,21 @@
 
                 </div>
             </div>
+
+            {% if order.tracking_url %}
+            <div style="margin-top:16px;padding:14px 18px;background:#f8f7f5;border-radius:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+                <div>
+                    <div style="font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.04em;">Courier Tracking</div>
+                    <div style="font-size:13px;color:#374151;margin-top:2px;">
+                        {% if order.courier_name %}{{ order.courier_name }} &nbsp;·&nbsp; {% endif %}AWB: {{ order.awb_number }}
+                    </div>
+                </div>
+                <a href="{{ order.tracking_url }}" target="_blank"
+                   style="background:#111;color:#fff;padding:9px 20px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap;">
+                    Track Package →
+                </a>
+            </div>
+            {% endif %}
         </div>
         {% endif %}
 

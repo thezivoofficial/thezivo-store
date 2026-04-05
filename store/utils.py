@@ -444,3 +444,109 @@ def send_whatsapp(phone, message):
         logger.info(f"WhatsApp sent to {phone}")
     except Exception as e:
         logger.error(f"WhatsApp send failed for {phone}: {e}", exc_info=True)
+
+
+# ── Shiprocket ────────────────────────────────────────────────────────────────
+
+def _get_shiprocket_token():
+    """Fetch (or return cached) Shiprocket JWT. Token is valid 10 days; cached for 9."""
+    from django.core.cache import cache
+    token = cache.get("shiprocket_token")
+    if token:
+        return token
+    import requests
+    resp = requests.post(
+        "https://apiv2.shiprocket.in/v1/external/auth/login",
+        json={"email": settings.SHIPROCKET_EMAIL, "password": settings.SHIPROCKET_PASSWORD},
+        timeout=10,
+    )
+    resp.raise_for_status()
+    token = resp.json()["token"]
+    cache.set("shiprocket_token", token, timeout=9 * 24 * 3600)
+    return token
+
+
+def create_shiprocket_shipment(order):
+    """Create a Shiprocket shipment and save AWB/tracking URL back to the order.
+    Runs in a background daemon thread — safe to call from admin views."""
+    import threading
+
+    def _run():
+        try:
+            import requests as req
+            token = _get_shiprocket_token()
+            headers = {
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/json",
+            }
+
+            items = []
+            total_weight_kg = 0.0
+            for item in order.items.select_related("sku__product").all():
+                weight_kg = (item.sku.weight_grams * item.quantity) / 1000
+                total_weight_kg += weight_kg
+                items.append({
+                    "name": item.sku.product.name,
+                    "sku": item.sku.sku_code,
+                    "units": item.quantity,
+                    "selling_price": str(item.price),
+                    "discount": "0",
+                    "tax": "0",
+                    "hsn": "",
+                })
+
+            if total_weight_kg < 0.1:
+                total_weight_kg = 0.2  # Shiprocket minimum
+
+            payload = {
+                "order_id": order.invoice_number,
+                "order_date": order.created_at.strftime("%Y-%m-%d %H:%M"),
+                "pickup_location": settings.SHIPROCKET_PICKUP_LOCATION,
+                "billing_customer_name": order.name,
+                "billing_address": order.address,
+                "billing_city": order.city or "",
+                "billing_pincode": order.pincode or "",
+                "billing_state": order.state or "",
+                "billing_country": "India",
+                "billing_email": order.contact_email or "",
+                "billing_phone": order.phone,
+                "shipping_is_billing": True,
+                "order_items": items,
+                "payment_method": "COD" if order.payment_method == "COD" else "Prepaid",
+                "sub_total": str(int(order.items_subtotal)),
+                "length": 25,
+                "breadth": 20,
+                "height": 5,
+                "weight": round(total_weight_kg, 2),
+            }
+            if settings.SHIPROCKET_CHANNEL_ID:
+                payload["channel_id"] = settings.SHIPROCKET_CHANNEL_ID
+
+            resp = req.post(
+                "https://apiv2.shiprocket.in/v1/external/orders/create/adhoc",
+                json=payload,
+                headers=headers,
+                timeout=20,
+            )
+            data = resp.json()
+
+            # Shiprocket returns AWB inside payload on success
+            awb      = (data.get("payload") or {}).get("awb_code") or data.get("awb_code", "")
+            courier  = (data.get("payload") or {}).get("courier_name") or data.get("courier_name", "")
+            tracking = f"https://shiprocket.co/tracking/{awb}" if awb else ""
+
+            if awb:
+                from .models import Order
+                Order.objects.filter(pk=order.pk).update(
+                    awb_number=awb,
+                    courier_name=courier,
+                    tracking_url=tracking,
+                )
+                logger.info(f"[SHIPROCKET] Order {order.id} — AWB {awb} ({courier})")
+            else:
+                logger.warning(f"[SHIPROCKET] Order {order.id} — no AWB in response: {data}")
+
+        except Exception as e:
+            logger.error(f"[SHIPROCKET] Order {order.id} failed: {e}", exc_info=True)
+
+    threading.Thread(target=_run, daemon=True).start()

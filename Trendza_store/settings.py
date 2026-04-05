@@ -405,6 +405,12 @@ ADMIN_ALERT_PHONE = config('ADMIN_ALERT_PHONE', default='')
 BREVO_API_KEY      = config('BREVO_API_KEY', default='')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='support@thezivo.com')
 
+# ── Shiprocket ────────────────────────────────────────────────────────────────
+SHIPROCKET_EMAIL           = config('SHIPROCKET_EMAIL', default='')
+SHIPROCKET_PASSWORD        = config('SHIPROCKET_PASSWORD', default='')
+SHIPROCKET_CHANNEL_ID      = config('SHIPROCKET_CHANNEL_ID', default='')
+SHIPROCKET_PICKUP_LOCATION = config('SHIPROCKET_PICKUP_LOCATION', default='Primary')
+
 # ── SMS (2Factor.in OTP) ──────────────────────────────────────────────────────
 TWO_FACTOR_API_KEY = config('TWO_FACTOR_API_KEY', default='')
 

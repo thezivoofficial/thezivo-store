@@ -12,7 +12,7 @@ from django.urls import path, reverse
 from django.utils.html import format_html
 from unfold.admin import ModelAdmin, TabularInline
 from .models import Product, SKU, Order, OrderItem, StockNotification, ProductImage, Address, Customer, SiteSettings, Coupon, Review, Announcement, Category, Offer, NewsletterSubscriber, ReturnRequest, ReturnItem, SizeExchangeRequest, StoreCredit, UserNotification, PushSubscription, SiteBanner
-from .utils import send_whatsapp, send_order_email, send_new_product_alert, whatsapp_order_shipped, whatsapp_order_delivered, create_notification, send_push_to_user, send_push_to_all
+from .utils import send_whatsapp, send_order_email, send_new_product_alert, whatsapp_order_shipped, whatsapp_order_delivered, create_notification, send_push_to_user, send_push_to_all, create_shiprocket_shipment
 from django.conf import settings
 
 
@@ -406,6 +406,7 @@ class OrderAdmin(ModelAdmin):
     readonly_fields = (
         "created_at", "shipped_at", "delivered_at",
         "razorpay_order_id", "razorpay_payment_id", "razorpay_signature",
+        "awb_number", "courier_name", "tracking_url",
     )
     inlines = [OrderItemInline]
     change_list_template = "admin/order_summary.html"
@@ -457,6 +458,7 @@ class OrderAdmin(ModelAdmin):
                 from django.utils import timezone
                 order.shipped_at = timezone.now()
                 order.save()
+                create_shiprocket_shipment(order)
                 send_order_email(order, 'order_shipped.html', f'Your Order #{order.id} Has Been Shipped!')
                 whatsapp_order_shipped(order)
                 if order.customer:
@@ -547,6 +549,7 @@ class OrderAdmin(ModelAdmin):
                     from django.utils import timezone
                     order.shipped_at = timezone.now()
                     order.save()
+                    create_shiprocket_shipment(order)
                     send_order_email(order, 'order_shipped.html', f'Your Order #{order.id} Has Been Shipped!')
                     whatsapp_order_shipped(order)
                 elif new_status == "DELIVERED":
@@ -692,6 +695,7 @@ class OrderAdmin(ModelAdmin):
         for order in queryset.filter(status__in=["PLACED", "CONFIRMED"]):
             order.status = "SHIPPED"
             order.save()
+            create_shiprocket_shipment(order)
             send_order_email(order, 'order_shipped.html', f'Your Order #{order.id} Has Been Shipped!')
             whatsapp_order_shipped(order)
             if order.customer:

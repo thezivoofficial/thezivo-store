@@ -217,6 +217,7 @@ class SKU(models.Model):
     mrp = models.PositiveIntegerField()
     selling_price = models.PositiveIntegerField()
     stock = models.PositiveIntegerField(default=0)
+    weight_grams = models.PositiveIntegerField(default=200, help_text="Weight in grams (used for shipping)")
     created_at = models.DateTimeField(auto_now_add=True)
     
     @property
@@ -323,6 +324,11 @@ class Order(models.Model):
     razorpay_order_id = models.CharField(max_length=100, blank=True, null=True)
     razorpay_payment_id = models.CharField(max_length=100, blank=True, null=True)
     razorpay_signature = models.CharField(max_length=200, blank=True, null=True)
+
+    # 🔹 Courier / tracking
+    awb_number   = models.CharField(max_length=100, blank=True)
+    courier_name = models.CharField(max_length=100, blank=True)
+    tracking_url = models.CharField(max_length=500, blank=True)
 
     coupon          = models.ForeignKey('Coupon', null=True, blank=True, on_delete=models.SET_NULL)
     discount_amount = models.PositiveIntegerField(default=0)   # coupon discount

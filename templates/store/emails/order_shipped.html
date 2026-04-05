@@ -44,6 +44,22 @@
         </table>
       </td></tr>
 
+      <!-- TRACK BUTTON -->
+      {% if order.tracking_url %}
+      <tr><td style="padding:0 32px 24px;">
+        <a href="{{ order.tracking_url }}"
+           style="display:inline-block;background:#111;color:#fff;padding:12px 28px;
+                  border-radius:8px;font-size:0.88rem;font-weight:600;text-decoration:none;">
+          Track Your Package →
+        </a>
+        {% if order.courier_name %}
+        <div style="margin-top:8px;font-size:0.78rem;color:#999;">
+          Courier: {{ order.courier_name }} &nbsp;·&nbsp; AWB: {{ order.awb_number }}
+        </div>
+        {% endif %}
+      </td></tr>
+      {% endif %}
+
       <!-- DELIVERY ADDRESS -->
       <tr><td style="padding:24px 32px;">
         <div style="font-size:0.72rem;font-weight:600;color:#aaa;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px;">Delivering To</div>
