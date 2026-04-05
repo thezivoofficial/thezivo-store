@@ -1556,7 +1556,9 @@ function renderSizeTable() {
         html += "</tr>";
     });
     html += "</tbody></table>";
-    document.getElementById("scTableContent").innerHTML = html;
+    const scEl = document.getElementById("scTableContent");
+    if (!scEl) return;
+    scEl.innerHTML = html;
 }
 
 // Close size chart on Escape (separate from zoom Escape handler above)
