@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -258,6 +259,7 @@
   </div>
 </div>
 
+<script src="{% static 'store/html5-qrcode.min.js' %}"></script>
 <script>
   let currentStream = null;
   let scanLoop = null;
@@ -318,28 +320,30 @@
     videoEl.style.display = "none";
     readerDiv.style.display = "block";
 
-    // Dynamically load the library only if needed
-    var s = document.createElement("script");
-    s.src = "https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js";
-    s.onload = function() {
-      // Stop the raw stream — html5-qrcode manages its own
-      stream.getTracks().forEach(function(t) { t.stop(); });
-      currentStream = null;
+    // Stop the raw stream — html5-qrcode manages its own
+    stream.getTracks().forEach(function(t) { t.stop(); });
+    currentStream = null;
 
-      var scanner = new Html5Qrcode("qr-reader");
-      scanner.start(
-        { facingMode: "environment" },
+    var scanner = new Html5Qrcode("qr-reader");
+    scanner.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: { width: 220, height: 220 } },
+      onScan, function() {}
+    ).then(function() {
+      currentStream = { _lib: scanner };
+      setStatus("Ready — hold the QR code steady", "#065f46");
+    }).catch(function(err) {
+      // Try front camera as fallback
+      var scanner2 = new Html5Qrcode("qr-reader");
+      scanner2.start(
+        { facingMode: "user" },
         { fps: 10, qrbox: { width: 220, height: 220 } },
         onScan, function() {}
       ).then(function() {
-        currentStream = { _lib: scanner };
+        currentStream = { _lib: scanner2 };
         setStatus("Ready — hold the QR code steady", "#065f46");
       }).catch(showPermissionHelp);
-    };
-    s.onerror = function() {
-      setStatus("❌ Could not load scanner. Check your internet connection.", "#dc2626");
-    };
-    document.head.appendChild(s);
+    });
   }
 
   function openQrScanner() {
