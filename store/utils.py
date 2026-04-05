@@ -534,10 +534,25 @@ def create_shiprocket_shipment(order):
                 timeout=20,
             )
             data = resp.json()
+            shipment_id = data.get("shipment_id")
 
-            # Shiprocket returns AWB inside payload on success
-            awb      = (data.get("payload") or {}).get("awb_code") or data.get("awb_code", "")
-            courier  = (data.get("payload") or {}).get("courier_name") or data.get("courier_name", "")
+            if not shipment_id:
+                logger.warning(f"[SHIPROCKET] Order {order.id} — no shipment_id: {data}")
+                return
+
+            # Step 2: assign courier + get AWB
+            import time
+            time.sleep(3)  # brief wait for Shiprocket to register the shipment
+            awb_resp = req.post(
+                "https://apiv2.shiprocket.in/v1/external/courier/assign/awb",
+                json={"shipment_id": [shipment_id]},
+                headers=headers,
+                timeout=20,
+            )
+            awb_data = awb_resp.json()
+            response_data = (awb_data.get("response") or {}).get("data") or {}
+            awb      = response_data.get("awb_code", "")
+            courier  = response_data.get("courier_name", "")
             tracking = f"https://shiprocket.co/tracking/{awb}" if awb else ""
 
             if awb:
@@ -549,7 +564,7 @@ def create_shiprocket_shipment(order):
                 )
                 logger.info(f"[SHIPROCKET] Order {order.id} — AWB {awb} ({courier})")
             else:
-                logger.warning(f"[SHIPROCKET] Order {order.id} — no AWB in response: {data}")
+                logger.warning(f"[SHIPROCKET] Order {order.id} — no AWB in response: {awb_data}")
 
         except Exception as e:
             logger.error(f"[SHIPROCKET] Order {order.id} failed: {e}", exc_info=True)
