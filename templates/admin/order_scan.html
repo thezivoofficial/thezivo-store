@@ -261,6 +261,10 @@
 
 <script src="{% static 'store/html5-qrcode.min.js' %}"></script>
 <script>
+  // The library exposes classes via window.__Html5QrcodeLibrary__
+  var _lib = window.__Html5QrcodeLibrary__ || window;
+  var Html5QrcodeClass = _lib.Html5Qrcode;
+
   let currentStream = null;
   let scanLoop = null;
 
@@ -289,11 +293,12 @@
     );
   }
 
-  // ── Native BarcodeDetector (Chrome Android built-in, no CDN needed) ──
+  // ── Native BarcodeDetector (Chrome Android built-in) ──
   function startNative(stream) {
     var video = document.getElementById("qr-video");
     video.srcObject = stream;
     video.style.display = "block";
+    document.getElementById("qr-reader").style.display = "none";
 
     var detector = new BarcodeDetector({ formats: ["qr_code"] });
 
@@ -313,18 +318,16 @@
     };
   }
 
-  // ── Fallback: draw frames to canvas + html5-qrcode library ──
-  function startLibraryFallback(stream) {
-    var readerDiv = document.getElementById("qr-reader");
-    var videoEl   = document.getElementById("qr-video");
-    videoEl.style.display = "none";
-    readerDiv.style.display = "block";
+  // ── Fallback: html5-qrcode library (handles getUserMedia itself) ──
+  function startLibraryFallback() {
+    if (!Html5QrcodeClass) {
+      setStatus("❌ Scanner not available. Try refreshing the page.", "#dc2626");
+      return;
+    }
+    document.getElementById("qr-video").style.display = "none";
+    document.getElementById("qr-reader").style.display = "block";
 
-    // Stop the raw stream — html5-qrcode manages its own
-    stream.getTracks().forEach(function(t) { t.stop(); });
-    currentStream = null;
-
-    var scanner = new Html5Qrcode("qr-reader");
+    var scanner = new Html5QrcodeClass("qr-reader");
     scanner.start(
       { facingMode: "environment" },
       { fps: 10, qrbox: { width: 220, height: 220 } },
@@ -332,9 +335,9 @@
     ).then(function() {
       currentStream = { _lib: scanner };
       setStatus("Ready — hold the QR code steady", "#065f46");
-    }).catch(function(err) {
-      // Try front camera as fallback
-      var scanner2 = new Html5Qrcode("qr-reader");
+    }).catch(function() {
+      document.getElementById("qr-reader").innerHTML = "";
+      var scanner2 = new Html5QrcodeClass("qr-reader");
       scanner2.start(
         { facingMode: "user" },
         { fps: 10, qrbox: { width: 220, height: 220 } },
@@ -342,7 +345,11 @@
       ).then(function() {
         currentStream = { _lib: scanner2 };
         setStatus("Ready — hold the QR code steady", "#065f46");
-      }).catch(showPermissionHelp);
+      }).catch(function(err) {
+        var e = String(err).toLowerCase();
+        if (e.includes("notallowed") || e.includes("permission")) showPermissionHelp();
+        else setStatus("❌ Camera error: " + err, "#dc2626");
+      });
     });
   }
 
@@ -350,39 +357,27 @@
     document.getElementById("qr-modal").style.display = "flex";
     setStatus("Starting camera…");
 
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      setStatus("❌ Camera API not supported on this browser.", "#dc2626");
-      return;
+    // Chrome Android: use native BarcodeDetector via getUserMedia
+    if ("BarcodeDetector" in window && navigator.mediaDevices) {
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } } })
+        .then(function(stream) {
+          currentStream = stream;
+          BarcodeDetector.getSupportedFormats().then(function(fmts) {
+            if (fmts.includes("qr_code")) startNative(stream);
+            else { stream.getTracks().forEach(function(t){t.stop();}); currentStream=null; startLibraryFallback(); }
+          }).catch(function() { startNative(stream); });
+        })
+        .catch(function(err) {
+          var e = (err.name || "").toLowerCase();
+          if (e === "notallowederror" || e === "permissiondeniederror") showPermissionHelp();
+          else if (e === "notfounderror") setStatus("❌ No camera found.", "#dc2626");
+          else if (e === "notreadableerror") setStatus("❌ Camera in use by another app.", "#dc2626");
+          else startLibraryFallback(); // try library as last resort
+        });
+    } else {
+      // Desktop or other: let html5-qrcode handle getUserMedia itself
+      startLibraryFallback();
     }
-
-    navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: "environment" } }
-    }).then(function(stream) {
-      currentStream = stream;
-
-      if ("BarcodeDetector" in window) {
-        BarcodeDetector.getSupportedFormats().then(function(fmts) {
-          if (fmts.includes("qr_code")) {
-            startNative(stream);
-          } else {
-            startLibraryFallback(stream);
-          }
-        }).catch(function() { startNative(stream); });
-      } else {
-        startLibraryFallback(stream);
-      }
-    }).catch(function(err) {
-      var e = (err.name || "").toLowerCase();
-      if (e === "notallowederror" || e === "permissiondeniederror") {
-        showPermissionHelp();
-      } else if (e === "notfounderror") {
-        setStatus("❌ No camera found on this device.", "#dc2626");
-      } else if (e === "notreadableerror") {
-        setStatus("❌ Camera is being used by another app. Close it and retry.", "#dc2626");
-      } else {
-        setStatus("❌ Camera error: " + (err.message || err.name || "unknown"), "#dc2626");
-      }
-    });
   }
 
   function closeQrScanner() {
