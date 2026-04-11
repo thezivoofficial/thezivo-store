@@ -400,6 +400,7 @@ TWILIO_ACCOUNT_SID = config('TWILIO_ACCOUNT_SID')
 TWILIO_AUTH_TOKEN = config('TWILIO_AUTH_TOKEN')
 TWILIO_WHATSAPP_FROM = config('TWILIO_WHATSAPP_FROM')
 ADMIN_ALERT_PHONE = config('ADMIN_ALERT_PHONE', default='')
+ADMIN_ALERT_EMAIL = config('ADMIN_ALERT_EMAIL', default='')
 
 # ── Email (Brevo HTTP API) ────────────────────────────────────────────────────
 BREVO_API_KEY      = config('BREVO_API_KEY', default='')

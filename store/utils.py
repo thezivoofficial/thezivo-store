@@ -387,6 +387,56 @@ def whatsapp_new_order_admin(order):
     _whatsapp_async(admin_phone, msg)
 
 
+def email_new_order_admin(order):
+    """Send a new order alert email to the store owner."""
+    import threading
+    admin_email = getattr(settings, 'ADMIN_ALERT_EMAIL', '')
+    if not admin_email:
+        return
+
+    def _send():
+        try:
+            items = list(order.items.select_related('sku__product').all())
+            items_text = "\n".join(
+                f"  • {item.sku.product.name} ({item.sku.size} / {item.sku.color}) × {item.quantity} — ₹{item.price}"
+                for item in items
+            )
+            html = f"""
+            <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;background:#f9f9f9;">
+              <div style="background:#111;padding:20px 24px;border-radius:10px 10px 0 0;">
+                <h2 style="color:#fff;margin:0;font-size:1.1rem;">🛒 New Order #{order.id}</h2>
+              </div>
+              <div style="background:#fff;padding:24px;border-radius:0 0 10px 10px;border:1px solid #e5e7eb;">
+                <p style="margin:0 0 16px;font-size:0.9rem;color:#374151;">
+                  <strong>Customer:</strong> {order.name} &nbsp;·&nbsp; {order.phone}<br>
+                  <strong>Payment:</strong> {order.get_payment_method_display()} &nbsp;·&nbsp; ₹{order.total_amount}<br>
+                  <strong>City:</strong> {order.city or '—'}
+                </p>
+                <div style="background:#f3f4f6;border-radius:8px;padding:14px 16px;font-size:0.85rem;color:#374151;white-space:pre-line;">{items_text}</div>
+                <div style="margin-top:20px;">
+                  <a href="{settings.SITE_URL}/admin/store/order/{order.id}/change/"
+                     style="background:#8b5cf6;color:#fff;padding:10px 20px;border-radius:7px;
+                            text-decoration:none;font-size:0.88rem;font-weight:600;">
+                    View Order in Admin →
+                  </a>
+                </div>
+              </div>
+            </div>
+            """
+            from brevo import Brevo, SendTransacEmailRequestToItem, SendTransacEmailRequestSender
+            client = Brevo(api_key=settings.BREVO_API_KEY)
+            client.transactional_emails.send_transac_email(
+                to=[SendTransacEmailRequestToItem(email=admin_email)],
+                sender=SendTransacEmailRequestSender(email=settings.DEFAULT_FROM_EMAIL, name='Zivo'),
+                subject=f"New Order #{order.id} — ₹{order.total_amount} ({order.get_payment_method_display()})",
+                html_content=html,
+            )
+        except Exception as e:
+            logger.error(f"Admin order alert email failed for order {order.id}: {e}", exc_info=True)
+
+    threading.Thread(target=_send, daemon=True).start()
+
+
 def whatsapp_order_shipped(order):
     """Notify the customer that their order has been shipped."""
     if not order.phone:
